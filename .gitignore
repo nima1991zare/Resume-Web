@@ -1,0 +1,22 @@
+# ===== NEVER PUBLISH THESE =====
+# Database: contains admin password hash, session tokens, visitor messages
+data/
+# Visitor-uploaded / admin-uploaded images (private until you choose otherwise)
+static/uploads/*
+!static/uploads/.gitkeep
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+.venv/
+venv/
+
+# OS / editor
+Thumbs.db
+.DS_Store
+*.log
+
+# Desktop shortcuts (contain local machine paths)
+*.url
+*.lnk

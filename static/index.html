@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>Nima — Full-Stack Developer | Python, Java & Web Development</title>
+  <meta name="description" content="Nima — full-stack developer with international Python & Java certificates. Custom websites, buyable application source code, UX/UI design, SQL & MongoDB. From zero to launch.">
+  <meta name="author" content="Nima">
+  <meta name="robots" content="index, follow, max-image-preview:large">
+  <meta name="theme-color" content="#050810">
+
+  <!-- Open Graph -->
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="Nima — Full-Stack Developer">
+  <meta property="og:title" content="Nima — Full-Stack Developer | Python, Java & Web Development">
+  <meta property="og:description" content="Custom websites and applications built from zero to launch. Buyable source code, UX/UI design included. Python · Java · JavaScript · SQL · MongoDB.">
+  <meta property="og:locale" content="en_US">
+  <meta property="og:locale:alternate" content="fa_IR">
+  <!--SEO:OG_URL-->
+
+  <!-- Twitter Card -->
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Nima — Full-Stack Developer">
+  <meta name="twitter:description" content="Custom websites and applications built from zero to launch. Python · Java · JavaScript · SQL · MongoDB.">
+  <!--SEO:TWITTER_IMAGE-->
+
+  <!--SEO:CANONICAL-->
+  <!--SEO:JSONLD-->
+  <link rel="manifest" href="/manifest.json">
+  <link rel="icon" type="image/svg+xml" href="/static/icons/favicon.svg">
+  <link rel="apple-touch-icon" href="/static/icons/icon-192.png">
+  <link rel="preload" as="font" type="font/woff2" crossorigin href="/static/fonts/spacegrotesk_v22_V8mDoQDjQSkFtoMM3T6r8E7mPbF4Cw.woff2">
+  <link rel="preload" as="font" type="font/woff2" crossorigin href="/static/fonts/dmsans_v17_rP2Yp2ywxg089UriI5-g4vlH9VoD8Cmcqbu0-K4.woff2">
+  <link rel="stylesheet" href="/static/css/fonts.css">
+  <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+  <!-- persistent morphing background -->
+  <canvas id="morph-canvas" aria-hidden="true"></canvas>
+  <div class="vignette" aria-hidden="true"></div>
+  <div class="noise" aria-hidden="true"></div>
+
+  <!-- top scroll progress -->
+  <div class="progress-bar" id="progress-bar" aria-hidden="true"></div>
+
+  <!-- side phase rail -->
+  <nav class="rail" id="rail" aria-label="Sections">
+    <a href="#hero"     data-phase="0"><span class="rail-dot"></span><span class="rail-label" data-i18n="v2.r0">Intro</span></a>
+    <a href="#about"    data-phase="1"><span class="rail-dot"></span><span class="rail-label" data-i18n="nav.about">About</span></a>
+    <a href="#apps"     data-phase="2"><span class="rail-dot"></span><span class="rail-label" data-i18n="nav.apps">Apps</span></a>
+    <a href="#websites" data-phase="3"><span class="rail-dot"></span><span class="rail-label" data-i18n="nav.websites">Websites</span></a>
+    <a href="#brands"   data-phase="4"><span class="rail-dot"></span><span class="rail-label" data-i18n="nav.brands">Brands</span></a>
+    <a href="#contact"  data-phase="5"><span class="rail-dot"></span><span class="rail-label" data-i18n="nav.contact">Contact</span></a>
+  </nav>
+
+  <!-- minimal top bar -->
+  <header class="topbar">
+    <a href="#hero" class="brand-mini"><span class="acc">&lt;/&gt;</span> NIMA</a>
+    <div class="topbar-right">
+      <button class="lang-switch" id="lang-switch" aria-label="Switch language">
+        <span class="lang-opt" data-lang="en">EN</span><span class="lang-sep">/</span><span class="lang-opt" data-lang="fa">فا</span>
+      </button>
+    </div>
+  </header>
+
+  <main id="scroll-root">
+
+    <!-- ========== PHASE 0 · HERO · nebula ========== -->
+    <section class="stage" id="hero" data-phase="0">
+      <div class="stage-inner hero-inner">
+        <p class="eyebrow reveal" data-i18n="hero.kicker">FULL-STACK DEVELOPER</p>
+        <h1 class="mega reveal">
+          <span class="mega-line" data-i18n="v2.hero1">I BUILD</span>
+          <span class="mega-line grad" data-i18n="v2.hero2">DIGITAL</span>
+          <span class="mega-line outline" data-i18n="v2.hero3">UNIVERSES</span>
+        </h1>
+        <p class="lede reveal" data-i18n="v2.heroSub">Nima — Python &amp; Java engineer. UX, UI, databases, backends, servers. One person. The whole stack. Zero to launch.</p>
+        <div class="hero-actions reveal">
+          <a class="btn btn-primary" href="#about" data-i18n="v2.begin">Begin the journey</a>
+          <a class="btn btn-ghost" href="#contact" data-i18n="hero.cta2">Contact Me</a>
+        </div>
+        <p class="scroll-hint reveal" aria-hidden="true"><span data-i18n="v2.scroll">SCROLL</span><span class="hint-line"></span></p>
+      </div>
+    </section>
+
+    <!-- skill marquee -->
+    <div class="marquee" aria-hidden="true">
+      <div class="marquee-track" id="marquee-track">
+        <div class="marquee-set">
+          <span>PYTHON</span><i>◆</i><span>JAVA</span><i>◆</i><span>JAVASCRIPT</span><i>◆</i><span>SQL</span><i>◆</i><span>MONGODB</span><i>◆</i><span>HTML/CSS</span><i>◆</i><span>PHOTOSHOP</span><i>◆</i><span>UX/UI</span><i>◆</i>
+        </div>
+      </div>
+    </div>
+
+    <!-- ========== PHASE 1 · ABOUT · DNA helix ========== -->
+    <section class="stage" id="about" data-phase="1">
+      <div class="stage-inner">
+        <div class="stage-head reveal">
+          <span class="stage-num">01</span>
+          <h2 data-i18n="about.title">About Me</h2>
+          <p class="stage-tag" data-i18n="v2.aboutTag">THE CODE IN MY DNA</p>
+        </div>
+        <div class="about-cols">
+          <p class="about-body reveal" id="about-body">…</p>
+          <ul class="cred-list reveal">
+            <li><span class="cred-num">B.Sc</span><span data-i18n="about.f1t">Computer Engineering</span></li>
+            <li><span class="cred-num">M.Sc</span><span data-i18n="about.f1d">Currently pursuing a Master's</span></li>
+            <li><span class="cred-num">2×</span><span data-i18n="about.f2d">Python &amp; Java international certificates</span></li>
+            <li><span class="cred-num">0→100</span><span data-i18n="about.f3d">UX · UI · DB · Backend · Server</span></li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <!-- ========== PHASE 2 · APPS · data grid ========== -->
+    <section class="stage" id="apps" data-phase="2">
+      <div class="stage-inner">
+        <div class="stage-head reveal">
+          <span class="stage-num">02</span>
+          <h2 data-i18n="apps.title">Applications for Sale</h2>
+          <p class="stage-tag" data-i18n="apps.sub">Full source code available. Design customization included.</p>
+        </div>
+        <div class="deck" id="apps-grid"></div>
+      </div>
+    </section>
+
+    <!-- ========== PHASE 3 · WEBSITES · wireframe globe ========== -->
+    <section class="stage" id="websites" data-phase="3">
+      <div class="stage-inner">
+        <div class="stage-head reveal">
+          <span class="stage-num">03</span>
+          <h2 data-i18n="web.title">Websites I've Built</h2>
+          <p class="stage-tag" data-i18n="web.sub">Built from scratch, clean architecture, worldwide.</p>
+        </div>
+        <div class="deck" id="websites-grid"></div>
+      </div>
+    </section>
+
+    <!-- ========== PHASE 4 · BRANDS · orbit rings ========== -->
+    <section class="stage" id="brands" data-phase="4">
+      <div class="stage-inner">
+        <div class="stage-head reveal">
+          <span class="stage-num">04</span>
+          <h2 data-i18n="brands.title">Brands I've Worked With</h2>
+          <p class="stage-tag" data-i18n="v2.brandsTag">IN THEIR ORBIT</p>
+        </div>
+        <div class="orbit-brands reveal" id="brands-row"></div>
+      </div>
+    </section>
+
+    <!-- ========== PHASE 5 · CONTACT · vortex ========== -->
+    <section class="stage" id="contact" data-phase="5">
+      <div class="stage-inner">
+        <div class="stage-head reveal">
+          <span class="stage-num">05</span>
+          <h2 data-i18n="contact.title">Get In Touch</h2>
+          <p class="stage-tag" data-i18n="contact.infoSub">Have a project in mind or want to buy an application?</p>
+        </div>
+        <div class="contact-cols">
+          <form class="v2-form reveal" id="contact-form" novalidate>
+            <div class="v2-row">
+              <div class="v2-field"><input id="f-name" name="name" type="text" required maxlength="120" placeholder=" "><label for="f-name" data-i18n="form.name">Name *</label></div>
+              <div class="v2-field"><input id="f-email" name="email" type="email" maxlength="200" placeholder=" " dir="ltr"><label for="f-email" data-i18n="form.email">Email</label></div>
+            </div>
+            <div class="v2-row">
+              <div class="v2-field"><input id="f-phone" name="phone" type="tel" maxlength="40" placeholder=" " dir="ltr"><label for="f-phone" data-i18n="form.phone">Phone</label></div>
+              <div class="v2-field"><input id="f-subject" name="subject" type="text" maxlength="200" placeholder=" "><label for="f-subject" data-i18n="form.subject">Subject</label></div>
+            </div>
+            <div class="v2-field"><textarea id="f-message" name="message" rows="4" required maxlength="5000" placeholder=" "></textarea><label for="f-message" data-i18n="form.message">Message *</label></div>
+            <button type="submit" class="btn btn-primary btn-wide" id="form-submit" data-i18n="form.send">Send Message</button>
+            <p class="form-status" id="form-status" role="status" aria-live="polite"></p>
+          </form>
+          <div class="channels reveal" id="channels"></div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="v2-footer">
+    <p>© <span id="year"></span> NIMA — <span data-i18n="footer.rights">All rights reserved.</span></p>
+  </footer>
+
+  <!--SEO:NOSCRIPT-->
+  <!--SEO:DATA-->
+  <script src="/static/js/i18n.js"></script>
+  <script src="/static/js/morph.js"></script>
+  <script src="/static/js/app.js"></script>
+</body>
+</html>
