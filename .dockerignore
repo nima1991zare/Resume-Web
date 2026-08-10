@@ -1,0 +1,10 @@
+data/
+static/uploads/*
+__pycache__/
+*.pyc
+.git/
+.gitignore
+*.url
+*.lnk
+start-server.bat
+README.md
