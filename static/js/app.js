@@ -298,8 +298,13 @@
 
   function fmtPrice(price, currency) {
     if (!price || price <= 0) return "";
+    var locale = state.lang === "fa" ? "fa-IR" : "en-US";
+    if (currency === "IRT") {   // Toman — not an ISO code, format manually
+      var n = new Intl.NumberFormat(locale, { maximumFractionDigits: 0 }).format(price);
+      return state.lang === "fa" ? n + " تومان" : n + " Toman";
+    }
     try {
-      return new Intl.NumberFormat(state.lang === "fa" ? "fa-IR" : "en-US", {
+      return new Intl.NumberFormat(locale, {
         style: "currency", currency: currency || "USD", maximumFractionDigits: 0
       }).format(price);
     } catch (e) { return price + " " + (currency || ""); }
