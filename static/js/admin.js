@@ -173,17 +173,20 @@
   function loadItems(table) {
     api("/api/admin/items/" + table).then(function (rows) {
       var el = document.getElementById("table-" + table);
+      var hasBuyable = table === "apps" || table === "games";
+      var hasUrl = table === "websites" || table === "games";
       var head = "<tr><th>Image</th><th>Title</th><th>Price</th>" +
-        (table === "apps" ? "<th>Buyable</th>" : "<th>URL</th>") +
+        (hasBuyable ? "<th>Buyable</th>" : "") + (hasUrl ? "<th>URL</th>" : "") +
         "<th>Status</th><th>Sort</th><th>Actions</th></tr>";
       el.innerHTML = head + rows.map(function (r) {
         return "<tr data-id='" + r.id + "'>" +
           "<td>" + (r.image ? '<img class="row-img" src="' + esc(r.image) + '" alt="">' : '<span class="row-img"></span>') + "</td>" +
           "<td><strong>" + esc(r.title_en) + "</strong><br><span style='color:var(--muted);font-size:.8rem'>" + esc(r.title_fa) + "</span></td>" +
           "<td>" + r.price + " " + esc(r.currency) + "</td>" +
-          (table === "apps"
-            ? "<td>" + (r.buyable ? '<span class="tag">Yes</span>' : '<span class="tag off">No</span>') + "</td>"
-            : "<td style='max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap'>" + esc(r.url || "—") + "</td>") +
+          (hasBuyable
+            ? "<td>" + (r.buyable ? '<span class="tag">Yes</span>' : '<span class="tag off">No</span>') + "</td>" : "") +
+          (hasUrl
+            ? "<td style='max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap'>" + esc(r.url || "—") + "</td>" : "") +
           "<td>" + (r.active ? '<span class="tag">Active</span>' : '<span class="tag off">Hidden</span>') + "</td>" +
           "<td>" + r.sort + "</td>" +
           '<td><div class="row-actions">' +
@@ -195,7 +198,7 @@
     }).catch(function () {});
   }
 
-  ["apps", "websites"].forEach(function (table) {
+  ["apps", "games", "websites"].forEach(function (table) {
     document.getElementById("table-" + table).addEventListener("click", function (e) {
       var btn = e.target.closest("button[data-act]");
       if (!btn) return;
@@ -243,9 +246,12 @@
   function openItemModal(table, row) {
     editCtx = { table: table, id: row ? row.id : null };
     document.getElementById("modal-title").textContent =
-      (row ? "Edit " : "Add ") + (table === "apps" ? "Application" : "Website");
-    document.getElementById("url-field").style.display = table === "websites" ? "" : "none";
-    document.getElementById("buyable-field").style.display = table === "apps" ? "" : "none";
+      (row ? "Edit " : "Add ") +
+      (table === "apps" ? "Application" : (table === "games" ? "Game" : "Website"));
+    document.getElementById("url-field").style.display =
+      (table === "websites" || table === "games") ? "" : "none";
+    document.getElementById("buyable-field").style.display =
+      (table === "apps" || table === "games") ? "" : "none";
 
     itemForm.reset();
     itemErr.textContent = "";
@@ -490,6 +496,7 @@
   var loaders = {
     stats: loadStats,
     apps: function () { loadItems("apps"); },
+    games: function () { loadItems("games"); },
     websites: function () { loadItems("websites"); },
     brands: loadBrands,
     messages: loadMessages,

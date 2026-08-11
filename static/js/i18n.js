@@ -3,9 +3,13 @@ window.I18N = {
   en: {
     "nav.about": "About",
     "nav.apps": "Applications",
+    "nav.games": "Games",
     "nav.websites": "Websites",
     "nav.brands": "Brands",
     "nav.contact": "Contact",
+
+    "games.title": "Games I've Made",
+    "games.sub": "Playable worlds built from scratch — physics, audio and level generation included.",
 
     "hero.kicker": "FULL-STACK DEVELOPER",
     "hero.hi": "Hi, I'm",
@@ -66,9 +70,13 @@ window.I18N = {
   fa: {
     "nav.about": "درباره من",
     "nav.apps": "اپلیکیشن‌ها",
+    "nav.games": "بازی‌ها",
     "nav.websites": "وب‌سایت‌ها",
     "nav.brands": "برندها",
     "nav.contact": "تماس",
+
+    "games.title": "بازی‌هایی که ساخته‌ام",
+    "games.sub": "دنیاهای قابل بازی که از صفر ساخته شده‌اند — با فیزیک، صدا و تولید مرحله.",
 
     "hero.kicker": "توسعه‌دهنده فول‌استک",
     "hero.hi": "سلام، من",

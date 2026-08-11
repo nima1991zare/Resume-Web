@@ -235,12 +235,16 @@ def _load_public_content() -> dict:
         apps = [dict(r) for r in conn.execute(
             "SELECT id,title_en,title_fa,desc_en,desc_fa,image,tech,price,currency,buyable "
             "FROM apps WHERE active=1 ORDER BY sort, id")]
+        games = [dict(r) for r in conn.execute(
+            "SELECT id,title_en,title_fa,desc_en,desc_fa,image,url,tech,price,currency,buyable "
+            "FROM games WHERE active=1 ORDER BY sort, id")]
         websites = [dict(r) for r in conn.execute(
             "SELECT id,title_en,title_fa,desc_en,desc_fa,image,url,tech,price,currency "
             "FROM websites WHERE active=1 ORDER BY sort, id")]
         brands = [dict(r) for r in conn.execute(
             "SELECT id,name,logo,url FROM brands WHERE active=1 ORDER BY sort, id")]
-        return {"settings": settings, "apps": apps, "websites": websites, "brands": brands}
+        return {"settings": settings, "apps": apps, "games": games,
+                "websites": websites, "brands": brands}
     finally:
         conn.close()
 
@@ -345,7 +349,17 @@ def admin_stats(authorization: Optional[str] = Header(None)):
         conn.close()
 
 
-TABLES = {"apps": "apps", "websites": "websites"}
+TABLES = {"apps": "apps", "games": "games", "websites": "websites"}
+
+# writable columns per table (games have both a demo URL and a buyable flag)
+TABLE_COLS = {
+    "apps": ["title_en", "title_fa", "desc_en", "desc_fa", "image", "tech",
+             "price", "currency", "buyable", "sort", "active"],
+    "games": ["title_en", "title_fa", "desc_en", "desc_fa", "image", "url", "tech",
+              "price", "currency", "buyable", "sort", "active"],
+    "websites": ["title_en", "title_fa", "desc_en", "desc_fa", "image", "url", "tech",
+                 "price", "currency", "sort", "active"],
+}
 
 
 @app.get("/api/admin/items/{table}")
@@ -366,22 +380,15 @@ def admin_create_item(table: str, data: ItemIn, authorization: Optional[str] = H
     require_admin(authorization)
     if table not in TABLES:
         raise HTTPException(status_code=404)
-    data.url = _validate_link(data.url, "Live URL")
+    data.url = _validate_link(data.url, "URL")
     data.image = _validate_link(data.image, "Image", allow_local=True)
+    cols = TABLE_COLS[table]
     conn = get_db()
     try:
-        if table == "apps":
-            cur = conn.execute(
-                "INSERT INTO apps(title_en,title_fa,desc_en,desc_fa,image,tech,price,currency,buyable,sort,active) "
-                "VALUES(?,?,?,?,?,?,?,?,?,?,?)",
-                (data.title_en, data.title_fa, data.desc_en, data.desc_fa, data.image,
-                 data.tech, data.price, data.currency, data.buyable, data.sort, data.active))
-        else:
-            cur = conn.execute(
-                "INSERT INTO websites(title_en,title_fa,desc_en,desc_fa,image,url,tech,price,currency,sort,active) "
-                "VALUES(?,?,?,?,?,?,?,?,?,?,?)",
-                (data.title_en, data.title_fa, data.desc_en, data.desc_fa, data.image,
-                 data.url, data.tech, data.price, data.currency, data.sort, data.active))
+        cur = conn.execute(
+            f"INSERT INTO {TABLES[table]}({','.join(cols)}) "
+            f"VALUES({','.join('?' * len(cols))})",
+            tuple(getattr(data, c) for c in cols))
         conn.commit()
         return {"id": cur.lastrowid}
     finally:
@@ -394,24 +401,14 @@ def admin_update_item(table: str, item_id: int, data: ItemIn,
     require_admin(authorization)
     if table not in TABLES:
         raise HTTPException(status_code=404)
-    data.url = _validate_link(data.url, "Live URL")
+    data.url = _validate_link(data.url, "URL")
     data.image = _validate_link(data.image, "Image", allow_local=True)
+    cols = TABLE_COLS[table]
     conn = get_db()
     try:
-        if table == "apps":
-            conn.execute(
-                "UPDATE apps SET title_en=?,title_fa=?,desc_en=?,desc_fa=?,image=?,tech=?,"
-                "price=?,currency=?,buyable=?,sort=?,active=? WHERE id=?",
-                (data.title_en, data.title_fa, data.desc_en, data.desc_fa, data.image,
-                 data.tech, data.price, data.currency, data.buyable, data.sort,
-                 data.active, item_id))
-        else:
-            conn.execute(
-                "UPDATE websites SET title_en=?,title_fa=?,desc_en=?,desc_fa=?,image=?,url=?,"
-                "tech=?,price=?,currency=?,sort=?,active=? WHERE id=?",
-                (data.title_en, data.title_fa, data.desc_en, data.desc_fa, data.image,
-                 data.url, data.tech, data.price, data.currency, data.sort,
-                 data.active, item_id))
+        conn.execute(
+            f"UPDATE {TABLES[table]} SET {','.join(c + '=?' for c in cols)} WHERE id=?",
+            tuple(getattr(data, c) for c in cols) + (item_id,))
         conn.commit()
         return {"ok": True}
     finally:
@@ -658,24 +655,27 @@ def _build_jsonld(content: dict, base: str) -> str:
     }
 
     products = []
-    for a in content["apps"]:
-        if not a.get("buyable"):
-            continue
-        p = {
-            "@type": "Product",
-            "name": a["title_en"],
-            "description": a["desc_en"],
-            "offers": {
-                "@type": "Offer",
-                "price": str(a["price"]),
-                "priceCurrency": a["currency"],
-                "availability": "https://schema.org/InStock",
-            },
-        }
-        if a.get("image"):
-            img = a["image"]
-            p["image"] = img if img.startswith("http") else base + img
-        products.append(p)
+    for kind, items in (("apps", content["apps"]), ("games", content["games"])):
+        for a in items:
+            if not a.get("buyable"):
+                continue
+            p = {
+                "@type": "Product",
+                "name": a["title_en"],
+                "description": a["desc_en"],
+                "url": f"{base}/p/{kind}/{a['id']}",
+                "offers": {
+                    "@type": "Offer",
+                    "price": str(a["price"]),
+                    "priceCurrency": a["currency"],
+                    "availability": "https://schema.org/InStock",
+                    "url": f"{base}/p/{kind}/{a['id']}",
+                },
+            }
+            if a.get("image"):
+                img = a["image"]
+                p["image"] = img if img.startswith("http") else base + img
+            products.append(p)
 
     graph = [person, website]
     if products:
@@ -700,9 +700,16 @@ def _build_noscript(content: dict) -> str:
     if content["apps"]:
         parts.append("<h2>Applications for sale</h2><ul>")
         for a in content["apps"]:
-            price = f' — {a["price"]:g} {a["currency"]}' if a.get("price") else ""
+            price = f' — {a["price"]:,.0f} {a["currency"]}' if a.get("price") else ""
             parts.append("<li><strong>" + _esc(a["title_en"]) + "</strong>: "
                          + _esc(a["desc_en"]) + _esc(price) + "</li>")
+        parts.append("</ul>")
+    if content["games"]:
+        parts.append("<h2>Games</h2><ul>")
+        for g in content["games"]:
+            price = f' — {g["price"]:,.0f} {g["currency"]}' if g.get("price") else ""
+            parts.append("<li><strong>" + _esc(g["title_en"]) + "</strong>: "
+                         + _esc(g["desc_en"]) + _esc(price) + "</li>")
         parts.append("</ul>")
     if content["websites"]:
         parts.append("<h2>Websites built</h2><ul>")
@@ -744,10 +751,88 @@ def _render_index(request: Request) -> str:
     return html
 
 
+TYPE_LABEL = {"apps": "APPLICATION", "games": "GAME", "websites": "WEBSITE"}
+
+
+def _render_product(request: Request, table: str, item_id: int) -> Optional[str]:
+    if table not in TABLES:
+        return None
+    conn = get_db()
+    try:
+        row = conn.execute(
+            f"SELECT * FROM {TABLES[table]} WHERE id=? AND active=1", (item_id,)).fetchone()
+        if row is None:
+            return None
+        item = dict(row)
+        settings = {k: get_setting(conn, k) for k in PUBLIC_SETTINGS}
+    finally:
+        conn.close()
+
+    base = _base_url(request, settings)
+    page_url = f"{base}/p/{table}/{item_id}"
+    img = item.get("image") or ""
+    img_abs = img if img.startswith("http") else (base + img if img else base + "/static/icons/og-image.png")
+    desc_meta = (item["desc_en"] or "")[:158]
+
+    jsonld = {
+        "@context": "https://schema.org",
+        "@type": "Product",
+        "name": item["title_en"],
+        "description": item["desc_en"],
+        "image": img_abs,
+        "url": page_url,
+    }
+    if item.get("buyable", 1) and item.get("price"):
+        jsonld["offers"] = {
+            "@type": "Offer", "price": str(item["price"]),
+            "priceCurrency": item["currency"],
+            "availability": "https://schema.org/InStock", "url": page_url,
+        }
+
+    data = {
+        "type": table, "id": item["id"],
+        "title_en": item["title_en"], "title_fa": item["title_fa"],
+        "desc_en": item["desc_en"], "desc_fa": item["desc_fa"],
+        "tech": item.get("tech", ""), "price": item.get("price", 0),
+        "currency": item.get("currency", "USD"),
+        "buyable": item.get("buyable", 0), "url": item.get("url", ""),
+    }
+
+    tech_html = "".join(
+        "<span>" + _esc(x.strip()) + "</span>"
+        for x in (item.get("tech") or "").replace(",", "·").split("·") if x.strip())
+    img_html = (f'<img src="{_esc(img)}" alt="{_esc(item["title_en"])}">' if img
+                else '<img src="/static/icons/og-image.png" alt="">')
+
+    html = (STATIC_DIR / "product.html").read_text(encoding="utf-8")
+    html = html.replace("<!--P:TITLE-->", _esc(item["title_en"]))
+    html = html.replace("<!--P:DESC-->", _esc(desc_meta))
+    html = html.replace("<!--P:DESC_FULL-->", _esc(item["desc_en"]))
+    html = html.replace("<!--P:CANONICAL-->", f'<link rel="canonical" href="{_esc(page_url)}">')
+    html = html.replace("<!--P:OG-->",
+                        f'<meta property="og:url" content="{_esc(page_url)}">\n'
+                        f'  <meta property="og:image" content="{_esc(img_abs)}">')
+    html = html.replace("<!--P:JSONLD-->",
+                        '<script type="application/ld+json">' + _json_for_script(jsonld) + "</script>")
+    html = html.replace("<!--P:BADGE-->", TYPE_LABEL[table])
+    html = html.replace("<!--P:IMAGE-->", img_html)
+    html = html.replace("<!--P:TECH-->", tech_html)
+    html = html.replace("<!--P:DATA-->", _json_for_script(data))
+    return html
+
+
 # ----------------------------------------------------------------- page routes
 @app.get("/", include_in_schema=False)
 def index(request: Request):
     return HTMLResponse(_render_index(request))
+
+
+@app.get("/p/{table}/{item_id}", include_in_schema=False)
+def product_page(table: str, item_id: int, request: Request):
+    html = _render_product(request, table, item_id)
+    if html is None:
+        return HTMLResponse(_render_index(request), status_code=404)
+    return HTMLResponse(html)
 
 
 @app.get("/robots.txt", include_in_schema=False)
@@ -772,17 +857,24 @@ def sitemap(request: Request):
     conn = get_db()
     try:
         settings = {"site_url": get_setting(conn, "site_url")}
+        product_urls = []
+        for table in ("apps", "games", "websites"):
+            for r in conn.execute(f"SELECT id FROM {table} WHERE active=1 ORDER BY id"):
+                product_urls.append(f"/p/{table}/{r['id']}")
     finally:
         conn.close()
     base = _base_url(request, settings)
     today = time.strftime("%Y-%m-%d")
-    xml = (
-        '<?xml version="1.0" encoding="UTF-8"?>\n'
-        '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n'
+    rows = [
         f"  <url><loc>{base}/</loc><lastmod>{today}</lastmod>"
-        "<changefreq>weekly</changefreq><priority>1.0</priority></url>\n"
-        "</urlset>\n"
-    )
+        "<changefreq>weekly</changefreq><priority>1.0</priority></url>"
+    ]
+    for u in product_urls:
+        rows.append(f"  <url><loc>{base}{u}</loc><lastmod>{today}</lastmod>"
+                    "<changefreq>monthly</changefreq><priority>0.8</priority></url>")
+    xml = ('<?xml version="1.0" encoding="UTF-8"?>\n'
+           '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n'
+           + "\n".join(rows) + "\n</urlset>\n")
     return Response(content=xml, media_type="application/xml")
 
 

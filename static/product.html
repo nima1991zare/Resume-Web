@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title><!--P:TITLE--> — Nima</title>
+  <meta name="description" content="<!--P:DESC-->">
+  <meta name="theme-color" content="#050810">
+  <!--P:CANONICAL-->
+  <meta property="og:type" content="product">
+  <meta property="og:site_name" content="Nima — Full-Stack Developer">
+  <meta property="og:title" content="<!--P:TITLE-->">
+  <meta property="og:description" content="<!--P:DESC-->">
+  <!--P:OG-->
+  <meta name="twitter:card" content="summary_large_image">
+  <!--P:JSONLD-->
+  <link rel="icon" type="image/svg+xml" href="/static/icons/favicon.svg">
+  <link rel="stylesheet" href="/static/css/fonts.css">
+  <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+  <canvas id="morph-canvas" aria-hidden="true"></canvas>
+  <div class="vignette" aria-hidden="true"></div>
+  <div class="noise" aria-hidden="true"></div>
+
+  <header class="topbar">
+    <a href="/" class="brand-mini"><span class="acc">&lt;/&gt;</span> NIMA</a>
+    <div class="topbar-right">
+      <button class="lang-switch" id="lang-switch" aria-label="Switch language">
+        <span class="lang-opt" data-lang="en">EN</span><span class="lang-sep">/</span><span class="lang-opt" data-lang="fa">فا</span>
+      </button>
+    </div>
+  </header>
+
+  <main class="pd-wrap">
+    <a href="/" class="pd-back" id="pd-back">← Back to portfolio</a>
+    <div class="pd-grid">
+      <div class="pd-media">
+        <!--P:IMAGE-->
+      </div>
+      <div class="pd-info">
+        <span class="pd-badge" id="pd-badge"><!--P:BADGE--></span>
+        <h1 class="pd-title" id="pd-title"><!--P:TITLE--></h1>
+        <p class="pd-price" id="pd-price"></p>
+        <p class="pd-desc" id="pd-desc"><!--P:DESC_FULL--></p>
+        <div class="vtech" id="pd-tech"><!--P:TECH--></div>
+        <div class="pd-actions" id="pd-actions"></div>
+        <p class="pd-note" id="pd-note" hidden></p>
+      </div>
+    </div>
+  </main>
+
+  <footer class="v2-footer">
+    <p>© <span id="year"></span> NIMA</p>
+  </footer>
+
+  <script id="product-data" type="application/json"><!--P:DATA--></script>
+  <script src="/static/js/i18n.js"></script>
+  <script src="/static/js/morph.js"></script>
+  <script src="/static/js/product.js"></script>
+</body>
+</html>

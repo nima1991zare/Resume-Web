@@ -159,6 +159,7 @@
 
   function updateSectionVisibility(c) {
     setSectionVisible("apps", c.apps.length > 0);
+    setSectionVisible("games", (c.games || []).length > 0);
     setSectionVisible("websites", c.websites.length > 0);
     setSectionVisible("brands", c.brands.length > 0);
     // renumber the visible section headers (01, 02, …)
@@ -327,23 +328,41 @@
     document.getElementById("about-body").textContent = c.settings[aboutKey] || c.settings.about_en || "";
 
     document.getElementById("apps-grid").innerHTML = c.apps.map(function (a, i) {
+      var link = "/p/apps/" + a.id;
       return '<article class="vcard reveal in">' +
-        '<div class="vcard-media">' + media(a) +
+        '<a class="vcard-media" href="' + link + '">' + media(a) +
           '<span class="vcard-index">APP/' + pad(i + 1) + "</span>" +
           (a.buyable ? '<span class="vbadge">' + t("apps.buyable") + "</span>" : "") +
-        "</div>" +
-        '<div class="vcard-body"><h3>' + esc(pick(a, "title")) + "</h3>" +
+        "</a>" +
+        '<div class="vcard-body"><h3><a href="' + link + '">' + esc(pick(a, "title")) + "</a></h3>" +
           '<p class="desc">' + esc(pick(a, "desc")) + "</p>" + tech(a.tech) +
           '<div class="vfoot"><span class="vprice">' + fmtPrice(a.price, a.currency) + "</span>" +
             (a.buyable ? '<a class="btn btn-primary" href="#contact" data-subject="' + esc(pick(a, "title")) + '">' + t("apps.buy") + "</a>" : "") +
           "</div></div></article>";
     }).join("");
 
-    document.getElementById("websites-grid").innerHTML = c.websites.map(function (w, i) {
+    document.getElementById("games-grid").innerHTML = (c.games || []).map(function (g, i) {
+      var link = "/p/games/" + g.id;
       return '<article class="vcard reveal in">' +
-        '<div class="vcard-media">' + media(w) +
-          '<span class="vcard-index">WEB/' + pad(i + 1) + "</span></div>" +
-        '<div class="vcard-body"><h3>' + esc(pick(w, "title")) + "</h3>" +
+        '<a class="vcard-media" href="' + link + '">' + media(g) +
+          '<span class="vcard-index">GAME/' + pad(i + 1) + "</span>" +
+          (g.buyable ? '<span class="vbadge">' + t("apps.buyable") + "</span>" : "") +
+        "</a>" +
+        '<div class="vcard-body"><h3><a href="' + link + '">' + esc(pick(g, "title")) + "</a></h3>" +
+          '<p class="desc">' + esc(pick(g, "desc")) + "</p>" + tech(g.tech) +
+          '<div class="vfoot"><span class="vprice">' + fmtPrice(g.price, g.currency) + "</span>" +
+            (isLink(g.url)
+              ? '<a class="btn btn-ghost" href="' + esc(g.url) + '" target="_blank" rel="noopener">' + t("web.visit") + "</a>"
+              : (g.buyable ? '<a class="btn btn-primary" href="#contact" data-subject="' + esc(pick(g, "title")) + '">' + t("apps.buy") + "</a>" : "")) +
+          "</div></div></article>";
+    }).join("");
+
+    document.getElementById("websites-grid").innerHTML = c.websites.map(function (w, i) {
+      var link = "/p/websites/" + w.id;
+      return '<article class="vcard reveal in">' +
+        '<a class="vcard-media" href="' + link + '">' + media(w) +
+          '<span class="vcard-index">WEB/' + pad(i + 1) + "</span></a>" +
+        '<div class="vcard-body"><h3><a href="' + link + '">' + esc(pick(w, "title")) + "</a></h3>" +
           '<p class="desc">' + esc(pick(w, "desc")) + "</p>" + tech(w.tech) +
           '<div class="vfoot"><span class="vprice">' + fmtPrice(w.price, w.currency) + "</span>" +
             (isLink(w.url)
@@ -469,6 +488,12 @@
       }).catch(function () {});
     }
   } catch (e) {}
+
+  // prefill contact subject from ?subject= (used by product pages)
+  try {
+    var qsub = new URLSearchParams(location.search).get("subject");
+    if (qsub) document.getElementById("f-subject").value = qsub;
+  } catch (e) { /* ignore */ }
 
   document.getElementById("year").textContent = new Date().getFullYear();
 

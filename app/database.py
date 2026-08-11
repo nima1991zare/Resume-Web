@@ -52,6 +52,22 @@ CREATE TABLE IF NOT EXISTS apps (
     active    INTEGER NOT NULL DEFAULT 1
 );
 
+CREATE TABLE IF NOT EXISTS games (
+    id        INTEGER PRIMARY KEY AUTOINCREMENT,
+    title_en  TEXT NOT NULL,
+    title_fa  TEXT NOT NULL DEFAULT '',
+    desc_en   TEXT NOT NULL DEFAULT '',
+    desc_fa   TEXT NOT NULL DEFAULT '',
+    image     TEXT NOT NULL DEFAULT '',
+    url       TEXT NOT NULL DEFAULT '',
+    tech      TEXT NOT NULL DEFAULT '',
+    price     REAL NOT NULL DEFAULT 0,
+    currency  TEXT NOT NULL DEFAULT 'USD',
+    buyable   INTEGER NOT NULL DEFAULT 1,
+    sort      INTEGER NOT NULL DEFAULT 0,
+    active    INTEGER NOT NULL DEFAULT 1
+);
+
 CREATE TABLE IF NOT EXISTS websites (
     id        INTEGER PRIMARY KEY AUTOINCREMENT,
     title_en  TEXT NOT NULL,

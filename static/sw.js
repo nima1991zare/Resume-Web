@@ -1,10 +1,10 @@
-/* Service worker
+﻿/* Service worker
    - fonts/icons/uploads (immutable): cache-first
-   - CSS/JS: stale-while-revalidate (instant load, silently refreshed —
+   - CSS/JS: stale-while-revalidate (instant load, silently refreshed â€”
      code updates always arrive by the next visit, never stuck stale)
    - pages: network-first with offline fallback
    - API and the entire admin panel: NEVER touched by this worker */
-var CACHE = "nima-v10";
+var CACHE = "nima-v12";
 var PRECACHE = [
   "/",
   "/static/css/fonts.css",
@@ -101,3 +101,5 @@ self.addEventListener("fetch", function (e) {
     })
   );
 });
+
+
