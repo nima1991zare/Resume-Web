@@ -386,6 +386,63 @@ a:focus-visible, button:focus-visible, input:focus-visible, textarea:focus-visib
   outline: 2px solid var(--acc-0); outline-offset: 3px;
 }
 
+/* ---------------- product detail page ---------------- */
+.pd-wrap {
+  position: relative; z-index: 10;
+  max-width: 1100px; margin-inline: auto;
+  padding: 110px clamp(16px, 5vw, 48px) 90px;
+  min-height: 80vh;
+}
+.pd-back {
+  display: inline-flex; align-items: center; gap: 8px;
+  color: var(--muted); font-family: var(--font-d); font-size: 0.9rem;
+  min-height: 44px; margin-bottom: 18px;
+  transition: color 0.2s;
+}
+.pd-back:hover { color: var(--acc-0); }
+.pd-grid {
+  display: grid; grid-template-columns: 1.15fr 1fr;
+  gap: clamp(24px, 4vw, 56px); align-items: start;
+}
+.pd-media {
+  border-radius: 20px; overflow: hidden;
+  border: 1px solid var(--line);
+  background: rgba(8, 13, 26, 0.6);
+}
+.pd-media img { width: 100%; display: block; }
+.pd-badge {
+  display: inline-block; font-family: var(--font-d);
+  font-size: 0.68rem; font-weight: 700; letter-spacing: 2.5px; text-transform: uppercase;
+  color: var(--acc-0); border: 1px solid var(--acc-0);
+  border-radius: 999px; padding: 6px 16px;
+}
+.pd-title {
+  font-size: clamp(2rem, 5.5vw, 3.4rem); font-weight: 700;
+  letter-spacing: -0.02em; margin: 14px 0 6px;
+}
+.pd-price {
+  font-family: var(--font-d); font-weight: 700; font-size: 1.55rem;
+  color: var(--acc-0); margin-bottom: 18px; direction: ltr; display: inline-block;
+}
+.pd-desc {
+  color: var(--muted); font-size: 1.06rem; line-height: 1.75;
+  margin-bottom: 22px; white-space: pre-line;
+}
+.pd-actions { display: flex; gap: 12px; flex-wrap: wrap; margin-top: 26px; }
+.pd-note {
+  margin-top: 24px; padding: 15px 18px;
+  border: 1px solid var(--line); border-radius: 14px;
+  background: rgba(8, 13, 26, 0.55); color: var(--muted); font-size: 0.9rem;
+}
+.vcard-media { text-decoration: none; }
+h3 a { color: inherit; }
+h3 a:hover { color: var(--acc-0); }
+
+@media (max-width: 860px) {
+  .pd-grid { grid-template-columns: 1fr; }
+  .pd-wrap { padding-top: 92px; }
+}
+
 /* ---------------- responsive ---------------- */
 @media (max-width: 980px) {
   .about-cols, .contact-cols { grid-template-columns: 1fr; }

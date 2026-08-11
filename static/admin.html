@@ -1,13 +1,13 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en" dir="ltr">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="robots" content="noindex, nofollow">
-  <title>Admin — Nima Portfolio</title>
+  <title>Admin â€” Nima Portfolio</title>
   <link rel="icon" type="image/svg+xml" href="/static/icons/favicon.svg">
   <link rel="stylesheet" href="/static/css/fonts.css">
-  <link rel="stylesheet" href="/static/css/admin.css?v=3">
+  <link rel="stylesheet" href="/static/css/admin.css?v=4">
 </head>
 <body>
   <!-- ================= LOGIN ================= -->
@@ -40,6 +40,10 @@
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="8" height="8" rx="2"/><rect x="13" y="3" width="8" height="8" rx="2"/><rect x="3" y="13" width="8" height="8" rx="2"/><rect x="13" y="13" width="8" height="8" rx="2"/></svg>
           Applications
         </button>
+        <button data-tab="games">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M6 12h4M8 10v4M15 11h.01M18 13h.01"/><path d="M17.3 5H6.7a4.7 4.7 0 00-4.6 5.6l1 5.3a2.8 2.8 0 005 1.1l1.2-1.6a3 3 0 012.4-1.2h.6a3 3 0 012.4 1.2l1.2 1.6a2.8 2.8 0 005-1.1l1-5.3A4.7 4.7 0 0017.3 5z"/></svg>
+          Games
+        </button>
         <button data-tab="websites">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3a15 15 0 010 18M12 3a15 15 0 000 18"/></svg>
           Websites
@@ -58,7 +62,7 @@
         </button>
       </nav>
       <div class="sidebar-foot">
-        <a href="/" target="_blank" rel="noopener" class="side-link">View Site ↗</a>
+        <a href="/" target="_blank" rel="noopener" class="side-link">View Site â†—</a>
         <button id="logout-btn" class="side-link danger">Logout</button>
       </div>
     </aside>
@@ -68,13 +72,13 @@
       <section class="tab" id="tab-stats">
         <h2>Dashboard</h2>
         <div class="stat-cards">
-          <div class="scard"><span class="scard-num" id="st-total">–</span><span class="scard-label">Total Visits</span></div>
-          <div class="scard"><span class="scard-num" id="st-today">–</span><span class="scard-label">Today</span></div>
-          <div class="scard"><span class="scard-num" id="st-week">–</span><span class="scard-label">Last 7 Days</span></div>
-          <div class="scard"><span class="scard-num" id="st-unread">–</span><span class="scard-label">Unread Messages</span></div>
+          <div class="scard"><span class="scard-num" id="st-total">â€“</span><span class="scard-label">Total Visits</span></div>
+          <div class="scard"><span class="scard-num" id="st-today">â€“</span><span class="scard-label">Today</span></div>
+          <div class="scard"><span class="scard-num" id="st-week">â€“</span><span class="scard-label">Last 7 Days</span></div>
+          <div class="scard"><span class="scard-num" id="st-unread">â€“</span><span class="scard-label">Unread Messages</span></div>
         </div>
         <div class="card">
-          <h3>Visits — last 30 days</h3>
+          <h3>Visits â€” last 30 days</h3>
           <div class="chart" id="chart-days"></div>
         </div>
         <div class="card">
@@ -90,6 +94,15 @@
           <button class="btn btn-primary" data-add="apps">+ Add Application</button>
         </div>
         <div class="table-wrap"><table id="table-apps"></table></div>
+      </section>
+
+      <!-- ===== games ===== -->
+      <section class="tab" id="tab-games" hidden>
+        <div class="tab-head">
+          <h2>Games</h2>
+          <button class="btn btn-primary" data-add="games">+ Add Game</button>
+        </div>
+        <div class="table-wrap"><table id="table-games"></table></div>
       </section>
 
       <!-- ===== websites ===== -->
@@ -122,7 +135,7 @@
         <form class="card form-stack" id="settings-form">
           <h3>About Description</h3>
           <div class="field"><label>About (English)</label><textarea name="about_en" rows="5"></textarea></div>
-          <div class="field"><label>About (Persian / فارسی)</label><textarea name="about_fa" rows="5" dir="rtl"></textarea></div>
+          <div class="field"><label>About (Persian / ÙØ§Ø±Ø³ÛŒ)</label><textarea name="about_fa" rows="5" dir="rtl"></textarea></div>
           <h3>Site Titles</h3>
           <div class="grid-2">
             <div class="field"><label>Title (EN)</label><input name="site_title_en"></div>
@@ -130,15 +143,15 @@
           </div>
           <h3>SEO</h3>
           <div class="field">
-            <label>Public Site URL (used for canonical link, sitemap &amp; social previews — e.g. https://nima.dev)</label>
+            <label>Public Site URL (used for canonical link, sitemap &amp; social previews â€” e.g. https://nima.dev)</label>
             <input name="site_url" placeholder="https://yourdomain.com" dir="ltr">
           </div>
           <h3>Contact Channels</h3>
           <div class="grid-2">
             <div class="field"><label>Phone</label><input name="phone"></div>
             <div class="field"><label>Email</label><input name="email" type="email"></div>
-            <div class="field"><label>Telegram URL</label><input name="telegram" placeholder="https://t.me/…"></div>
-            <div class="field"><label>WhatsApp URL</label><input name="whatsapp" placeholder="https://wa.me/…"></div>
+            <div class="field"><label>Telegram URL</label><input name="telegram" placeholder="https://t.me/â€¦"></div>
+            <div class="field"><label>WhatsApp URL</label><input name="whatsapp" placeholder="https://wa.me/â€¦"></div>
             <div class="field"><label>GitHub URL</label><input name="github"></div>
             <div class="field"><label>LinkedIn URL</label><input name="linkedin"></div>
           </div>
@@ -172,8 +185,8 @@
         <div class="field"><label>Description (FA)</label><textarea name="desc_fa" rows="3" dir="rtl"></textarea></div>
       </div>
       <div class="grid-2">
-        <div class="field"><label>Tech (e.g. Python · JS · SQL)</label><input name="tech"></div>
-        <div class="field" id="url-field"><label>Live URL (optional — must start with https://)</label><input name="url" placeholder="https://project-demo.com" dir="ltr"></div>
+        <div class="field"><label>Tech (e.g. Python Â· JS Â· SQL)</label><input name="tech"></div>
+        <div class="field" id="url-field"><label>Live URL (optional â€” must start with https://)</label><input name="url" placeholder="https://project-demo.com" dir="ltr"></div>
       </div>
       <div class="grid-3">
         <div class="field"><label>Price</label><input name="price" type="number" min="0" step="0.01" value="0"></div>
@@ -193,7 +206,7 @@
       <div class="field">
         <label>Image</label>
         <div class="upload-row">
-          <input name="image" placeholder="/static/uploads/… or URL">
+          <input name="image" placeholder="/static/uploads/â€¦ or URL">
           <label class="btn btn-ghost upload-btn">Upload<input type="file" id="item-upload" accept="image/*" hidden></label>
         </div>
         <img id="img-preview" class="img-preview" alt="" hidden>
@@ -211,11 +224,11 @@
     <form class="modal-card" id="brand-form">
       <h3 id="brand-modal-title">Brand</h3>
       <div class="field"><label>Name *</label><input name="name" required></div>
-      <div class="field"><label>Website URL (optional — must start with https://, leave empty if none)</label><input name="url" placeholder="https://brand-website.com" dir="ltr"></div>
+      <div class="field"><label>Website URL (optional â€” must start with https://, leave empty if none)</label><input name="url" placeholder="https://brand-website.com" dir="ltr"></div>
       <div class="field">
         <label>Logo</label>
         <div class="upload-row">
-          <input name="logo" placeholder="/static/uploads/… or URL">
+          <input name="logo" placeholder="/static/uploads/â€¦ or URL">
           <label class="btn btn-ghost upload-btn">Upload<input type="file" id="brand-upload" accept="image/*" hidden></label>
         </div>
       </div>
@@ -231,6 +244,7 @@
     </form>
   </div>
 
-  <script src="/static/js/admin.js?v=2"></script>
+  <script src="/static/js/admin.js?v=3"></script>
 </body>
 </html>
+

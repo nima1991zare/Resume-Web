@@ -58,9 +58,10 @@
     [74, 222, 128],   // 0 hero      — green
     [56, 189, 248],   // 1 about     — cyan
     [167, 139, 250],  // 2 apps      — violet
-    [96, 165, 250],   // 3 websites  — blue
-    [251, 191, 36],   // 4 brands    — amber
-    [74, 222, 128]    // 5 contact   — green
+    [251, 113, 133],  // 3 games     — rose
+    [96, 165, 250],   // 4 websites  — blue
+    [251, 191, 36],   // 5 brands    — amber
+    [74, 222, 128]    // 6 contact   — green
   ];
 
   /* ---------------- formations ----------------
@@ -127,7 +128,39 @@
     return (i % gCols) < gCols - 1 ? i + 1 : -1;
   }
 
-  // 3 · GLOBE — fibonacci sphere, rotating
+  // 3 · INVADER — classic space-invader bitmap doing its shuffle
+  var INV = [
+    "00100000100",
+    "00010001000",
+    "00111111100",
+    "01101110110",
+    "11111111111",
+    "10111111101",
+    "10100000101",
+    "00011011000"
+  ];
+  var invCells = [];
+  (function () {
+    for (var r = 0; r < INV.length; r++) {
+      for (var c = 0; c < INV[r].length; c++) {
+        if (INV[r].charAt(c) === "1") invCells.push([c, r]);
+      }
+    }
+  })();
+  function fInvader(i, t, o) {
+    var cell = invCells[i % invCells.length];
+    var layer = Math.floor(i / invCells.length);          // depth layers
+    var s = R * 0.19;
+    var step = Math.floor(t * 1.4) % 2;                   // the shuffle
+    var jx = (rnd1[i] - 0.5) * s * 0.5;
+    var jy = (rnd2[i] - 0.5) * s * 0.5;
+    o[0] = (cell[0] - 5) * s + jx + (step ? s * 0.35 : -s * 0.35);
+    o[1] = (cell[1] - 3.5) * s + jy + Math.sin(t * 2 + layer) * 4;
+    o[2] = (layer - 1) * s * 1.4 + (rnd3[i] - 0.5) * s;
+  }
+  function lInvader() { return -1; }
+
+  // 4 · GLOBE — fibonacci sphere, rotating
   var GA = Math.PI * (3 - Math.sqrt(5));
   function fGlobe(i, t, o) {
     var k = (i + 0.5) / N;
@@ -182,12 +215,13 @@
   function lVortex(i) { return i < N - 1 ? i + 1 : -1; }
 
   var FORMS = [
-    { f: fNebula, l: lNebula },
-    { f: fHelix,  l: lHelix  },
-    { f: fGrid,   l: lGrid   },
-    { f: fGlobe,  l: lGlobe  },
-    { f: fOrbits, l: lOrbits },
-    { f: fVortex, l: lVortex }
+    { f: fNebula,  l: lNebula  },
+    { f: fHelix,   l: lHelix   },
+    { f: fGrid,    l: lGrid    },
+    { f: fInvader, l: lInvader },
+    { f: fGlobe,   l: lGlobe   },
+    { f: fOrbits,  l: lOrbits  },
+    { f: fVortex,  l: lVortex  }
   ];
 
   /* ---------------- engine ---------------- */
