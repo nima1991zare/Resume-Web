@@ -1,6 +1,9 @@
 ﻿# -*- coding: utf-8 -*-
-"""Seed the real portfolio projects into the database (idempotent â€” safe to
-re-run; existing items with the same English title are skipped).
+"""Seed/repair the real portfolio projects in the database.
+
+Idempotent UPSERT: if an item with the same English title exists, its texts,
+image, tech and price are UPDATED (this also repairs any corrupted rows);
+otherwise it is inserted.
 
 Run from the project root:  python tools/seed_projects.py
 """
@@ -13,44 +16,44 @@ from app.database import get_db, init_db
 APPS = [
     {
         "title_en": "CalCounter",
-        "title_fa": "Ú©Ø§Ù„â€ŒÚ©Ø§Ù†ØªØ±",
+        "title_fa": "کال‌کانتر",
         "desc_en": ("Complete calorie & nutrition tracker. Food diary with 35+ tracked "
                     "micronutrients, barcode scanner, recipes, exercise, water and "
-                    "biometrics â€” everything stored offline in SQLite. Cross-platform "
+                    "biometrics — everything stored offline in SQLite. Cross-platform "
                     "Flutter app for Android, iOS and Windows."),
-        "desc_fa": ("Ø±Ø¯ÛŒØ§Ø¨ Ú©Ø§Ù…Ù„ Ú©Ø§Ù„Ø±ÛŒ Ùˆ ØªØºØ°ÛŒÙ‡. Ø¯ÙØªØ±Ú†Ù‡ ØºØ°Ø§ÛŒÛŒ Ø¨Ø§ Ø¨ÛŒØ´ Ø§Ø² Û³Ûµ Ø±ÛŒØ²Ù…ØºØ°ÛŒØŒ Ø§Ø³Ú©Ù†Ø± Ø¨Ø§Ø±Ú©Ø¯ØŒ "
-                    "Ø¯Ø³ØªÙˆØ± Ù¾Ø®ØªØŒ ÙˆØ±Ø²Ø´ØŒ Ø¢Ø¨ Ùˆ Ø´Ø§Ø®Øµâ€ŒÙ‡Ø§ÛŒ Ø¨Ø¯Ù†ÛŒ â€” Ù‡Ù…Ù‡ Ø¨Ù‡â€ŒØµÙˆØ±Øª Ø¢ÙÙ„Ø§ÛŒÙ† Ø¯Ø± SQLite. "
-                    "Ø§Ù¾ ÙÙ„Ø§ØªØ± Ú†Ù†Ø¯Ø³Ú©ÙˆÛŒÛŒ Ø¨Ø±Ø§ÛŒ Ø§Ù†Ø¯Ø±ÙˆÛŒØ¯ØŒ iOS Ùˆ ÙˆÛŒÙ†Ø¯ÙˆØ²."),
+        "desc_fa": ("ردیاب کامل کالری و تغذیه. دفترچه غذایی با بیش از ۳۵ ریزمغذی، اسکنر بارکد، "
+                    "دستور پخت، ورزش، آب و شاخص‌های بدنی — همه به‌صورت آفلاین در SQLite. "
+                    "اپ فلاتر چندسکویی برای اندروید، iOS و ویندوز."),
         "image": "/static/projects/calcounter.png",
-        "tech": "Flutter Â· Dart Â· SQLite",
+        "tech": "Flutter · Dart · SQLite",
         "price": 4500000, "currency": "IRT", "buyable": 1, "sort": 1,
     },
     {
         "title_en": "Aura Stylist",
-        "title_fa": "Ø¢Ø¦ÙˆØ±Ø§ Ø§Ø³ØªØ§ÛŒÙ„ÛŒØ³Øª",
+        "title_fa": "آئورا استایلیست",
         "desc_en": ("Your on-device personal stylist. Rates your outfits with the camera, "
                     "gives colour and body-type advice, and builds outfit combinations "
-                    "from your own wardrobe. 100% private â€” no cloud, everything runs "
+                    "from your own wardrobe. 100% private — no cloud, everything runs "
                     "and stays on the phone."),
-        "desc_fa": ("Ø§Ø³ØªØ§ÛŒÙ„ÛŒØ³Øª Ø´Ø®ØµÛŒ Ø±ÙˆÛŒ Ú¯ÙˆØ´ÛŒ Ø´Ù…Ø§. Ø¨Ø§ Ø¯ÙˆØ±Ø¨ÛŒÙ† Ø¨Ù‡ Ø§Ø³ØªØ§ÛŒÙ„ Ø´Ù…Ø§ Ø§Ù…ØªÛŒØ§Ø² Ù…ÛŒâ€ŒØ¯Ù‡Ø¯ØŒ "
-                    "ØªÙˆØµÛŒÙ‡ Ø±Ù†Ú¯ Ùˆ ÙØ±Ù… Ø¨Ø¯Ù† Ø§Ø±Ø§Ø¦Ù‡ Ù…ÛŒâ€ŒÚ©Ù†Ø¯ Ùˆ Ø§Ø² Ú©Ù…Ø¯ Ù„Ø¨Ø§Ø³ Ø®ÙˆØ¯ØªØ§Ù† ØªØ±Ú©ÛŒØ¨ Ù¾ÛŒØ´Ù†Ù‡Ø§Ø¯ Ù…ÛŒâ€ŒØ¯Ù‡Ø¯. "
-                    "Ú©Ø§Ù…Ù„Ø§Ù‹ Ø®ØµÙˆØµÛŒ â€” Ø¨Ø¯ÙˆÙ† Ú©Ù„Ø§ÙˆØ¯ØŒ Ù‡Ù…Ù‡â€ŒÚ†ÛŒØ² Ø±ÙˆÛŒ Ú¯ÙˆØ´ÛŒ."),
+        "desc_fa": ("استایلیست شخصی روی گوشی شما. با دوربین به استایل شما امتیاز می‌دهد، "
+                    "توصیه رنگ و فرم بدن ارائه می‌کند و از کمد لباس خودتان ترکیب پیشنهاد می‌دهد. "
+                    "کاملاً خصوصی — بدون کلاود، همه‌چیز روی گوشی."),
         "image": "/static/projects/aura-stylist.png",
-        "tech": "Flutter Â· Dart Â· SQLite Â· Camera",
+        "tech": "Flutter · Dart · SQLite · Camera",
         "price": 4000000, "currency": "IRT", "buyable": 1, "sort": 2,
     },
     {
         "title_en": "Crypto Trade Panel",
-        "title_fa": "Ù¾Ù†Ù„ Ù…Ø¹Ø§Ù…Ù„Ø§Øª Ú©Ø±ÛŒÙ¾ØªÙˆ",
+        "title_fa": "پنل معاملات کریپتو",
         "desc_en": ("Full-stack crypto trading terminal: live market data and charts, "
                     "AI chart-image analysis, wallet & portfolio analytics, money "
-                    "management, trading journal, backtesting and price alerts â€” with a "
+                    "management, trading journal, backtesting and price alerts — with a "
                     "built-in AI trading assistant. React frontend, Node.js + SQLite backend."),
-        "desc_fa": ("ØªØ±Ù…ÛŒÙ†Ø§Ù„ Ù…Ø¹Ø§Ù…Ù„Ø§ØªÛŒ ÙÙˆÙ„â€ŒØ§Ø³ØªÚ© Ú©Ø±ÛŒÙ¾ØªÙˆ: Ø¯ÛŒØªØ§ÛŒ Ø²Ù†Ø¯Ù‡ Ø¨Ø§Ø²Ø§Ø± Ùˆ Ù†Ù…ÙˆØ¯Ø§Ø±ØŒ ØªØ­Ù„ÛŒÙ„ ØªØµÙˆÛŒØ± Ú†Ø§Ø±Øª Ø¨Ø§ "
-                    "Ù‡ÙˆØ´ Ù…ØµÙ†ÙˆØ¹ÛŒØŒ ØªØ­Ù„ÛŒÙ„ Ú©ÛŒÙ Ù¾ÙˆÙ„ Ùˆ Ù¾Ø±ØªÙÙˆÛŒØŒ Ù…Ø¯ÛŒØ±ÛŒØª Ø³Ø±Ù…Ø§ÛŒÙ‡ØŒ Ú˜ÙˆØ±Ù†Ø§Ù„ Ù…Ø¹Ø§Ù…Ù„Ø§ØªØŒ Ø¨Ú©â€ŒØªØ³Øª Ùˆ "
-                    "Ù‡Ø´Ø¯Ø§Ø± Ù‚ÛŒÙ…Øª â€” Ù‡Ù…Ø±Ø§Ù‡ Ø¯Ø³ØªÛŒØ§Ø± Ù…Ø¹Ø§Ù…Ù„Ø§ØªÛŒ Ù‡ÙˆØ´Ù…Ù†Ø¯. ÙØ±Ø§Ù†Øª React Ùˆ Ø¨Ú©â€ŒØ§Ù†Ø¯ Node.js + SQLite."),
+        "desc_fa": ("ترمینال معاملاتی فول‌استک کریپتو: دیتای زنده بازار و نمودار، تحلیل تصویر چارت با "
+                    "هوش مصنوعی، تحلیل کیف پول و پرتفوی، مدیریت سرمایه، ژورنال معاملات، بک‌تست و "
+                    "هشدار قیمت — همراه دستیار معاملاتی هوشمند. فرانت React و بک‌اند Node.js + SQLite."),
         "image": "/static/projects/trade-panel.png",
-        "tech": "React Â· Node.js Â· SQLite Â· AI",
+        "tech": "React · Node.js · SQLite · AI",
         "price": 9000000, "currency": "IRT", "buyable": 1, "sort": 3,
     },
 ]
@@ -58,32 +61,32 @@ APPS = [
 GAMES = [
     {
         "title_en": "Terrain Painter",
-        "title_fa": "Ù†Ù‚Ø§Ø´ Ø²Ù…ÛŒÙ†",
+        "title_fa": "نقاش زمین",
         "desc_en": ("Draw the ground under a rolling ball to keep it alive. Ink is limited, "
                     "strokes crumble after seconds, and the physics run at a fixed 120 Hz. "
-                    "A complete HTML5 arcade game in a single file â€” touch and mouse ready, "
+                    "A complete HTML5 arcade game in a single file — touch and mouse ready, "
                     "zero dependencies."),
-        "desc_fa": ("Ø²ÛŒØ± ØªÙˆÙ¾Ù Ø¯Ø± Ø­Ø§Ù„ Ø­Ø±Ú©Øª Ø²Ù…ÛŒÙ† Ø¨Ú©Ø´ÛŒØ¯ ØªØ§ Ø²Ù†Ø¯Ù‡ Ø¨Ù…Ø§Ù†Ø¯. Ø¬ÙˆÙ‡Ø± Ù…Ø­Ø¯ÙˆØ¯ Ø§Ø³ØªØŒ Ø®Ø·â€ŒÙ‡Ø§ Ø¨Ø¹Ø¯ Ø§Ø² Ú†Ù†Ø¯ "
-                    "Ø«Ø§Ù†ÛŒÙ‡ ÙØ±Ùˆ Ù…ÛŒâ€ŒØ±ÛŒØ²Ù†Ø¯ Ùˆ ÙÛŒØ²ÛŒÚ© Ø¨Ø§Ø²ÛŒ Ø¨Ø§ Ù†Ø±Ø® Ø«Ø§Ø¨Øª Û±Û²Û° Ù‡Ø±ØªØ² Ø§Ø¬Ø±Ø§ Ù…ÛŒâ€ŒØ´ÙˆØ¯. ÛŒÚ© Ø¨Ø§Ø²ÛŒ Ø¢Ø±Ú©ÛŒØ¯ "
-                    "Ú©Ø§Ù…Ù„ HTML5 Ø¯Ø± ÛŒÚ© ÙØ§ÛŒÙ„ â€” Ø³Ø§Ø²Ú¯Ø§Ø± Ø¨Ø§ Ù„Ù…Ø³ Ùˆ Ù…Ø§ÙˆØ³ØŒ Ø¨Ø¯ÙˆÙ† Ù‡ÛŒÚ† ÙˆØ§Ø¨Ø³ØªÚ¯ÛŒ."),
+        "desc_fa": ("زیر توپِ در حال حرکت زمین بکشید تا زنده بماند. جوهر محدود است، خط‌ها بعد از چند "
+                    "ثانیه فرو می‌ریزند و فیزیک بازی با نرخ ثابت ۱۲۰ هرتز اجرا می‌شود. یک بازی آرکید "
+                    "کامل HTML5 در یک فایل — سازگار با لمس و ماوس، بدون هیچ وابستگی."),
         "image": "/static/projects/terrain-painter.png",
         "url": "",
-        "tech": "HTML5 Canvas Â· JavaScript Â· Web Audio",
+        "tech": "HTML5 Canvas · JavaScript · Web Audio",
         "price": 1500000, "currency": "IRT", "buyable": 1, "sort": 1,
     },
     {
         "title_en": "Sound Dash",
-        "title_fa": "Ø³Ø§Ù†Ø¯ Ø¯ÙŽØ´",
-        "desc_en": ("A 3D lane-runner driven by YOUR music. Pick any song on your device â€” "
+        "title_fa": "ساند دَش",
+        "desc_en": ("A 3D lane-runner driven by YOUR music. Pick any song on your device — "
                     "the game analyses beats, BPM and energy offline, then builds an obstacle "
                     "course perfectly synced to the track. Endless content, fully offline. "
                     "Built in Godot 4."),
-        "desc_fa": ("ÛŒÚ© Ø¨Ø§Ø²ÛŒ Ø³Ù‡â€ŒØ¨Ø¹Ø¯ÛŒ Ù„ÙÛŒÙ†â€ŒØ±Ø§Ù†Ø± Ú©Ù‡ Ø¨Ø§ Ù…ÙˆØ³ÛŒÙ‚ÛŒÙ Ø®ÙˆØ¯Ù Ø´Ù…Ø§ Ø§Ø¬Ø±Ø§ Ù…ÛŒâ€ŒØ´ÙˆØ¯. Ù‡Ø± Ø¢Ù‡Ù†Ú¯ÛŒ Ø±Ø§ Ø§Ù†ØªØ®Ø§Ø¨ Ú©Ù†ÛŒØ¯ â€” "
-                    "Ø¨Ø§Ø²ÛŒ Ø¶Ø±Ø¨â€ŒÙ‡Ø§ØŒ BPM Ùˆ Ø§Ù†Ø±Ú˜ÛŒ Ø±Ø§ Ø¢ÙÙ„Ø§ÛŒÙ† ØªØ­Ù„ÛŒÙ„ Ù…ÛŒâ€ŒÚ©Ù†Ø¯ Ùˆ Ù…Ø³ÛŒØ± Ù…ÙˆØ§Ù†Ø¹ Ø±Ø§ Ø¯Ù‚ÛŒÙ‚Ø§Ù‹ Ù‡Ù…Ø§Ù‡Ù†Ú¯ Ø¨Ø§ Ø¢Ù‡Ù†Ú¯ "
-                    "Ù…ÛŒâ€ŒØ³Ø§Ø²Ø¯. Ù…Ø­ØªÙˆØ§ÛŒ Ø¨ÛŒâ€ŒÙ¾Ø§ÛŒØ§Ù†ØŒ Ú©Ø§Ù…Ù„Ø§Ù‹ Ø¢ÙÙ„Ø§ÛŒÙ†. Ø³Ø§Ø®ØªÙ‡â€ŒØ´Ø¯Ù‡ Ø¨Ø§ Godot 4."),
+        "desc_fa": ("یک بازی سه‌بعدی لِین‌رانر که با موسیقیِ خودِ شما اجرا می‌شود. هر آهنگی را انتخاب کنید — "
+                    "بازی ضرب‌ها، BPM و انرژی را آفلاین تحلیل می‌کند و مسیر موانع را دقیقاً هماهنگ با آهنگ "
+                    "می‌سازد. محتوای بی‌پایان، کاملاً آفلاین. ساخته‌شده با Godot 4."),
         "image": "/static/projects/sound-dash.png",
         "url": "",
-        "tech": "Godot 4 Â· GDScript Â· Audio DSP",
+        "tech": "Godot 4 · GDScript · Audio DSP",
         "price": 3000000, "currency": "IRT", "buyable": 1, "sort": 2,
     },
 ]
@@ -91,69 +94,70 @@ GAMES = [
 WEBSITES = [
     {
         "title_en": "FAMA Store",
-        "title_fa": "ÙØ±ÙˆØ´Ú¯Ø§Ù‡ ÙØ§Ù…Ø§",
+        "title_fa": "فروشگاه فاما",
         "desc_en": ("Persian RTL e-commerce storefront for original cosmetics: category "
                     "browsing, product search, product pages, shopping cart and special "
-                    "offers. Hand-coded HTML/CSS/JavaScript â€” fast, framework-free and "
+                    "offers. Hand-coded HTML/CSS/JavaScript — fast, framework-free and "
                     "fully responsive."),
-        "desc_fa": ("ÙØ±ÙˆØ´Ú¯Ø§Ù‡ Ø§ÛŒÙ†ØªØ±Ù†ØªÛŒ Ù„ÙˆØ§Ø²Ù… Ø¢Ø±Ø§ÛŒØ´ÛŒ Ø§ÙˆØ±Ø¬ÛŒÙ†Ø§Ù„ Ø¨Ø§ Ø·Ø±Ø§Ø­ÛŒ Ø±Ø§Ø³Øªâ€ŒØ¨Ù‡â€ŒÚ†Ù¾: Ø¯Ø³ØªÙ‡â€ŒØ¨Ù†Ø¯ÛŒ Ù…Ø­ØµÙˆÙ„Ø§ØªØŒ "
-                    "Ø¬Ø³ØªØ¬ÙˆØŒ ØµÙØ­Ù‡ Ù…Ø­ØµÙˆÙ„ØŒ Ø³Ø¨Ø¯ Ø®Ø±ÛŒØ¯ Ùˆ Ù¾ÛŒØ´Ù†Ù‡Ø§Ø¯Ù‡Ø§ÛŒ ÙˆÛŒÚ˜Ù‡. Ú©Ø¯Ù†ÙˆÛŒØ³ÛŒ Ø¯Ø³ØªÛŒ Ø¨Ø§ HTML/CSS/JS â€” "
-                    "Ø³Ø±ÛŒØ¹ØŒ Ø¨Ø¯ÙˆÙ† ÙØ±ÛŒÙ…â€ŒÙˆØ±Ú© Ùˆ Ú©Ø§Ù…Ù„Ø§Ù‹ ÙˆØ§Ú©Ù†Ø´â€ŒÚ¯Ø±Ø§."),
+        "desc_fa": ("فروشگاه اینترنتی لوازم آرایشی اورجینال با طراحی راست‌به‌چپ: دسته‌بندی محصولات، "
+                    "جستجو، صفحه محصول، سبد خرید و پیشنهادهای ویژه. کدنویسی دستی با HTML/CSS/JS — "
+                    "سریع، بدون فریم‌ورک و کاملاً واکنش‌گرا."),
         "image": "/static/projects/fama.png",
         "url": "",
-        "tech": "HTML Â· CSS Â· JavaScript Â· RTL",
+        "tech": "HTML · CSS · JavaScript · RTL",
         "price": 4000000, "currency": "IRT", "sort": 1,
     },
 ]
-
 
 PLACEHOLDER_APPS = ("Inventory Manager Pro", "Smart POS System")
 PLACEHOLDER_WEBSITES = ("Restaurant Ordering Website", "Corporate Landing Page")
 
 
+def upsert(conn, table, item, cols):
+    exists = conn.execute(
+        f"SELECT id FROM {table} WHERE title_en=?", (item["title_en"],)).fetchone()
+    if exists:
+        sets = ",".join(f"{c}=:{c}" for c in cols if c != "title_en")
+        conn.execute(f"UPDATE {table} SET {sets}, active=1 WHERE title_en=:title_en", item)
+        return "updated"
+    fields = ",".join(cols) + ",active"
+    values = ",".join(f":{c}" for c in cols) + ",1"
+    conn.execute(f"INSERT INTO {table}({fields}) VALUES({values})", item)
+    return "inserted"
+
+
 def seed():
     init_db()
     conn = get_db()
-    added = 0
     try:
-        # hide demo placeholders that shipped with the very first seed
         conn.execute(
             f"UPDATE apps SET active=0 WHERE title_en IN ({','.join('?' * len(PLACEHOLDER_APPS))})",
             PLACEHOLDER_APPS)
         conn.execute(
             f"UPDATE websites SET active=0 WHERE title_en IN ({','.join('?' * len(PLACEHOLDER_WEBSITES))})",
             PLACEHOLDER_WEBSITES)
+
+        app_cols = ["title_en", "title_fa", "desc_en", "desc_fa", "image", "tech",
+                    "price", "currency", "buyable", "sort"]
+        game_cols = app_cols[:5] + ["url", "tech", "price", "currency", "buyable", "sort"]
+        web_cols = ["title_en", "title_fa", "desc_en", "desc_fa", "image", "url", "tech",
+                    "price", "currency", "sort"]
+
         for item in APPS:
-            if conn.execute("SELECT 1 FROM apps WHERE title_en=?", (item["title_en"],)).fetchone():
-                continue
-            conn.execute(
-                "INSERT INTO apps(title_en,title_fa,desc_en,desc_fa,image,tech,price,currency,buyable,sort,active) "
-                "VALUES(:title_en,:title_fa,:desc_en,:desc_fa,:image,:tech,:price,:currency,:buyable,:sort,1)", item)
-            added += 1
+            print("apps:", item["title_en"], "->", upsert(conn, "apps", item, app_cols))
         for item in GAMES:
-            if conn.execute("SELECT 1 FROM games WHERE title_en=?", (item["title_en"],)).fetchone():
-                continue
-            conn.execute(
-                "INSERT INTO games(title_en,title_fa,desc_en,desc_fa,image,url,tech,price,currency,buyable,sort,active) "
-                "VALUES(:title_en,:title_fa,:desc_en,:desc_fa,:image,:url,:tech,:price,:currency,:buyable,:sort,1)", item)
-            added += 1
+            print("games:", item["title_en"], "->", upsert(conn, "games", item, game_cols))
         for item in WEBSITES:
-            if conn.execute("SELECT 1 FROM websites WHERE title_en=?", (item["title_en"],)).fetchone():
-                continue
-            conn.execute(
-                "INSERT INTO websites(title_en,title_fa,desc_en,desc_fa,image,url,tech,price,currency,sort,active) "
-                "VALUES(:title_en,:title_fa,:desc_en,:desc_fa,:image,:url,:tech,:price,:currency,:sort,1)", item)
-            added += 1
+            print("websites:", item["title_en"], "->", upsert(conn, "websites", item, web_cols))
         conn.commit()
-        print(f"seeded {added} new project(s)")
-        for t in ("apps", "games", "websites"):
-            n = conn.execute(f"SELECT COUNT(*) FROM {t} WHERE active=1").fetchone()[0]
-            print(f"  active {t}: {n}")
+
+        # verify Persian text is intact (no mojibake)
+        row = conn.execute("SELECT title_fa FROM games WHERE title_en='Terrain Painter'").fetchone()
+        ok = row and row["title_fa"] == "نقاش زمین"
+        print("persian integrity check:", "OK" if ok else "FAILED")
     finally:
         conn.close()
 
 
 if __name__ == "__main__":
     seed()
-
-
