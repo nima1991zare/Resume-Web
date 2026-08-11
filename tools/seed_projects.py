@@ -23,7 +23,7 @@ APPS = [
                     "Ø§Ù¾ ÙÙ„Ø§ØªØ± Ú†Ù†Ø¯Ø³Ú©ÙˆÛŒÛŒ Ø¨Ø±Ø§ÛŒ Ø§Ù†Ø¯Ø±ÙˆÛŒØ¯ØŒ iOS Ùˆ ÙˆÛŒÙ†Ø¯ÙˆØ²."),
         "image": "/static/projects/calcounter.png",
         "tech": "Flutter Â· Dart Â· SQLite",
-        "price": 45000000, "currency": "IRR", "buyable": 1, "sort": 1,
+        "price": 4500000, "currency": "IRT", "buyable": 1, "sort": 1,
     },
     {
         "title_en": "Aura Stylist",
@@ -37,7 +37,7 @@ APPS = [
                     "Ú©Ø§Ù…Ù„Ø§Ù‹ Ø®ØµÙˆØµÛŒ â€” Ø¨Ø¯ÙˆÙ† Ú©Ù„Ø§ÙˆØ¯ØŒ Ù‡Ù…Ù‡â€ŒÚ†ÛŒØ² Ø±ÙˆÛŒ Ú¯ÙˆØ´ÛŒ."),
         "image": "/static/projects/aura-stylist.png",
         "tech": "Flutter Â· Dart Â· SQLite Â· Camera",
-        "price": 40000000, "currency": "IRR", "buyable": 1, "sort": 2,
+        "price": 4000000, "currency": "IRT", "buyable": 1, "sort": 2,
     },
     {
         "title_en": "Crypto Trade Panel",
@@ -51,7 +51,7 @@ APPS = [
                     "Ù‡Ø´Ø¯Ø§Ø± Ù‚ÛŒÙ…Øª â€” Ù‡Ù…Ø±Ø§Ù‡ Ø¯Ø³ØªÛŒØ§Ø± Ù…Ø¹Ø§Ù…Ù„Ø§ØªÛŒ Ù‡ÙˆØ´Ù…Ù†Ø¯. ÙØ±Ø§Ù†Øª React Ùˆ Ø¨Ú©â€ŒØ§Ù†Ø¯ Node.js + SQLite."),
         "image": "/static/projects/trade-panel.png",
         "tech": "React Â· Node.js Â· SQLite Â· AI",
-        "price": 90000000, "currency": "IRR", "buyable": 1, "sort": 3,
+        "price": 9000000, "currency": "IRT", "buyable": 1, "sort": 3,
     },
 ]
 
@@ -69,7 +69,7 @@ GAMES = [
         "image": "/static/projects/terrain-painter.png",
         "url": "",
         "tech": "HTML5 Canvas Â· JavaScript Â· Web Audio",
-        "price": 15000000, "currency": "IRR", "buyable": 1, "sort": 1,
+        "price": 1500000, "currency": "IRT", "buyable": 1, "sort": 1,
     },
     {
         "title_en": "Sound Dash",
@@ -84,7 +84,7 @@ GAMES = [
         "image": "/static/projects/sound-dash.png",
         "url": "",
         "tech": "Godot 4 Â· GDScript Â· Audio DSP",
-        "price": 30000000, "currency": "IRR", "buyable": 1, "sort": 2,
+        "price": 3000000, "currency": "IRT", "buyable": 1, "sort": 2,
     },
 ]
 
@@ -102,7 +102,7 @@ WEBSITES = [
         "image": "/static/projects/fama.png",
         "url": "",
         "tech": "HTML Â· CSS Â· JavaScript Â· RTL",
-        "price": 40000000, "currency": "IRR", "sort": 1,
+        "price": 4000000, "currency": "IRT", "sort": 1,
     },
 ]
 
@@ -155,4 +155,5 @@ def seed():
 
 if __name__ == "__main__":
     seed()
+
 

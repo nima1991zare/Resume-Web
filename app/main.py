@@ -625,6 +625,19 @@ def _json_for_script(data) -> str:
     return json.dumps(data, ensure_ascii=False).replace("</", "<\\/")
 
 
+def _iso_price(price: float, currency: str) -> tuple[str, str]:
+    """Toman (IRT) is not ISO 4217 — express it as rials for structured data."""
+    if currency == "IRT":
+        return str(int(price * 10)), "IRR"
+    return str(price), currency
+
+
+def _human_price(price: float, currency: str) -> str:
+    if currency == "IRT":
+        return f"{price:,.0f} Toman"
+    return f"{price:,.0f} {currency}"
+
+
 def _build_jsonld(content: dict, base: str) -> str:
     s = content["settings"]
     same_as = [u for u in (s.get("github"), s.get("linkedin"), s.get("telegram")) if u]
@@ -659,6 +672,7 @@ def _build_jsonld(content: dict, base: str) -> str:
         for a in items:
             if not a.get("buyable"):
                 continue
+            iso_price, iso_cur = _iso_price(a["price"], a["currency"])
             p = {
                 "@type": "Product",
                 "name": a["title_en"],
@@ -666,8 +680,8 @@ def _build_jsonld(content: dict, base: str) -> str:
                 "url": f"{base}/p/{kind}/{a['id']}",
                 "offers": {
                     "@type": "Offer",
-                    "price": str(a["price"]),
-                    "priceCurrency": a["currency"],
+                    "price": iso_price,
+                    "priceCurrency": iso_cur,
                     "availability": "https://schema.org/InStock",
                     "url": f"{base}/p/{kind}/{a['id']}",
                 },
@@ -700,14 +714,14 @@ def _build_noscript(content: dict) -> str:
     if content["apps"]:
         parts.append("<h2>Applications for sale</h2><ul>")
         for a in content["apps"]:
-            price = f' — {a["price"]:,.0f} {a["currency"]}' if a.get("price") else ""
+            price = f' — {_human_price(a["price"], a["currency"])}' if a.get("price") else ""
             parts.append("<li><strong>" + _esc(a["title_en"]) + "</strong>: "
                          + _esc(a["desc_en"]) + _esc(price) + "</li>")
         parts.append("</ul>")
     if content["games"]:
         parts.append("<h2>Games</h2><ul>")
         for g in content["games"]:
-            price = f' — {g["price"]:,.0f} {g["currency"]}' if g.get("price") else ""
+            price = f' — {_human_price(g["price"], g["currency"])}' if g.get("price") else ""
             parts.append("<li><strong>" + _esc(g["title_en"]) + "</strong>: "
                          + _esc(g["desc_en"]) + _esc(price) + "</li>")
         parts.append("</ul>")
@@ -783,9 +797,10 @@ def _render_product(request: Request, table: str, item_id: int) -> Optional[str]
         "url": page_url,
     }
     if item.get("buyable", 1) and item.get("price"):
+        iso_price, iso_cur = _iso_price(item["price"], item["currency"])
         jsonld["offers"] = {
-            "@type": "Offer", "price": str(item["price"]),
-            "priceCurrency": item["currency"],
+            "@type": "Offer", "price": iso_price,
+            "priceCurrency": iso_cur,
             "availability": "https://schema.org/InStock", "url": page_url,
         }
 
