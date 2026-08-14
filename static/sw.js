@@ -4,7 +4,7 @@
      code updates always arrive by the next visit, never stuck stale)
    - pages: network-first with offline fallback
    - API and the entire admin panel: NEVER touched by this worker */
-var CACHE = "nima-v13";
+var CACHE = "nima-v14";
 var PRECACHE = [
   "/",
   "/static/css/fonts.css",

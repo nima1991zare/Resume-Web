@@ -17,17 +17,17 @@ from app.database import get_db, init_db
 
 DEMOS = {
     "apps": {
-        "CalCounter": "/static/demos/calcounter/",
-        "Aura Stylist": "/static/demos/aura-stylist/",
-        "Crypto Trade Panel": "/static/demos/trade-panel/",
-        "TODO_Liat": "/static/demos/todo-liat/",
+        "CalCounter": "/static/demos/calcounter/index.html",
+        "Aura Stylist": "/static/demos/aura-stylist/index.html",
+        "Crypto Trade Panel": "/static/demos/trade-panel/index.html",
+        "TODO_Liat": "/static/demos/todo-liat/index.html",
     },
     "games": {
-        "Terrain Painter": "/static/demos/terrain-painter/",
-        "Sound Dash": "/static/demos/sound-dash/",
+        "Terrain Painter": "/static/demos/terrain-painter/index.html",
+        "Sound Dash": "/static/demos/sound-dash/index.html",
     },
     "websites": {
-        "FAMA Store": "/static/demos/fama/",
+        "FAMA Store": "/static/demos/fama/index.html",
     },
 }
 
@@ -45,7 +45,7 @@ TODO_LIAT = {
                 "همراه نمای تقویم که روزهای دارای وظیفه را مشخص می‌کند."),
     "image": "/static/projects/todo-liat.png",
     "tech": "Java · Android · Room · AlarmManager",
-    "demo_url": "/static/demos/todo-liat/",
+    "demo_url": "/static/demos/todo-liat/index.html",
     "price": 3000000, "currency": "IRT", "buyable": 1, "sort": 4,
 }
 

@@ -25,7 +25,7 @@ APPS = [
                     "دستور پخت، ورزش، آب و شاخص‌های بدنی — همه به‌صورت آفلاین در SQLite. "
                     "اپ فلاتر چندسکویی برای اندروید، iOS و ویندوز."),
         "image": "/static/projects/calcounter.png",
-        "demo_url": "/static/demos/calcounter/",
+        "demo_url": "/static/demos/calcounter/index.html",
         "tech": "Flutter · Dart · SQLite",
         "price": 4500000, "currency": "IRT", "buyable": 1, "sort": 1,
     },
@@ -40,7 +40,7 @@ APPS = [
                     "توصیه رنگ و فرم بدن ارائه می‌کند و از کمد لباس خودتان ترکیب پیشنهاد می‌دهد. "
                     "کاملاً خصوصی — بدون کلاود، همه‌چیز روی گوشی."),
         "image": "/static/projects/aura-stylist.png",
-        "demo_url": "/static/demos/aura-stylist/",
+        "demo_url": "/static/demos/aura-stylist/index.html",
         "tech": "Flutter · Dart · SQLite · Camera",
         "price": 4000000, "currency": "IRT", "buyable": 1, "sort": 2,
     },
@@ -55,7 +55,7 @@ APPS = [
                     "هوش مصنوعی، تحلیل کیف پول و پرتفوی، مدیریت سرمایه، ژورنال معاملات، بک‌تست و "
                     "هشدار قیمت — همراه دستیار معاملاتی هوشمند. فرانت React و بک‌اند Node.js + SQLite."),
         "image": "/static/projects/trade-panel.png",
-        "demo_url": "/static/demos/trade-panel/",
+        "demo_url": "/static/demos/trade-panel/index.html",
         "tech": "React · Node.js · SQLite · AI",
         "price": 9000000, "currency": "IRT", "buyable": 1, "sort": 3,
     },
@@ -72,7 +72,7 @@ APPS = [
                     "سررسید — به‌علاوه یادآور ۱۰ دقیقه زودتر — حتی بعد از ری‌استارت گوشی. "
                     "همراه نمای تقویم که روزهای دارای وظیفه را مشخص می‌کند."),
         "image": "/static/projects/todo-liat.png",
-        "demo_url": "/static/demos/todo-liat/",
+        "demo_url": "/static/demos/todo-liat/index.html",
         "tech": "Java · Android · Room · AlarmManager",
         "price": 3000000, "currency": "IRT", "buyable": 1, "sort": 4,
     },
@@ -90,7 +90,7 @@ GAMES = [
                     "ثانیه فرو می‌ریزند و فیزیک بازی با نرخ ثابت ۱۲۰ هرتز اجرا می‌شود. یک بازی آرکید "
                     "کامل HTML5 در یک فایل — سازگار با لمس و ماوس، بدون هیچ وابستگی."),
         "image": "/static/projects/terrain-painter.png",
-        "demo_url": "/static/demos/terrain-painter/",
+        "demo_url": "/static/demos/terrain-painter/index.html",
         "url": "",
         "tech": "HTML5 Canvas · JavaScript · Web Audio",
         "price": 1500000, "currency": "IRT", "buyable": 1, "sort": 1,
@@ -106,7 +106,7 @@ GAMES = [
                     "بازی ضرب‌ها، BPM و انرژی را آفلاین تحلیل می‌کند و مسیر موانع را دقیقاً هماهنگ با آهنگ "
                     "می‌سازد. محتوای بی‌پایان، کاملاً آفلاین. ساخته‌شده با Godot 4."),
         "image": "/static/projects/sound-dash.png",
-        "demo_url": "/static/demos/sound-dash/",
+        "demo_url": "/static/demos/sound-dash/index.html",
         "url": "",
         "tech": "Godot 4 · GDScript · Audio DSP",
         "price": 3000000, "currency": "IRT", "buyable": 1, "sort": 2,
@@ -125,7 +125,7 @@ WEBSITES = [
                     "جستجو، صفحه محصول، سبد خرید و پیشنهادهای ویژه. کدنویسی دستی با HTML/CSS/JS — "
                     "سریع، بدون فریم‌ورک و کاملاً واکنش‌گرا."),
         "image": "/static/projects/fama.png",
-        "demo_url": "/static/demos/fama/",
+        "demo_url": "/static/demos/fama/index.html",
         "url": "",
         "tech": "HTML · CSS · JavaScript · RTL",
         "price": 4000000, "currency": "IRT", "sort": 1,
