@@ -61,6 +61,22 @@ CSP = (
     "object-src 'none'"
 )
 
+# Demo pages under /static/demos/ are single-file mockups with inline JS.
+# They stay locked down (no connect-src, no frames, no objects) but need
+# inline scripts — and the FAMA demo loads its fonts from Google Fonts.
+CSP_DEMOS = (
+    "default-src 'self'; "
+    "script-src 'self' 'unsafe-inline'; "
+    "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; "
+    "font-src 'self' https://fonts.gstatic.com; "
+    "img-src 'self' data:; "
+    "connect-src 'none'; "
+    "frame-ancestors 'none'; "
+    "base-uri 'self'; "
+    "form-action 'none'; "
+    "object-src 'none'"
+)
+
 # long-lived immutable assets vs. occasionally-edited code
 CACHE_LONG = ("/static/fonts/", "/static/icons/", "/static/uploads/")
 CACHE_SHORT = ("/static/css/", "/static/js/")
@@ -122,7 +138,8 @@ async def security_middleware(request: Request, call_next):
     ct = response.headers.get("content-type", "")
     path = request.url.path
     if "text/html" in ct:
-        response.headers["Content-Security-Policy"] = CSP
+        response.headers["Content-Security-Policy"] = (
+            CSP_DEMOS if path.startswith("/static/demos/") else CSP)
     if path.startswith("/api/") or path == "/admin":
         response.headers["Cache-Control"] = "no-store"
     elif path in ("/static/js/admin.js", "/static/css/admin.css"):
