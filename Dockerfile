@@ -7,6 +7,7 @@ RUN pip install --no-cache-dir -r requirements.txt
 
 COPY app ./app
 COPY static ./static
+COPY tools ./tools
 
 # data dir for SQLite — mount a persistent volume/disk here in production,
 # otherwise the database resets on every redeploy

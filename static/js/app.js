@@ -44,9 +44,9 @@
 
   var LANG_KEY = "nima_lang";
   var savedLang = localStorage.getItem(LANG_KEY);
-  var autoLang = (navigator.language || "").toLowerCase().indexOf("fa") === 0 ? "fa" : "en";
   var state = {
-    lang: (savedLang === "fa" || savedLang === "en") ? savedLang : autoLang,
+    // Persian is the default; a visitor's explicit choice is remembered
+    lang: (savedLang === "fa" || savedLang === "en") ? savedLang : "fa",
     content: null
   };
 
@@ -325,6 +325,12 @@
 
   function pad(n) { return n < 10 ? "0" + n : "" + n; }
 
+  function demoBtn(item) {
+    var u = item.demo_url || "";
+    if (!/^https?:\/\//i.test(u) && u.indexOf("/static/") !== 0) return "";
+    return '<a class="btn btn-ghost" href="' + esc(u) + '" target="_blank" rel="noopener">' + t("apps.demo") + "</a>";
+  }
+
   function renderContent() {
     var c = state.content;
     if (!c) return;
@@ -342,6 +348,7 @@
         '<div class="vcard-body"><h3><a href="' + link + '">' + esc(pick(a, "title")) + "</a></h3>" +
           '<p class="desc">' + esc(pick(a, "desc")) + "</p>" + tech(a.tech) +
           '<div class="vfoot"><span class="vprice">' + fmtPrice(a.price, a.currency) + "</span>" +
+            demoBtn(a) +
             (a.buyable ? '<a class="btn btn-primary" href="#contact" data-subject="' + esc(pick(a, "title")) + '">' + t("apps.buy") + "</a>" : "") +
           "</div></div></article>";
     }).join("");
@@ -356,6 +363,7 @@
         '<div class="vcard-body"><h3><a href="' + link + '">' + esc(pick(g, "title")) + "</a></h3>" +
           '<p class="desc">' + esc(pick(g, "desc")) + "</p>" + tech(g.tech) +
           '<div class="vfoot"><span class="vprice">' + fmtPrice(g.price, g.currency) + "</span>" +
+            demoBtn(g) +
             (isLink(g.url)
               ? '<a class="btn btn-ghost" href="' + esc(g.url) + '" target="_blank" rel="noopener">' + t("web.visit") + "</a>"
               : (g.buyable ? '<a class="btn btn-primary" href="#contact" data-subject="' + esc(pick(g, "title")) + '">' + t("apps.buy") + "</a>" : "")) +
@@ -370,6 +378,7 @@
         '<div class="vcard-body"><h3><a href="' + link + '">' + esc(pick(w, "title")) + "</a></h3>" +
           '<p class="desc">' + esc(pick(w, "desc")) + "</p>" + tech(w.tech) +
           '<div class="vfoot"><span class="vprice">' + fmtPrice(w.price, w.currency) + "</span>" +
+            demoBtn(w) +
             (isLink(w.url)
               ? '<a class="btn btn-ghost" href="' + esc(w.url) + '" target="_blank" rel="noopener">' + t("web.visit") + "</a>"
               : '<a class="btn btn-ghost" href="#contact" data-subject="' + esc(pick(w, "title")) + '">' + t("web.order") + "</a>") +

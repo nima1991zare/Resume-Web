@@ -1,0 +1,1359 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<title>Terrain Painter</title>
+<style>
+  html, body {
+    margin: 0; padding: 0; width: 100%; height: 100%;
+    overflow: hidden; background: #6fbdf5;
+    overscroll-behavior: none;
+    -webkit-user-select: none; user-select: none;
+    -webkit-touch-callout: none;
+  }
+  canvas {
+    display: block; width: 100vw; height: 100vh;
+    touch-action: none; cursor: crosshair;
+  }
+</style>
+</head>
+<body>
+<canvas id="c"></canvas>
+<script>
+'use strict';
+/* ============================================================
+   TERRAIN PAINTER — draw the world, keep the ball alive.
+   Single file. Canvas 2D + Web Audio. No dependencies.
+   ============================================================ */
+
+// ---------- Canvas / DPR ----------
+const cv = document.getElementById('c');
+const ctx = cv.getContext('2d');
+let W = 0, H = 0, DPR = 1;
+function resize() {
+  DPR = Math.min(window.devicePixelRatio || 1, 2.5);
+  W = window.innerWidth; H = window.innerHeight;
+  cv.width = Math.round(W * DPR);
+  cv.height = Math.round(H * DPR);
+  cv.style.width = W + 'px';
+  cv.style.height = H + 'px';
+}
+window.addEventListener('resize', resize);
+resize();
+
+// ---------- Utils ----------
+const clamp = (v, a, b) => v < a ? a : (v > b ? b : v);
+const lerp = (a, b, t) => a + (b - a) * t;
+const rand = (a, b) => a + Math.random() * (b - a);
+const TAU = Math.PI * 2;
+function hexToRgb(h) {
+  return [parseInt(h.slice(1, 3), 16), parseInt(h.slice(3, 5), 16), parseInt(h.slice(5, 7), 16)];
+}
+function mixHex(h1, h2, t) {
+  const a = hexToRgb(h1), b = hexToRgb(h2);
+  return 'rgb(' + Math.round(lerp(a[0], b[0], t)) + ',' + Math.round(lerp(a[1], b[1], t)) + ',' + Math.round(lerp(a[2], b[2], t)) + ')';
+}
+function mixRgbArr(a, b, t) {
+  return [lerp(a[0], b[0], t), lerp(a[1], b[1], t), lerp(a[2], b[2], t)];
+}
+function rgbStr(a) { return 'rgb(' + Math.round(a[0]) + ',' + Math.round(a[1]) + ',' + Math.round(a[2]) + ')'; }
+
+// ---------- Constants ----------
+const STEP = 1 / 120;            // fixed physics timestep
+const GRAV = 2300;
+const BALL_R = 13;
+const TERRAIN_HALF = 7;          // 14 px thick strokes
+const TERRAIN_LIFE = 4.0;        // seconds before a stroke crumbles away
+const CRUMBLE_AT = 2.7;          // crack/fade warning starts here
+const PX_PER_M = 40;
+const INK_MAX = 100;
+const INK_COST = 0.038;          // ink per pixel of stroke
+const EXCLUDE_R = BALL_R + 24;   // can't draw this close to the ball
+const RESTITUTION = 0.04;
+
+// ---------- Game state ----------
+let state = 'start';             // start | play | dead
+let gameTime = 0;
+let timeScale = 1, slowmoT = 0;
+let deadAt = 0;
+let best = 0;
+try { best = parseFloat(localStorage.getItem('tp_best') || '0') || 0; } catch (e) {}
+let bestComboEver = 0;
+try { bestComboEver = parseFloat(localStorage.getItem('tp_bestcombo') || '0') || 0; } catch (e) {}
+
+const ball = {
+  x: 0, y: 0, px: 0, py: 0, vx: 0, vy: 0, rot: 0, av: 0,
+  grounded: false, groundNX: 0, groundNY: -1,
+  airTime: 0, wasAir: 0, deform: 0, deformAng: 0, prevVN: 0
+};
+let startX = 0;
+let meters = 0;
+let ink = INK_MAX;
+let coins = 0;
+let combo = 1, comboTimer = 0, bestCombo = 1, airCoins = 0;
+let shake = 0;
+let deathCause = '';
+
+const strokes = [];   // {pts:[{x,y}], born, life, minX,maxX,minY,maxY}
+const coinsArr = [];  // {x,y,taken,phase}
+const hazards = [];   // {type:'saw'|'spikes'|'wind', ...}
+const pickups = [];   // ink bottles {x,y,taken,phase}
+const popups = [];    // floating text {x,y,txt,life,max,color,size}
+let nextCoinX = 0, nextHazX = 0, nextCheckpoint = 250, checkpointFxT = 0;
+
+// camera (render-space, smoothed)
+const cam = { x: 0, y: 0, init: false };
+
+// main-loop state (declared early: resetGame touches accum)
+let accum = 0;
+let lastT = performance.now();
+let paused = false;
+
+// ---------- Particles (pooled) ----------
+const POOL = 420;
+const parts = [];
+for (let i = 0; i < POOL; i++) parts.push({ on: false, x: 0, y: 0, vx: 0, vy: 0, life: 0, max: 1, size: 2, color: '#fff', grav: 0, fade: true });
+let partIdx = 0;
+function spawnPart(x, y, vx, vy, life, size, color, grav) {
+  const p = parts[partIdx]; partIdx = (partIdx + 1) % POOL;
+  p.on = true; p.x = x; p.y = y; p.vx = vx; p.vy = vy;
+  p.life = life; p.max = life; p.size = size; p.color = color; p.grav = grav || 0;
+}
+function updateParts(dt) {
+  for (let i = 0; i < POOL; i++) {
+    const p = parts[i];
+    if (!p.on) continue;
+    p.life -= dt;
+    if (p.life <= 0) { p.on = false; continue; }
+    p.vy += p.grav * dt;
+    p.x += p.vx * dt; p.y += p.vy * dt;
+  }
+}
+
+function popup(x, y, txt, color, size) {
+  popups.push({ x, y, txt, life: 1.4, max: 1.4, color: color || '#fff', size: size || 20 });
+  if (popups.length > 24) popups.shift();
+}
+
+// ============================================================
+// AUDIO — all procedural via Web Audio
+// ============================================================
+let AC = null, master = null, rollGain = null, rollFilt = null, scratchGain = null;
+let musicTime = 0, chordIdx = 0, musicOn = false;
+const CHORDS = [ // lo-fi progression: Cmaj7 Am7 Fmaj7 G7 (low voicings)
+  [130.8, 164.8, 196.0, 246.9],
+  [110.0, 130.8, 164.8, 196.0],
+  [87.3, 130.8, 174.6, 220.0],
+  [98.0, 123.5, 146.8, 196.0]
+];
+const PENTA = [392, 440, 523.3, 587.3, 659.3, 784];
+
+function initAudio() {
+  if (AC) return;
+  try {
+    AC = new (window.AudioContext || window.webkitAudioContext)();
+  } catch (e) { return; }
+  master = AC.createGain(); master.gain.value = 0.85; master.connect(AC.destination);
+
+  // noise buffer (shared)
+  const len = AC.sampleRate * 1.2;
+  const buf = AC.createBuffer(1, len, AC.sampleRate);
+  const d = buf.getChannelData(0);
+  for (let i = 0; i < len; i++) d[i] = Math.random() * 2 - 1;
+  window._noiseBuf = buf;
+
+  // rolling rumble
+  const rs = AC.createBufferSource(); rs.buffer = buf; rs.loop = true;
+  rollFilt = AC.createBiquadFilter(); rollFilt.type = 'bandpass'; rollFilt.frequency.value = 180; rollFilt.Q.value = 0.8;
+  rollGain = AC.createGain(); rollGain.gain.value = 0;
+  rs.connect(rollFilt); rollFilt.connect(rollGain); rollGain.connect(master); rs.start();
+
+  // pencil scratch
+  const ss = AC.createBufferSource(); ss.buffer = buf; ss.loop = true; ss.playbackRate.value = 1.7;
+  const sf = AC.createBiquadFilter(); sf.type = 'highpass'; sf.frequency.value = 2600;
+  scratchGain = AC.createGain(); scratchGain.gain.value = 0;
+  ss.connect(sf); sf.connect(scratchGain); scratchGain.connect(master); ss.start();
+
+  musicTime = AC.currentTime + 0.15;
+  musicOn = true;
+}
+
+function tone(freq, t0, dur, type, vol, slideTo) {
+  if (!AC) return;
+  const o = AC.createOscillator(), g = AC.createGain();
+  o.type = type || 'sine'; o.frequency.setValueAtTime(freq, t0);
+  if (slideTo) o.frequency.exponentialRampToValueAtTime(slideTo, t0 + dur);
+  g.gain.setValueAtTime(0.0001, t0);
+  g.gain.exponentialRampToValueAtTime(vol, t0 + 0.012);
+  g.gain.exponentialRampToValueAtTime(0.0001, t0 + dur);
+  o.connect(g); g.connect(master);
+  o.start(t0); o.stop(t0 + dur + 0.05);
+}
+
+function sfxCoin(comboLvl) {
+  if (!AC) return;
+  const t = AC.currentTime;
+  const base = 660 * Math.pow(1.0905, clamp(comboLvl - 1, 0, 12)); // rises with combo
+  tone(base, t, 0.14, 'sine', 0.14);
+  tone(base * 1.5, t + 0.06, 0.16, 'sine', 0.10);
+}
+function sfxCheckpoint() {
+  if (!AC) return;
+  const t = AC.currentTime;
+  tone(523.3, t, 0.22, 'sine', 0.12);
+  tone(659.3, t + 0.11, 0.22, 'sine', 0.12);
+  tone(784.0, t + 0.22, 0.34, 'sine', 0.13);
+  tone(1046.5, t + 0.33, 0.44, 'sine', 0.10);
+}
+function sfxInk() {
+  if (!AC) return;
+  const t = AC.currentTime;
+  tone(340, t, 0.16, 'triangle', 0.12, 560);
+  tone(680, t + 0.09, 0.18, 'sine', 0.08);
+}
+function sfxDeath() {
+  if (!AC) return;
+  const t = AC.currentTime;
+  tone(150, t, 0.5, 'triangle', 0.35, 42);
+  tone(75, t + 0.02, 0.7, 'sine', 0.3, 30);
+  // noise burst
+  const n = AC.createBufferSource(); n.buffer = window._noiseBuf;
+  const f = AC.createBiquadFilter(); f.type = 'lowpass'; f.frequency.setValueAtTime(900, t); f.frequency.exponentialRampToValueAtTime(80, t + 0.4);
+  const g = AC.createGain(); g.gain.setValueAtTime(0.28, t); g.gain.exponentialRampToValueAtTime(0.0001, t + 0.45);
+  n.connect(f); f.connect(g); g.connect(master); n.start(t); n.stop(t + 0.5);
+}
+function sfxLand(impact) {
+  if (!AC) return;
+  const t = AC.currentTime;
+  const v = clamp(impact / 1400, 0.05, 0.3);
+  tone(110, t, 0.13, 'triangle', v, 55);
+}
+function sfxSlowmo() {
+  if (!AC) return;
+  const t = AC.currentTime;
+  tone(880, t, 0.5, 'sine', 0.09, 440);
+  tone(1320, t, 0.5, 'sine', 0.06, 660);
+}
+
+function scheduleMusic() {
+  if (!AC || !musicOn) return;
+  const BAR = 3.34; // one chord bar
+  while (musicTime < AC.currentTime + 0.6) {
+    const chord = CHORDS[chordIdx % CHORDS.length];
+    const t0 = musicTime;
+    // pad
+    for (let i = 0; i < chord.length; i++) {
+      const o = AC.createOscillator(), g = AC.createGain(), f = AC.createBiquadFilter();
+      o.type = i === 0 ? 'triangle' : 'sine';
+      o.frequency.value = chord[i] * (i === 0 ? 1 : 2);
+      f.type = 'lowpass'; f.frequency.value = 900;
+      g.gain.setValueAtTime(0.0001, t0);
+      g.gain.linearRampToValueAtTime(0.02, t0 + 0.7);
+      g.gain.setValueAtTime(0.02, t0 + BAR - 1.0);
+      g.gain.linearRampToValueAtTime(0.0001, t0 + BAR + 0.15);
+      o.connect(f); f.connect(g); g.connect(master);
+      o.start(t0); o.stop(t0 + BAR + 0.3);
+    }
+    // sparse pluck melody
+    for (let b = 0; b < 4; b++) {
+      if (Math.random() < 0.55) {
+        const nt = t0 + b * (BAR / 4) + (Math.random() < 0.3 ? BAR / 8 : 0);
+        tone(PENTA[Math.floor(Math.random() * PENTA.length)], nt, 0.35, 'triangle', 0.028);
+      }
+    }
+    // soft "vinyl" tick
+    if (window._noiseBuf) {
+      for (let b = 0; b < 2; b++) {
+        const n = AC.createBufferSource(); n.buffer = window._noiseBuf;
+        const g = AC.createGain(); const tt = t0 + b * (BAR / 2) + BAR / 4;
+        g.gain.setValueAtTime(0.012, tt); g.gain.exponentialRampToValueAtTime(0.0001, tt + 0.06);
+        const f = AC.createBiquadFilter(); f.type = 'highpass'; f.frequency.value = 5000;
+        n.connect(f); f.connect(g); g.connect(master); n.start(tt); n.stop(tt + 0.08);
+      }
+    }
+    musicTime += BAR;
+    chordIdx++;
+  }
+}
+
+// ============================================================
+// INPUT — mouse + touch via pointer events, first pointer only
+// ============================================================
+let activePointer = null;
+let drawing = false;          // pointer held down
+let curStroke = null;         // stroke being drawn
+let drawBlocked = false;      // inside ball exclusion zone
+let lastDrawMove = 0;         // for scratch sound
+let pointerScreen = { x: 0, y: 0 };
+
+function screenToWorld(sx, sy) {
+  return { x: cam.x + sx, y: cam.y + sy };
+}
+
+function beginStroke() {
+  curStroke = { pts: [], born: gameTime, life: TERRAIN_LIFE, minX: 1e9, maxX: -1e9, minY: 1e9, maxY: -1e9 };
+  strokes.push(curStroke);
+}
+
+function addStrokePoint(wx, wy) {
+  if (ink <= 0) { curStroke = null; return; }
+  // exclusion around ball
+  const dx = wx - ball.x, dy = wy - ball.y;
+  if (dx * dx + dy * dy < EXCLUDE_R * EXCLUDE_R) {
+    drawBlocked = true;
+    curStroke = null; // gap the stroke
+    return;
+  }
+  drawBlocked = false;
+  if (!curStroke) beginStroke();
+  const pts = curStroke.pts;
+  if (pts.length > 0) {
+    const lp = pts[pts.length - 1];
+    const d = Math.hypot(wx - lp.x, wy - lp.y);
+    if (d < 5) return;
+    // subdivide fast swipes so physics segments stay short
+    const steps = Math.floor(d / 14);
+    for (let i = 1; i <= steps; i++) {
+      const t = i / (steps + 1);
+      pushPt(curStroke, lerp(lp.x, wx, t), lerp(lp.y, wy, t));
+    }
+    const cost = d * INK_COST;
+    ink = Math.max(0, ink - cost);
+  } else {
+    ink = Math.max(0, ink - 0.5);
+  }
+  pushPt(curStroke, wx, wy);
+  lastDrawMove = gameTime;
+  if (ink <= 0) {
+    curStroke = null;
+    popup(wx, wy - 20, 'OUT OF INK!', '#ff6b6b', 16);
+  }
+}
+
+function pushPt(s, x, y) {
+  s.pts.push({ x, y });
+  if (x < s.minX) s.minX = x; if (x > s.maxX) s.maxX = x;
+  if (y < s.minY) s.minY = y; if (y > s.maxY) s.maxY = y;
+}
+
+cv.addEventListener('pointerdown', (e) => {
+  e.preventDefault();
+  if (activePointer !== null && activePointer !== e.pointerId) return; // first pointer only
+  activePointer = e.pointerId;
+  try { cv.setPointerCapture(e.pointerId); } catch (err) {}
+  initAudio();
+  if (AC && AC.state === 'suspended') AC.resume();
+
+  pointerScreen.x = e.clientX; pointerScreen.y = e.clientY;
+
+  if (state === 'start') {
+    startGame();
+  } else if (state === 'dead') {
+    if (performance.now() - deadAt > 600) { resetGame(); startGame(); }
+    return;
+  }
+  if (state === 'play') {
+    drawing = true;
+    curStroke = null;
+    const w = screenToWorld(e.clientX, e.clientY);
+    addStrokePoint(w.x, w.y);
+  }
+});
+
+cv.addEventListener('pointermove', (e) => {
+  if (e.pointerId !== activePointer) return;
+  pointerScreen.x = e.clientX; pointerScreen.y = e.clientY;
+  if (drawing && state === 'play') {
+    // use coalesced events for extra smoothness where available
+    let evs = e.getCoalescedEvents ? e.getCoalescedEvents() : null;
+    if (evs && evs.length) {
+      for (const ev of evs) {
+        const w = screenToWorld(ev.clientX, ev.clientY);
+        addStrokePoint(w.x, w.y);
+      }
+    } else {
+      const w = screenToWorld(e.clientX, e.clientY);
+      addStrokePoint(w.x, w.y);
+    }
+  }
+});
+
+function endPointer(e) {
+  if (e.pointerId !== activePointer) return;
+  activePointer = null;
+  drawing = false;
+  curStroke = null;
+  drawBlocked = false;
+}
+cv.addEventListener('pointerup', endPointer);
+cv.addEventListener('pointercancel', endPointer);
+cv.addEventListener('contextmenu', e => e.preventDefault());
+
+// ============================================================
+// GAME LIFECYCLE
+// ============================================================
+function resetGame() {
+  strokes.length = 0; coinsArr.length = 0; hazards.length = 0; pickups.length = 0; popups.length = 0;
+  for (const p of parts) p.on = false;
+  gameTime = 0; timeScale = 1; slowmoT = 0;
+  ball.x = 200; ball.y = 40; ball.px = ball.x; ball.py = ball.y;
+  ball.vx = 60; ball.vy = 0; ball.rot = 0; ball.av = 0;
+  ball.grounded = false; ball.airTime = 0; ball.deform = 0;
+  startX = ball.x;
+  meters = 0; ink = INK_MAX; coins = 0;
+  combo = 1; comboTimer = 0; bestCombo = 1; airCoins = 0;
+  shake = 0; deathCause = '';
+  nextCoinX = ball.x + 500;
+  nextHazX = ball.x + 1400;
+  nextCheckpoint = 250; checkpointFxT = 0;
+  cam.init = false;
+  // starter launch pad (extra life so the player can settle in)
+  const pad = { pts: [], born: 0, life: 7.5, minX: 1e9, maxX: -1e9, minY: 1e9, maxY: -1e9 };
+  for (let i = 0; i <= 22; i++) {
+    const t = i / 22;
+    pushPt(pad, 40 + t * 480, 92 + t * 46 + Math.sin(t * 3.5) * 8);
+  }
+  strokes.push(pad);
+  accum = 0;
+}
+function startGame() {
+  state = 'play';
+}
+function die(cause) {
+  if (state !== 'play') return;
+  state = 'dead';
+  deathCause = cause;
+  deadAt = performance.now();
+  shake = 14;
+  sfxDeath();
+  drawing = false; curStroke = null;
+  // burst
+  for (let i = 0; i < 40; i++) {
+    const a = rand(0, TAU), s = rand(80, 460);
+    spawnPart(ball.x, ball.y, Math.cos(a) * s, Math.sin(a) * s - 120, rand(0.5, 1.1), rand(2, 5), i % 2 ? '#ff8a5c' : '#ffd93d', 700);
+  }
+  if (meters > best) {
+    best = meters;
+    try { localStorage.setItem('tp_best', String(best)); } catch (e) {}
+  }
+  if (bestCombo > bestComboEver) {
+    bestComboEver = bestCombo;
+    try { localStorage.setItem('tp_bestcombo', String(bestComboEver)); } catch (e) {}
+  }
+}
+
+resetGame();
+// pretty start-screen scenery: a decorative curve under the ball
+(function () {
+  ball.y = 110; ball.py = 110;
+})();
+
+// ============================================================
+// WORLD SPAWNING
+// ============================================================
+function difficultyTier() { return Math.floor(meters / 100); }
+
+function nearCheckpoint(x) {
+  const cpx = startX + nextCheckpoint * PX_PER_M;
+  return Math.abs(x - cpx) < 340;
+}
+
+function spawnAhead() {
+  const aheadEdge = cam.x + W + 260;
+
+  // coins
+  while (nextCoinX < aheadEdge) {
+    if (!nearCheckpoint(nextCoinX)) {
+      const tier = difficultyTier();
+      const baseY = ball.y + rand(-40 - Math.min(tier * 14, 190), 50);
+      const kind = Math.random();
+      if (kind < 0.4) { // arc
+        const n = 5;
+        for (let i = 0; i < n; i++) {
+          const t = i / (n - 1);
+          coinsArr.push({ x: nextCoinX + i * 34, y: baseY - Math.sin(t * Math.PI) * (60 + tier * 6), taken: false, phase: rand(0, TAU) });
+        }
+      } else if (kind < 0.7) { // rising line
+        const n = 4;
+        const dir = Math.random() < 0.5 ? -1 : 1;
+        for (let i = 0; i < n; i++) coinsArr.push({ x: nextCoinX + i * 38, y: baseY + dir * i * 26, taken: false, phase: rand(0, TAU) });
+      } else { // high cluster — needs a ramp!
+        const n = 3;
+        for (let i = 0; i < n; i++) coinsArr.push({ x: nextCoinX + i * 30, y: baseY - 120 - Math.min(tier * 10, 120) + rand(-10, 10), taken: false, phase: rand(0, TAU) });
+      }
+    }
+    nextCoinX += rand(340, 560);
+  }
+
+  // hazards
+  while (nextHazX < aheadEdge) {
+    if (meters > 25 && !nearCheckpoint(nextHazX)) {
+      const tier = difficultyTier();
+      const r = Math.random();
+      const hy = ball.y + rand(-90, 70);
+      if (r < 0.38) {
+        hazards.push({ type: 'saw', x: nextHazX, y: hy, r: 20 + Math.min(tier * 1.2, 14), rot: 0 });
+      } else if (r < 0.72) {
+        hazards.push({ type: 'spikes', x: nextHazX, y: hy + 40, w: 90 + Math.min(tier * 8, 90), h: 22 });
+      } else {
+        const up = Math.random() < 0.6;
+        hazards.push({ type: 'wind', x: nextHazX, y: hy - 120, w: rand(160, 240), h: 260, fx: up ? 0 : -rand(300, 460), fy: up ? -rand(900, 1300) : 0, t: 0 });
+      }
+    }
+    const gap = Math.max(430, 1250 - meters * 2.6) * rand(0.85, 1.25);
+    nextHazX += gap;
+  }
+
+  // checkpoint / rest zone ink pickup
+  const cpx = startX + nextCheckpoint * PX_PER_M;
+  if (cpx < aheadEdge && !pickups.some(p => p.cp === nextCheckpoint)) {
+    pickups.push({ x: cpx + 30, y: ball.y - 70, taken: false, phase: 0, cp: nextCheckpoint });
+  }
+  // occasional free-floating ink drops
+  if (Math.random() < 0.004 && pickups.length < 6) {
+    pickups.push({ x: aheadEdge - rand(0, 100), y: ball.y + rand(-120, 20), taken: false, phase: rand(0, TAU), cp: -1 });
+  }
+
+  // cull far-left objects
+  const cullX = cam.x - 300;
+  for (let i = coinsArr.length - 1; i >= 0; i--) if (coinsArr[i].x < cullX || coinsArr[i].taken) coinsArr.splice(i, 1);
+  for (let i = hazards.length - 1; i >= 0; i--) if (hazards[i].x + (hazards[i].w || hazards[i].r || 0) < cullX) hazards.splice(i, 1);
+  for (let i = pickups.length - 1; i >= 0; i--) if (pickups[i].x < cullX || pickups[i].taken) pickups.splice(i, 1);
+}
+
+// ============================================================
+// PHYSICS
+// ============================================================
+function circleVsSegment(cx, cy, r, ax, ay, bx, by) {
+  const abx = bx - ax, aby = by - ay;
+  const apx = cx - ax, apy = cy - ay;
+  const ab2 = abx * abx + aby * aby;
+  let t = ab2 > 0 ? (apx * abx + apy * aby) / ab2 : 0;
+  t = clamp(t, 0, 1);
+  const px = ax + abx * t, py = ay + aby * t;
+  const dx = cx - px, dy = cy - py;
+  const d2 = dx * dx + dy * dy;
+  const rr = r + TERRAIN_HALF;
+  if (d2 >= rr * rr || d2 < 1e-9) return null;
+  const d = Math.sqrt(d2);
+  return { nx: dx / d, ny: dy / d, pen: rr - d, px, py };
+}
+
+function physicsStep(dt) {
+  gameTime += dt;
+
+  // ---- difficulty-scaled forces ----
+  const push = 300 + Math.min(340, meters * 0.9);
+  const maxVX = 430 + Math.min(380, meters * 1.05);
+
+  const wasGrounded = ball.grounded;
+
+  // gravity + forward push
+  ball.vy += GRAV * dt;
+  const pushEff = ball.grounded ? push : push * 0.42;
+  if (ball.vx < maxVX) ball.vx += pushEff * dt;
+
+  // wind zones
+  for (const h of hazards) {
+    if (h.type !== 'wind') continue;
+    if (ball.x > h.x && ball.x < h.x + h.w && ball.y > h.y && ball.y < h.y + h.h) {
+      ball.vx += h.fx * dt; ball.vy += h.fy * dt;
+    }
+  }
+
+  // mild air drag
+  ball.vx *= Math.exp(-0.06 * dt);
+  ball.vy *= Math.exp(-0.02 * dt);
+
+  ball.px = ball.x; ball.py = ball.y;
+  ball.x += ball.vx * dt;
+  ball.y += ball.vy * dt;
+
+  // ---- terrain collision ----
+  ball.grounded = false;
+  let impactVN = 0;
+  const bx = ball.x, by = ball.y;
+  for (const s of strokes) {
+    const age = gameTime - s.born;
+    if (age >= s.life) continue;
+    if (bx < s.minX - 40 || bx > s.maxX + 40 || by < s.minY - 40 || by > s.maxY + 40) continue;
+    const pts = s.pts;
+    for (let i = 0; i < pts.length - 1; i++) {
+      const a = pts[i], b = pts[i + 1];
+      // quick reject
+      if ((a.x < bx - 40 && b.x < bx - 40) || (a.x > bx + 40 && b.x > bx + 40)) continue;
+      const c = circleVsSegment(ball.x, ball.y, BALL_R, a.x, a.y, b.x, b.y);
+      if (!c) continue;
+      // positional correction
+      ball.x += c.nx * c.pen;
+      ball.y += c.ny * c.pen;
+      const vn = ball.vx * c.nx + ball.vy * c.ny;
+      if (vn < 0) {
+        if (-vn > impactVN) impactVN = -vn;
+        ball.vx -= c.nx * vn * (1 + RESTITUTION);
+        ball.vy -= c.ny * vn * (1 + RESTITUTION);
+        // rolling friction on tangential component (gentle — push must win on flats)
+        const tx = -c.ny, ty = c.nx;
+        let vt = ball.vx * tx + ball.vy * ty;
+        vt *= Math.exp(-0.45 * dt);
+        // rebuild velocity from components
+        const vn2 = ball.vx * c.nx + ball.vy * c.ny;
+        ball.vx = c.nx * vn2 + tx * vt;
+        ball.vy = c.ny * vn2 + ty * vt;
+      }
+      if (c.ny < -0.25) { // upward-ish normal = ground
+        ball.grounded = true;
+        ball.groundNX = c.nx; ball.groundNY = c.ny;
+      }
+    }
+  }
+
+  // ---- landing / airtime events ----
+  if (ball.grounded) {
+    if (!wasGrounded && ball.airTime > 0.12) {
+      onLand(impactVN, ball.airTime);
+    }
+    ball.wasAir = ball.airTime;
+    ball.airTime = 0;
+    airCoins = 0;
+    // spin matches surface speed
+    const tx = -ball.groundNY, ty = ball.groundNX;
+    const vt = ball.vx * tx + ball.vy * ty;
+    ball.av = vt / BALL_R;
+    // rolling dust
+    if (Math.abs(vt) > 160 && Math.random() < clamp(Math.abs(vt) / 900, 0, 0.8)) {
+      const cx2 = ball.x - ball.groundNX * BALL_R, cy2 = ball.y - ball.groundNY * BALL_R;
+      spawnPart(cx2, cy2, -ball.vx * 0.15 + rand(-30, 30), rand(-70, -10), rand(0.25, 0.55), rand(1.5, 3.5), 'rgba(180,150,110,0.8)', 300);
+    }
+  } else {
+    ball.airTime += dt;
+    ball.av *= Math.exp(-0.4 * dt);
+    // airborne streak
+    const sp = Math.hypot(ball.vx, ball.vy);
+    if (sp > 300 && Math.random() < 0.55) {
+      spawnPart(ball.x, ball.y, -ball.vx * 0.05, -ball.vy * 0.05, 0.3, rand(2, 4), 'rgba(255,255,255,0.5)', 0);
+    }
+  }
+  ball.rot += ball.av * dt;
+
+  // deform relax
+  ball.deform *= Math.exp(-8 * dt);
+
+  // ---- distance / score ----
+  const m = Math.max(meters, (ball.x - startX) / PX_PER_M);
+  meters = m;
+
+  // ---- ink regen (slows with distance) ----
+  const regen = Math.max(3.2, 7.5 - meters / 110);
+  ink = Math.min(INK_MAX, ink + regen * dt);
+
+  // ---- combo timer ----
+  if (comboTimer > 0) {
+    comboTimer -= dt;
+    if (comboTimer <= 0) combo = 1;
+  }
+
+  // ---- coins ----
+  for (const c of coinsArr) {
+    if (c.taken) continue;
+    const dx = ball.x - c.x, dy = ball.y - (c.y + Math.sin(gameTime * 3 + c.phase) * 5);
+    if (dx * dx + dy * dy < (BALL_R + 11) * (BALL_R + 11)) {
+      c.taken = true;
+      coins += combo;
+      sfxCoin(combo);
+      popup(c.x, c.y - 16, '+' + combo, '#ffd93d', 18);
+      for (let i = 0; i < 10; i++) {
+        const a = rand(0, TAU), s2 = rand(50, 220);
+        spawnPart(c.x, c.y, Math.cos(a) * s2, Math.sin(a) * s2, rand(0.3, 0.6), rand(1.5, 3), '#ffd93d', 300);
+      }
+      if (!ball.grounded) {
+        airCoins++;
+        if (airCoins === 3) comboUp('AIR STREAK!', true);
+      }
+    }
+  }
+
+  // ---- ink pickups ----
+  for (const p of pickups) {
+    if (p.taken) continue;
+    const dx = ball.x - p.x, dy = ball.y - (p.y + Math.sin(gameTime * 2.4 + p.phase) * 6);
+    if (dx * dx + dy * dy < (BALL_R + 14) * (BALL_R + 14)) {
+      p.taken = true;
+      ink = Math.min(INK_MAX, ink + 45);
+      sfxInk();
+      popup(p.x, p.y - 18, '+INK', '#5cc8ff', 18);
+      for (let i = 0; i < 12; i++) {
+        const a = rand(0, TAU), s2 = rand(40, 200);
+        spawnPart(p.x, p.y, Math.cos(a) * s2, Math.sin(a) * s2, rand(0.3, 0.7), rand(1.5, 3.5), '#5cc8ff', 200);
+      }
+    }
+  }
+
+  // ---- checkpoint ----
+  const cpx = startX + nextCheckpoint * PX_PER_M;
+  if (ball.x >= cpx) {
+    sfxCheckpoint();
+    popup(ball.x + 40, ball.y - 70, nextCheckpoint + 'm CHECKPOINT', '#7dffb0', 22);
+    ink = Math.min(INK_MAX, ink + 18);
+    checkpointFxT = 1;
+    nextCheckpoint += 250;
+  }
+  if (checkpointFxT > 0) checkpointFxT -= dt * 0.7;
+
+  // ---- deadly hazards ----
+  for (const h of hazards) {
+    if (h.type === 'saw') {
+      h.rot += dt * 9;
+      const dx = ball.x - h.x, dy = ball.y - h.y;
+      const rr = BALL_R + h.r - 4;
+      if (dx * dx + dy * dy < rr * rr) { die('sliced by a saw'); return; }
+    } else if (h.type === 'spikes') {
+      const nx = clamp(ball.x, h.x, h.x + h.w), ny = clamp(ball.y, h.y - h.h, h.y);
+      const dx = ball.x - nx, dy = ball.y - ny;
+      if (dx * dx + dy * dy < (BALL_R - 3) * (BALL_R - 3)) { die('impaled on spikes'); return; }
+    } else if (h.type === 'wind') {
+      h.t += dt;
+    }
+  }
+
+  // ---- terrain crumble particles + stroke culling ----
+  for (let i = strokes.length - 1; i >= 0; i--) {
+    const s = strokes[i];
+    const age = gameTime - s.born;
+    const crumbleStart = s.life - (TERRAIN_LIFE - CRUMBLE_AT);
+    if (age > crumbleStart && age < s.life && Math.random() < 0.35 && s.pts.length > 1) {
+      const p = s.pts[Math.floor(Math.random() * s.pts.length)];
+      if (p.x > cam.x - 20 && p.x < cam.x + W + 20) {
+        spawnPart(p.x + rand(-4, 4), p.y + rand(-4, 8), rand(-15, 15), rand(10, 70), rand(0.4, 0.9), rand(1.5, 3), 'rgba(140,100,60,0.9)', 420);
+      }
+    }
+    if (age >= s.life || s.maxX < cam.x - 260) strokes.splice(i, 1);
+  }
+
+  // ---- death by void ----
+  if (ball.y - cam.y > H + 140) { die('fell into the void'); return; }
+
+  spawnAhead();
+}
+
+function comboUp(label, big) {
+  combo = Math.min(combo + 1, 12);
+  comboTimer = 5;
+  if (combo > bestCombo) bestCombo = combo;
+  popup(ball.x, ball.y - 46, label + '  x' + combo, '#ff9ff3', 22);
+  if (big) {
+    slowmoT = 0.3;
+    timeScale = 0.3;
+    sfxSlowmo();
+  }
+}
+
+function onLand(impact, airT) {
+  ball.prevVN = impact;
+  // squash oriented to ground normal
+  ball.deform = clamp(impact / 1100, 0, 0.5);
+  ball.deformAng = Math.atan2(ball.groundNY, ball.groundNX);
+  sfxLand(impact);
+  if (impact > 380) {
+    shake = Math.min(10, impact / 130);
+    const cx2 = ball.x - ball.groundNX * BALL_R, cy2 = ball.y - ball.groundNY * BALL_R;
+    for (let i = 0; i < 12; i++) {
+      spawnPart(cx2 + rand(-8, 8), cy2, rand(-140, 140), rand(-160, -20), rand(0.3, 0.7), rand(2, 4), 'rgba(180,150,110,0.85)', 500);
+    }
+  }
+  // smooth landing: velocity nearly parallel to slope
+  const sp = Math.hypot(ball.vx, ball.vy);
+  if (sp > 200) {
+    const tx = -ball.groundNY, ty = ball.groundNX;
+    const cosA = Math.abs((ball.vx * tx + ball.vy * ty) / sp);
+    if (cosA > 0.965 && airT > 0.35) comboUp('SMOOTH!', false);
+    else if (airT > 1.15) comboUp('BIG AIR!', false);
+  }
+}
+
+// ============================================================
+// RENDERING
+// ============================================================
+// day-night palettes: [skyTop, skyBot, mountains, hills, sun]
+const PALS = [
+  { top: '#69b7f2', bot: '#d8f0ff', mtn: '#8fb4d9', hill: '#8fd07f', amb: 0 },     // day
+  { top: '#f2926b', bot: '#ffd9a8', mtn: '#b07898', hill: '#7ba86a', amb: 0.15 },  // sunset
+  { top: '#131b3d', bot: '#33406e', mtn: '#2a3760', hill: '#2f4a58', amb: 0.75 },  // night
+  { top: '#7a6bb5', bot: '#ffc4d0', mtn: '#7d7bb0', hill: '#6da075', amb: 0.3 }    // dawn
+];
+function palAt(m) {
+  const cyc = (m % 600) / 600 * 4; // full cycle every 600 m
+  const i = Math.floor(cyc) % 4, j = (i + 1) % 4;
+  const t0 = cyc - Math.floor(cyc);
+  const t = t0 < 0.7 ? 0 : (t0 - 0.7) / 0.3; // hold then blend
+  const A = PALS[i], B = PALS[j];
+  return {
+    top: mixHex(A.top, B.top, t), bot: mixHex(A.bot, B.bot, t),
+    mtn: mixHex(A.mtn, B.mtn, t), hill: mixHex(A.hill, B.hill, t),
+    amb: lerp(A.amb, B.amb, t)
+  };
+}
+
+function mtnY(x, seed, amp) {
+  return Math.sin(x * 0.0021 + seed) * amp + Math.sin(x * 0.0057 + seed * 2.3) * amp * 0.4 + Math.sin(x * 0.013 + seed * 4.1) * amp * 0.15;
+}
+
+function drawBackground(pal) {
+  // sky
+  const g = ctx.createLinearGradient(0, 0, 0, H);
+  g.addColorStop(0, pal.top); g.addColorStop(1, pal.bot);
+  ctx.fillStyle = g;
+  ctx.fillRect(0, 0, W, H);
+
+  // stars at night
+  if (pal.amb > 0.35) {
+    ctx.globalAlpha = (pal.amb - 0.35) * 1.6;
+    ctx.fillStyle = '#fff';
+    for (let i = 0; i < 40; i++) {
+      const sx = ((i * 733.1 - cam.x * 0.02) % (W + 40) + W + 40) % (W + 40) - 20;
+      const sy = (i * 391.7) % (H * 0.6);
+      const tw = 0.6 + 0.4 * Math.sin(gameTime * 2 + i * 1.7);
+      ctx.fillRect(sx, sy, 1.6 * tw, 1.6 * tw);
+    }
+    ctx.globalAlpha = 1;
+  }
+
+  // sun / moon
+  const sunY = H * 0.22 + Math.sin(meters * 0.002) * 20;
+  ctx.beginPath();
+  ctx.arc(W * 0.78, sunY, 34, 0, TAU);
+  ctx.fillStyle = pal.amb > 0.5 ? 'rgba(240,240,255,0.9)' : 'rgba(255,236,160,0.95)';
+  ctx.fill();
+
+  // far mountains (parallax 0.15)
+  ctx.fillStyle = pal.mtn;
+  ctx.beginPath();
+  ctx.moveTo(0, H);
+  const off1 = cam.x * 0.15, base1 = H * 0.62 + cam.y * 0.05;
+  for (let sx = 0; sx <= W; sx += 14) {
+    ctx.lineTo(sx, base1 + mtnY(sx + off1, 3.7, 90));
+  }
+  ctx.lineTo(W, H); ctx.closePath(); ctx.fill();
+
+  // mid hills (parallax 0.4)
+  ctx.fillStyle = pal.hill;
+  ctx.beginPath();
+  ctx.moveTo(0, H);
+  const off2 = cam.x * 0.4, base2 = H * 0.82 + cam.y * 0.12;
+  for (let sx = 0; sx <= W; sx += 12) {
+    ctx.lineTo(sx, base2 + mtnY(sx + off2, 9.2, 55));
+  }
+  ctx.lineTo(W, H); ctx.closePath(); ctx.fill();
+
+  // night dimming veil
+  if (pal.amb > 0) {
+    ctx.fillStyle = 'rgba(10,14,40,' + (pal.amb * 0.18) + ')';
+    ctx.fillRect(0, 0, W, H);
+  }
+}
+
+function strokePath(pts) {
+  ctx.beginPath();
+  if (pts.length === 1) {
+    ctx.moveTo(pts[0].x, pts[0].y);
+    ctx.lineTo(pts[0].x + 0.1, pts[0].y);
+    return;
+  }
+  ctx.moveTo(pts[0].x, pts[0].y);
+  for (let i = 1; i < pts.length - 1; i++) {
+    const mx = (pts[i].x + pts[i + 1].x) / 2, my = (pts[i].y + pts[i + 1].y) / 2;
+    ctx.quadraticCurveTo(pts[i].x, pts[i].y, mx, my);
+  }
+  ctx.lineTo(pts[pts.length - 1].x, pts[pts.length - 1].y);
+}
+
+function drawTerrain() {
+  ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+  for (const s of strokes) {
+    if (s.pts.length < 1) continue;
+    if (s.maxX < cam.x - 30 || s.minX > cam.x + W + 30) continue;
+    const age = gameTime - s.born;
+    const crumbleStart = s.life - (TERRAIN_LIFE - CRUMBLE_AT);
+    let alpha = 1;
+    if (age > crumbleStart) alpha = clamp(1 - (age - crumbleStart) / (s.life - crumbleStart), 0, 1);
+    ctx.globalAlpha = 0.25 + alpha * 0.75;
+
+    // grass layer (full thickness, drawn first so top edge stays green)
+    ctx.strokeStyle = '#5cb85c';
+    ctx.lineWidth = 14;
+    strokePath(s.pts);
+    ctx.stroke();
+
+    // dirt body, nudged down so grass peeks on top
+    ctx.save();
+    ctx.translate(0, 4);
+    ctx.strokeStyle = '#9a6a3f';
+    ctx.lineWidth = 11;
+    strokePath(s.pts);
+    ctx.stroke();
+    ctx.restore();
+
+    // crack warning
+    if (age > crumbleStart) {
+      const pulse = 0.5 + 0.5 * Math.sin(gameTime * 14);
+      ctx.globalAlpha = (1 - alpha) * 0.8 * (0.6 + 0.4 * pulse);
+      ctx.strokeStyle = '#3d2b1a';
+      ctx.lineWidth = 2.5;
+      ctx.setLineDash([5, 9]);
+      strokePath(s.pts);
+      ctx.stroke();
+      ctx.setLineDash([]);
+    }
+    ctx.globalAlpha = 1;
+  }
+}
+
+function drawCoin(c) {
+  const y = c.y + Math.sin(gameTime * 3 + c.phase) * 5;
+  const sq = 0.72 + 0.28 * Math.abs(Math.sin(gameTime * 2.2 + c.phase));
+  ctx.save();
+  ctx.translate(c.x, y);
+  ctx.scale(sq, 1);
+  ctx.beginPath(); ctx.arc(0, 0, 10, 0, TAU);
+  ctx.fillStyle = '#ffd93d'; ctx.fill();
+  ctx.lineWidth = 2.5; ctx.strokeStyle = '#e0a800'; ctx.stroke();
+  ctx.beginPath(); ctx.arc(0, 0, 5, 0, TAU);
+  ctx.strokeStyle = 'rgba(224,168,0,0.7)'; ctx.lineWidth = 1.5; ctx.stroke();
+  ctx.restore();
+}
+
+function drawPickup(p) {
+  const y = p.y + Math.sin(gameTime * 2.4 + p.phase) * 6;
+  ctx.save();
+  ctx.translate(p.x, y);
+  // ink bottle
+  ctx.fillStyle = '#5cc8ff';
+  ctx.strokeStyle = '#2a7fb8';
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.moveTo(-8, 10); ctx.lineTo(-8, -3); ctx.lineTo(-4, -7); ctx.lineTo(-4, -12); ctx.lineTo(4, -12); ctx.lineTo(4, -7); ctx.lineTo(8, -3); ctx.lineTo(8, 10);
+  ctx.closePath(); ctx.fill(); ctx.stroke();
+  ctx.fillStyle = 'rgba(255,255,255,0.5)';
+  ctx.fillRect(-5, -2, 3, 9);
+  // glow
+  ctx.globalAlpha = 0.25 + 0.15 * Math.sin(gameTime * 4);
+  ctx.beginPath(); ctx.arc(0, 0, 20, 0, TAU); ctx.fillStyle = '#5cc8ff'; ctx.fill();
+  ctx.restore();
+}
+
+function drawHazard(h) {
+  if (h.type === 'saw') {
+    ctx.save();
+    ctx.translate(h.x, h.y);
+    ctx.rotate(h.rot);
+    ctx.fillStyle = '#b8bcc4';
+    ctx.beginPath();
+    const teeth = 10;
+    for (let i = 0; i < teeth; i++) {
+      const a0 = (i / teeth) * TAU, a1 = ((i + 0.5) / teeth) * TAU, a2 = ((i + 1) / teeth) * TAU;
+      ctx.lineTo(Math.cos(a0) * h.r, Math.sin(a0) * h.r);
+      ctx.lineTo(Math.cos(a1) * (h.r + 7), Math.sin(a1) * (h.r + 7));
+      ctx.lineTo(Math.cos(a2) * h.r, Math.sin(a2) * h.r);
+    }
+    ctx.closePath(); ctx.fill();
+    ctx.beginPath(); ctx.arc(0, 0, h.r * 0.5, 0, TAU);
+    ctx.fillStyle = '#7d828c'; ctx.fill();
+    ctx.beginPath(); ctx.arc(0, 0, 3.5, 0, TAU);
+    ctx.fillStyle = '#4a4e57'; ctx.fill();
+    ctx.restore();
+  } else if (h.type === 'spikes') {
+    ctx.fillStyle = '#5a5f6b';
+    ctx.fillRect(h.x, h.y - 4, h.w, 8);
+    ctx.fillStyle = '#8b909c';
+    ctx.beginPath();
+    const n = Math.floor(h.w / 15);
+    for (let i = 0; i < n; i++) {
+      const x0 = h.x + i * (h.w / n);
+      ctx.moveTo(x0, h.y - 3);
+      ctx.lineTo(x0 + h.w / n / 2, h.y - h.h);
+      ctx.lineTo(x0 + h.w / n, h.y - 3);
+    }
+    ctx.fill();
+  } else if (h.type === 'wind') {
+    ctx.save();
+    ctx.globalAlpha = 0.14;
+    ctx.fillStyle = '#bfe8ff';
+    ctx.fillRect(h.x, h.y, h.w, h.h);
+    ctx.globalAlpha = 0.55;
+    ctx.strokeStyle = '#dff4ff';
+    ctx.lineWidth = 2;
+    const up = h.fy !== 0;
+    for (let i = 0; i < 6; i++) {
+      const t = ((gameTime * 1.4 + i * 0.37) % 1);
+      ctx.beginPath();
+      if (up) {
+        const x0 = h.x + ((i * 53.7) % h.w);
+        const y0 = h.y + h.h - t * h.h;
+        ctx.moveTo(x0, y0 + 18);
+        ctx.quadraticCurveTo(x0 + 6, y0 + 9, x0, y0);
+      } else {
+        const y0 = h.y + ((i * 47.3) % h.h);
+        const x0 = h.x + h.w - t * h.w;
+        ctx.moveTo(x0 + 20, y0);
+        ctx.quadraticCurveTo(x0 + 10, y0 + 5, x0, y0);
+      }
+      ctx.stroke();
+    }
+    ctx.restore();
+  }
+}
+
+function drawBall(alphaT) {
+  const bx = lerp(ball.px, ball.x, alphaT);
+  const by = lerp(ball.py, ball.y, alphaT);
+  ctx.save();
+  ctx.translate(bx, by);
+
+  // deform: squash on land (along stored normal), stretch when fast in air
+  let sx = 1, sy = 1, dAng = 0;
+  if (ball.deform > 0.01) {
+    dAng = ball.deformAng + Math.PI / 2; // squash axis perpendicular to normal
+    sx = 1 + ball.deform * 0.9;
+    sy = 1 - ball.deform * 0.65;
+  } else if (!ball.grounded) {
+    const sp = Math.hypot(ball.vx, ball.vy);
+    const st = clamp((sp - 400) / 2600, 0, 0.22);
+    if (st > 0.01) {
+      dAng = Math.atan2(ball.vy, ball.vx);
+      sx = 1 + st; sy = 1 - st;
+    }
+  }
+  ctx.rotate(dAng);
+  ctx.scale(sx, sy);
+  ctx.rotate(-dAng);
+  ctx.rotate(ball.rot);
+
+  // body
+  const g = ctx.createRadialGradient(-4, -5, 2, 0, 0, BALL_R + 2);
+  g.addColorStop(0, '#ff9d76');
+  g.addColorStop(1, '#e8542f');
+  ctx.beginPath(); ctx.arc(0, 0, BALL_R, 0, TAU);
+  ctx.fillStyle = g; ctx.fill();
+  ctx.lineWidth = 2; ctx.strokeStyle = '#b93a1c'; ctx.stroke();
+  // rotation marker
+  ctx.beginPath(); ctx.arc(BALL_R * 0.5, 0, 3.4, 0, TAU);
+  ctx.fillStyle = '#ffe3d0'; ctx.fill();
+  // face-ish highlight
+  ctx.beginPath(); ctx.arc(-4, -5, 3.5, 0, TAU);
+  ctx.fillStyle = 'rgba(255,255,255,0.55)'; ctx.fill();
+  ctx.restore();
+}
+
+function drawCheckpointFlag() {
+  const cpx = startX + nextCheckpoint * PX_PER_M;
+  if (cpx < cam.x - 60 || cpx > cam.x + W + 60) return;
+  ctx.save();
+  const wob = Math.sin(gameTime * 3) * 4;
+  const topY = cam.y + 60;
+  ctx.strokeStyle = 'rgba(255,255,255,0.5)';
+  ctx.lineWidth = 3;
+  ctx.setLineDash([10, 12]);
+  ctx.beginPath();
+  ctx.moveTo(cpx, cam.y);
+  ctx.lineTo(cpx, cam.y + H);
+  ctx.stroke();
+  ctx.setLineDash([]);
+  ctx.fillStyle = '#7dffb0';
+  ctx.beginPath();
+  ctx.moveTo(cpx, topY);
+  ctx.lineTo(cpx + 44 + wob, topY + 13);
+  ctx.lineTo(cpx, topY + 26);
+  ctx.closePath(); ctx.fill();
+  ctx.fillStyle = 'rgba(255,255,255,0.9)';
+  ctx.font = '700 15px system-ui, sans-serif';
+  ctx.textAlign = 'left';
+  ctx.fillText(nextCheckpoint + 'm', cpx + 8, topY + 48);
+  ctx.restore();
+}
+
+function drawHUD(pal) {
+  const dark = pal.amb > 0.45;
+  const fg = dark ? 'rgba(255,255,255,0.95)' : 'rgba(30,40,60,0.9)';
+
+  // distance — top center
+  ctx.textAlign = 'center';
+  ctx.font = '800 30px system-ui, sans-serif';
+  ctx.fillStyle = fg;
+  ctx.fillText(Math.floor(meters) + 'm', W / 2, 42);
+  if (combo > 1) {
+    ctx.font = '800 19px system-ui, sans-serif';
+    ctx.fillStyle = '#ff9ff3';
+    const pulse = 1 + 0.06 * Math.sin(gameTime * 10);
+    ctx.save();
+    ctx.translate(W / 2, 68); ctx.scale(pulse, pulse);
+    ctx.fillText('COMBO x' + combo, 0, 0);
+    ctx.restore();
+  }
+
+  // ink meter — top left
+  const iw = Math.min(180, W * 0.3), ih = 8, ix = 16, iy = 22;
+  ctx.fillStyle = dark ? 'rgba(255,255,255,0.18)' : 'rgba(30,40,60,0.18)';
+  roundRect(ix, iy, iw, ih, 4); ctx.fill();
+  const frac = ink / INK_MAX;
+  const low = frac < 0.2;
+  ctx.fillStyle = low ? (Math.sin(gameTime * 12) > 0 ? '#ff6b6b' : '#ff9d9d') : '#5cc8ff';
+  if (frac > 0.005) { roundRect(ix, iy, iw * frac, ih, 4); ctx.fill(); }
+  ctx.font = '700 12px system-ui, sans-serif';
+  ctx.textAlign = 'left';
+  ctx.fillStyle = fg;
+  ctx.fillText('INK', ix, iy - 6);
+
+  // coins — top right
+  ctx.textAlign = 'right';
+  ctx.font = '800 22px system-ui, sans-serif';
+  ctx.fillStyle = '#ffd93d';
+  ctx.fillText(coins, W - 20, 38);
+  ctx.beginPath(); ctx.arc(W - 20 - ctx.measureText(String(coins)).width - 16, 31, 8, 0, TAU);
+  ctx.fillStyle = '#ffd93d'; ctx.fill();
+  ctx.lineWidth = 2; ctx.strokeStyle = '#e0a800'; ctx.stroke();
+}
+
+function roundRect(x, y, w, h, r) {
+  ctx.beginPath();
+  ctx.moveTo(x + r, y);
+  ctx.arcTo(x + w, y, x + w, y + h, r);
+  ctx.arcTo(x + w, y + h, x, y + h, r);
+  ctx.arcTo(x, y + h, x, y, r);
+  ctx.arcTo(x, y, x + w, y, r);
+  ctx.closePath();
+}
+
+function drawStartScreen() {
+  ctx.fillStyle = 'rgba(15,25,45,0.35)';
+  ctx.fillRect(0, 0, W, H);
+  ctx.textAlign = 'center';
+  ctx.fillStyle = '#fff';
+  ctx.font = '800 ' + Math.min(58, W * 0.09) + 'px system-ui, sans-serif';
+  ctx.fillText('Terrain Painter', W / 2, H * 0.32);
+  ctx.font = '600 19px system-ui, sans-serif';
+  ctx.fillStyle = 'rgba(255,255,255,0.85)';
+  const bob = Math.sin(performance.now() * 0.003) * 4;
+  ctx.fillText('~ draw to begin ~', W / 2, H * 0.44 + bob);
+  ctx.font = '500 15px system-ui, sans-serif';
+  ctx.fillStyle = 'rgba(255,255,255,0.65)';
+  ctx.fillText('The line you draw IS the ground. Keep the ball alive.', W / 2, H * 0.52);
+  ctx.fillText('Ink is limited — terrain crumbles — keep painting ahead!', W / 2, H * 0.56);
+  if (best > 0) {
+    ctx.font = '700 16px system-ui, sans-serif';
+    ctx.fillStyle = '#ffd93d';
+    ctx.fillText('BEST: ' + Math.floor(best) + 'm', W / 2, H * 0.64);
+  }
+}
+
+function drawDeathScreen() {
+  const t = clamp((performance.now() - deadAt) / 400, 0, 1);
+  ctx.fillStyle = 'rgba(15,20,35,' + (0.55 * t) + ')';
+  ctx.fillRect(0, 0, W, H);
+  if (t < 0.3) return;
+  ctx.textAlign = 'center';
+  ctx.fillStyle = '#ff8a5c';
+  ctx.font = '800 40px system-ui, sans-serif';
+  ctx.fillText('GAME OVER', W / 2, H * 0.28);
+  ctx.font = '500 15px system-ui, sans-serif';
+  ctx.fillStyle = 'rgba(255,255,255,0.6)';
+  ctx.fillText(deathCause, W / 2, H * 0.33);
+
+  ctx.font = '800 46px system-ui, sans-serif';
+  ctx.fillStyle = '#fff';
+  ctx.fillText(Math.floor(meters) + 'm', W / 2, H * 0.44);
+
+  ctx.font = '600 19px system-ui, sans-serif';
+  ctx.fillStyle = '#ffd93d';
+  ctx.fillText('coins ' + coins + '    best combo x' + bestCombo, W / 2, H * 0.51);
+
+  const newBest = meters >= best && meters > 0;
+  ctx.fillStyle = newBest ? '#7dffb0' : 'rgba(255,255,255,0.8)';
+  ctx.font = '700 17px system-ui, sans-serif';
+  ctx.fillText(newBest ? 'NEW PERSONAL BEST!' : 'personal best ' + Math.floor(best) + 'm', W / 2, H * 0.58);
+
+  if (performance.now() - deadAt > 600) {
+    const bob = Math.sin(performance.now() * 0.004) * 3;
+    ctx.fillStyle = 'rgba(255,255,255,0.9)';
+    ctx.font = '700 20px system-ui, sans-serif';
+    ctx.fillText('tap to restart', W / 2, H * 0.68 + bob);
+  }
+}
+
+function render(alphaT) {
+  ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
+
+  // camera target from interpolated ball
+  const bx = lerp(ball.px, ball.x, alphaT);
+  const by = lerp(ball.py, ball.y, alphaT);
+  const tx = bx - W * 0.33;
+  const ty = by - H * 0.46;
+  if (!cam.init) { cam.x = tx; cam.y = ty; cam.init = true; }
+  cam.x = lerp(cam.x, tx, 0.12);
+  cam.y = lerp(cam.y, ty, 0.07);
+
+  const pal = palAt(meters);
+  drawBackground(pal);
+
+  // shake
+  let shx = 0, shy = 0;
+  if (shake > 0.2) {
+    shx = rand(-shake, shake); shy = rand(-shake, shake);
+  }
+
+  ctx.save();
+  ctx.translate(-cam.x + shx, -cam.y + shy);
+
+  drawCheckpointFlag();
+  for (const h of hazards) drawHazard(h);
+  drawTerrain();
+  for (const c of coinsArr) if (!c.taken) drawCoin(c);
+  for (const p of pickups) if (!p.taken) drawPickup(p);
+  if (state !== 'dead') drawBall(alphaT);
+
+  // particles
+  for (let i = 0; i < POOL; i++) {
+    const p = parts[i];
+    if (!p.on) continue;
+    const a = p.life / p.max;
+    ctx.globalAlpha = a;
+    ctx.fillStyle = p.color;
+    ctx.beginPath();
+    ctx.arc(p.x, p.y, p.size * (0.4 + a * 0.6), 0, TAU);
+    ctx.fill();
+  }
+  ctx.globalAlpha = 1;
+
+  // popups
+  for (const p of popups) {
+    const a = clamp(p.life / p.max, 0, 1);
+    ctx.globalAlpha = a;
+    ctx.fillStyle = p.color;
+    ctx.font = '800 ' + p.size + 'px system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText(p.txt, p.x, p.y - (1 - a) * 40);
+  }
+  ctx.globalAlpha = 1;
+
+  // ink-low pointer hint: exclusion circle around ball while drawing near it
+  if (drawing && drawBlocked && state === 'play') {
+    ctx.beginPath();
+    ctx.arc(ball.x, ball.y, EXCLUDE_R, 0, TAU);
+    ctx.strokeStyle = 'rgba(255,107,107,0.5)';
+    ctx.setLineDash([4, 6]);
+    ctx.lineWidth = 2;
+    ctx.stroke();
+    ctx.setLineDash([]);
+  }
+
+  ctx.restore();
+
+  // slow-mo vignette flash
+  if (timeScale < 0.95) {
+    ctx.fillStyle = 'rgba(255,159,243,' + (0.12 * (1 - timeScale)) + ')';
+    ctx.fillRect(0, 0, W, H);
+  }
+  // checkpoint flash
+  if (checkpointFxT > 0) {
+    ctx.fillStyle = 'rgba(125,255,176,' + (0.14 * checkpointFxT) + ')';
+    ctx.fillRect(0, 0, W, H);
+  }
+
+  drawHUD(pal);
+
+  if (state === 'start') drawStartScreen();
+  else if (state === 'dead') drawDeathScreen();
+
+  if (paused) {
+    ctx.fillStyle = 'rgba(10,15,30,0.55)';
+    ctx.fillRect(0, 0, W, H);
+    ctx.textAlign = 'center';
+    ctx.fillStyle = '#fff';
+    ctx.font = '800 32px system-ui, sans-serif';
+    ctx.fillText('PAUSED', W / 2, H / 2);
+    ctx.font = '600 15px system-ui, sans-serif';
+    ctx.fillStyle = 'rgba(255,255,255,0.7)';
+    ctx.fillText('game paused while tab is inactive', W / 2, H / 2 + 30);
+  }
+}
+
+// ============================================================
+// MAIN LOOP — fixed timestep + render interpolation
+// ============================================================
+function pauseGame() {
+  paused = true;
+  if (AC && AC.state === 'running') AC.suspend();
+}
+function resumeGame() {
+  if (!paused) return;
+  paused = false;
+  lastT = performance.now();
+  accum = 0;
+  if (AC && AC.state === 'suspended') AC.resume();
+  if (AC) musicTime = Math.max(musicTime, AC.currentTime + 0.1);
+}
+document.addEventListener('visibilitychange', () => {
+  if (document.hidden) pauseGame(); else resumeGame();
+});
+window.addEventListener('blur', pauseGame);
+window.addEventListener('focus', resumeGame);
+
+function updateAudioFrame() {
+  if (!AC || paused) return;
+  scheduleMusic();
+  const sp = Math.hypot(ball.vx, ball.vy);
+  // rolling rumble
+  const target = (state === 'play' && ball.grounded) ? clamp(sp / 3800, 0, 0.14) : 0;
+  rollGain.gain.setTargetAtTime(target, AC.currentTime, 0.08);
+  rollFilt.frequency.setTargetAtTime(140 + sp * 0.5, AC.currentTime, 0.1);
+  // pencil scratch while actively drawing
+  const scratching = drawing && state === 'play' && ink > 0 && (gameTime - lastDrawMove) < 0.08;
+  scratchGain.gain.setTargetAtTime(scratching ? 0.035 : 0, AC.currentTime, 0.03);
+}
+
+function frame(now) {
+  requestAnimationFrame(frame);
+  let dt = (now - lastT) / 1000;
+  lastT = now;
+  if (dt > 0.06) dt = 0.06; // clamp big frame gaps
+
+  if (!paused) {
+    // slow-mo decay in real time
+    if (slowmoT > 0) {
+      slowmoT -= dt;
+      if (slowmoT <= 0) timeScale = 1;
+    } else if (timeScale < 1) {
+      timeScale = Math.min(1, timeScale + dt * 4);
+    }
+
+    if (state === 'play') {
+      accum += dt * timeScale;
+      let guard = 0;
+      while (accum >= STEP && guard < 12) {
+        physicsStep(STEP);
+        accum -= STEP;
+        guard++;
+        if (state !== 'play') { accum = 0; break; }
+      }
+    } else {
+      gameTime += dt; // keep ambient animation ticking
+      ball.px = ball.x; ball.py = ball.y;
+    }
+
+    updateParts(dt);
+    for (let i = popups.length - 1; i >= 0; i--) {
+      popups[i].life -= dt;
+      if (popups[i].life <= 0) popups.splice(i, 1);
+    }
+    shake *= Math.exp(-7 * dt);
+
+    updateAudioFrame();
+  }
+
+  const alphaT = state === 'play' ? clamp(accum / STEP, 0, 1) : 1;
+  render(alphaT);
+}
+requestAnimationFrame(frame);
+</script>
+</body>
+</html>
