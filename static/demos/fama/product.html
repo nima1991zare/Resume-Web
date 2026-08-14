@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>جزئیات محصول | فروشگاه فاما</title>
+  <meta name="description" content="مشاهده جزئیات و خرید محصولات آرایشی و بهداشتی اورجینال از فروشگاه فاما.">
+  <link rel="icon" type="image/svg+xml" href="assets/img/favicon.svg">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="assets/css/style.css">
+</head>
+<body>
+
+  <div class="topbar">ارسال رایگان برای خریدهای بالای ۵۰۰ هزار تومان | کد تخفیف اولین خرید: <b>FAMA10</b></div>
+
+  <header class="header">
+    <div class="container header-inner">
+      <button type="button" id="menuToggle" class="icon-btn menu-toggle" aria-label="باز کردن منو" aria-expanded="false" aria-controls="mainNav">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+      </button>
+
+      <a href="index.html" class="logo" aria-label="فاما — صفحه اصلی">
+        <img src="assets/img/logo.svg" alt="لوگوی فاما" width="220" height="64">
+      </a>
+
+      <form class="search-box" id="searchForm" role="search">
+        <label for="searchInput" class="visually-hidden">جستجوی محصولات</label>
+        <input type="search" id="searchInput" placeholder="جستجو در محصولات فاما...">
+        <span class="search-icon">
+          <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        </span>
+      </form>
+
+      <div class="header-actions">
+        <a href="products.html" class="icon-btn" aria-label="علاقه‌مندی‌ها">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+        </a>
+        <button type="button" id="cartOpen" class="icon-btn" aria-label="سبد خرید">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>
+          <span id="cartCount" class="cart-count" style="display:none">۰</span>
+        </button>
+      </div>
+    </div>
+
+    <nav class="nav" id="mainNav" aria-label="منوی اصلی">
+      <div class="container">
+        <ul>
+          <li><a href="index.html">خانه</a></li>
+          <li><a href="products.html" class="active">همه محصولات</a></li>
+          <li><a href="products.html?cat=lips">آرایش لب</a></li>
+          <li><a href="products.html?cat=eyes">آرایش چشم</a></li>
+          <li><a href="products.html?cat=face">آرایش صورت</a></li>
+          <li><a href="products.html?cat=skincare">مراقبت پوست</a></li>
+          <li><a href="products.html?cat=fragrance">عطر و بدن</a></li>
+          <li><a href="products.html?cat=tools">ابزار آرایشی</a></li>
+        </ul>
+      </div>
+    </nav>
+  </header>
+
+  <main>
+    <div class="container">
+      <nav class="breadcrumb" aria-label="مسیر صفحه">
+        <a href="index.html">خانه</a>
+        <span class="sep">/</span>
+        <a href="products.html">محصولات</a>
+        <span class="sep">/</span>
+        <span id="crumbName">جزئیات محصول</span>
+      </nav>
+    </div>
+
+    <section class="section" style="padding-top:16px">
+      <div class="container pd-layout" id="productDetail"></div>
+    </section>
+
+    <section class="section" style="padding-top:0" aria-labelledby="relTitle">
+      <div class="container">
+        <div class="section-head">
+          <div>
+            <h2 class="section-title" id="relTitle">محصولات مرتبط</h2>
+            <p class="section-sub">شاید این‌ها را هم دوست داشته باشید</p>
+          </div>
+        </div>
+        <div class="product-grid" id="relatedGrid"></div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <div class="container footer-grid">
+      <div>
+        <img src="assets/img/logo-white.svg" alt="لوگوی فاما" class="logo-white" width="220" height="64">
+        <p>فروشگاه اینترنتی فاما با هدف عرضه لوازم آرایشی و بهداشتی اورجینال با بهترین قیمت راه‌اندازی شده است. زیبایی شما، افتخار ماست.</p>
+        <div class="socials">
+          <a href="#" aria-label="اینستاگرام"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="20" rx="5"/><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"/></svg></a>
+          <a href="#" aria-label="تلگرام"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg></a>
+          <a href="#" aria-label="واتساپ"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg></a>
+        </div>
+      </div>
+      <nav aria-label="دسترسی سریع">
+        <h4>دسترسی سریع</h4>
+        <ul>
+          <li><a href="index.html">صفحه اصلی</a></li>
+          <li><a href="products.html">همه محصولات</a></li>
+          <li><a href="products.html?cat=lips">آرایش لب</a></li>
+          <li><a href="products.html?cat=skincare">مراقبت پوست</a></li>
+          <li><a href="products.html?cat=fragrance">عطر و بدن</a></li>
+        </ul>
+      </nav>
+      <nav aria-label="خدمات مشتریان">
+        <h4>خدمات مشتریان</h4>
+        <ul>
+          <li><a href="#">راهنمای خرید</a></li>
+          <li><a href="#">شرایط بازگشت کالا</a></li>
+          <li><a href="#">پیگیری سفارش</a></li>
+          <li><a href="#">سوالات متداول</a></li>
+          <li><a href="#">حریم خصوصی</a></li>
+        </ul>
+      </nav>
+      <div>
+        <h4>تماس با ما</h4>
+        <ul class="footer-contact">
+          <li>
+            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+            <span>۰۲۱-۹۱۰۰۰۰۰۰</span>
+          </li>
+          <li>
+            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+            <span>info@fama-shop.ir</span>
+          </li>
+          <li>
+            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+            <span>تهران، خیابان ولیعصر</span>
+          </li>
+          <li>
+            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+            <span>شنبه تا پنجشنبه — ۹ تا ۱۸</span>
+          </li>
+        </ul>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <div class="container">تمامی حقوق این وب‌سایت متعلق به فروشگاه فاما است. © ۱۴۰۵</div>
+    </div>
+  </footer>
+
+  <div class="overlay" id="overlay"></div>
+  <aside class="cart-drawer" id="cartDrawer" aria-label="سبد خرید">
+    <div class="cart-head">
+      <h3>سبد خرید</h3>
+      <button type="button" id="cartClose" class="icon-btn" aria-label="بستن سبد خرید">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+    <div class="cart-items" id="cartItems"></div>
+    <div class="cart-foot">
+      <div class="cart-total"><span>جمع کل:</span><span id="cartTotal">۰ تومان</span></div>
+      <button type="button" class="btn btn-primary" style="width:100%">ادامه فرآیند خرید</button>
+    </div>
+  </aside>
+
+  <script src="assets/js/products.js"></script>
+  <script src="assets/js/main.js"></script>
+</body>
+</html>

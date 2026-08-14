@@ -1,0 +1,715 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Sound Dash — Web Teaser</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  html, body { height: 100%; overflow: hidden; background: #06040f; font-family: "Segoe UI", system-ui, -apple-system, sans-serif; }
+
+  /* ---- Slim demo bar ---- */
+  #demobar {
+    position: fixed; top: 0; left: 0; right: 0; height: 34px; z-index: 30;
+    display: flex; align-items: center; gap: 12px; padding: 0 12px;
+    background: rgba(10, 6, 24, 0.95);
+    border-bottom: 1px solid rgba(255, 60, 220, 0.35);
+    font-size: 12px; color: #b9a8d8; letter-spacing: 0.4px;
+    user-select: none;
+  }
+  #demobar a {
+    color: #34e5ff; text-decoration: none; font-weight: 600; white-space: nowrap;
+  }
+  #demobar a:hover { text-shadow: 0 0 8px #34e5ff; }
+  #demobar .label { overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+  #demobar .label b { color: #ff4fd8; font-weight: 700; }
+
+  /* ---- Stage ---- */
+  #stage { position: fixed; top: 34px; left: 0; right: 0; bottom: 0; }
+  canvas { display: block; width: 100%; height: 100%; touch-action: none; }
+
+  /* ---- Mute button ---- */
+  #muteBtn {
+    position: absolute; top: 10px; right: 10px; z-index: 20;
+    background: rgba(12, 6, 30, 0.7); color: #34e5ff;
+    border: 1px solid rgba(52, 229, 255, 0.5); border-radius: 6px;
+    font-family: inherit; font-size: 13px; padding: 6px 12px; cursor: pointer;
+    letter-spacing: 1px;
+  }
+  #muteBtn:hover { box-shadow: 0 0 10px rgba(52, 229, 255, 0.4); }
+
+  /* ---- Overlays ---- */
+  .overlay {
+    position: absolute; inset: 0; z-index: 10;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    text-align: center; padding: 20px; cursor: pointer; user-select: none;
+    background: radial-gradient(ellipse at 50% 60%, rgba(30, 8, 60, 0.35), rgba(4, 2, 12, 0.75));
+  }
+  .overlay.hidden { display: none; }
+  .title {
+    font-size: clamp(42px, 10vw, 84px); font-weight: 800; letter-spacing: 0.12em;
+    background: linear-gradient(180deg, #7df6ff 0%, #34e5ff 45%, #ff4fd8 55%, #ff2a9d 100%);
+    -webkit-background-clip: text; background-clip: text; color: transparent;
+    filter: drop-shadow(0 0 18px rgba(255, 79, 216, 0.55)) drop-shadow(0 0 6px rgba(52, 229, 255, 0.5));
+    line-height: 1.05;
+  }
+  .subtitle { margin-top: 14px; color: #cfc3ea; font-size: clamp(13px, 2.4vw, 16px); max-width: 520px; line-height: 1.5; }
+  .prompt {
+    margin-top: 34px; font-size: clamp(18px, 4vw, 26px); font-weight: 700; letter-spacing: 0.35em;
+    color: #7df6ff; text-shadow: 0 0 12px rgba(52, 229, 255, 0.8);
+    animation: blink 1s steps(1) infinite;
+  }
+  @keyframes blink { 50% { opacity: 0.25; } }
+  .caption {
+    margin-top: 40px; font-size: clamp(11px, 2.2vw, 13px); color: #9d8ec4;
+    border: 1px solid rgba(255, 79, 216, 0.35); border-radius: 8px;
+    padding: 10px 16px; max-width: 480px; line-height: 1.5;
+    background: rgba(20, 8, 40, 0.5);
+  }
+  .caption b { color: #ff8fe6; }
+  .controls-hint { margin-top: 16px; font-size: 11px; color: #6f639a; letter-spacing: 0.5px; }
+  .go-title {
+    font-size: clamp(30px, 7vw, 54px); font-weight: 800; letter-spacing: 0.18em; color: #ff2a5f;
+    text-shadow: 0 0 20px rgba(255, 42, 95, 0.8);
+  }
+  .go-score { margin-top: 18px; font-size: clamp(20px, 5vw, 32px); color: #7df6ff; letter-spacing: 0.1em;
+    text-shadow: 0 0 12px rgba(52, 229, 255, 0.6); font-variant-numeric: tabular-nums; }
+  .btn {
+    margin-top: 34px; display: inline-block; padding: 12px 34px; border-radius: 8px;
+    border: 2px solid #ff4fd8; color: #ffd9f5; font-size: 17px; font-weight: 700; letter-spacing: 0.25em;
+    background: rgba(60, 8, 48, 0.45); box-shadow: 0 0 18px rgba(255, 79, 216, 0.4), inset 0 0 12px rgba(255, 79, 216, 0.2);
+  }
+  .btn:hover { box-shadow: 0 0 26px rgba(255, 79, 216, 0.7), inset 0 0 16px rgba(255, 79, 216, 0.35); }
+</style>
+</head>
+<body>
+
+<div id="demobar">
+  <a href="/p/games/2">&larr; Back</a>
+  <span class="label"><b>DEMO PREVIEW</b> &mdash; simplified web teaser of the Godot game</span>
+</div>
+
+<div id="stage">
+  <canvas id="cv"></canvas>
+  <button id="muteBtn" aria-label="Toggle sound">SOUND: OFF</button>
+
+  <div id="startScreen" class="overlay">
+    <div class="title">SOUND&nbsp;DASH</div>
+    <div class="subtitle">A rhythm-driven 3-lane runner. Obstacles spawn on every beat &mdash; dodge them as the track speeds up.</div>
+    <div class="prompt">TAP TO PLAY</div>
+    <div class="caption"><b>Full game (Godot&nbsp;4):</b> pick ANY song on your device &mdash; the course is built from YOUR music.</div>
+    <div class="controls-hint">&larr; &rarr; / A D / swipe or tap left &amp; right half to switch lanes</div>
+  </div>
+
+  <div id="gameoverScreen" class="overlay hidden">
+    <div class="go-title">CRASHED</div>
+    <div class="go-score">SCORE <span id="finalScore">0</span></div>
+    <div class="btn">PLAY AGAIN</div>
+    <div class="controls-hint">the beat never stops&hellip;</div>
+  </div>
+</div>
+
+<script>
+(function () {
+  "use strict";
+
+  /* ============================================================
+     Sound Dash — web teaser
+     Pseudo-3D lane runner. Beat clock at 120 BPM drives obstacle
+     spawns, visual pulsing, and the (optional) synthesized music.
+     ============================================================ */
+
+  var canvas = document.getElementById("cv");
+  var ctx = canvas.getContext("2d");
+  var startScreen = document.getElementById("startScreen");
+  var gameoverScreen = document.getElementById("gameoverScreen");
+  var finalScoreEl = document.getElementById("finalScore");
+  var muteBtn = document.getElementById("muteBtn");
+
+  var W = 0, H = 0, DPR = 1;
+  function resize() {
+    DPR = Math.min(window.devicePixelRatio || 1, 2);
+    var r = canvas.parentElement.getBoundingClientRect();
+    W = Math.max(1, r.width);
+    H = Math.max(1, r.height);
+    canvas.width = Math.round(W * DPR);
+    canvas.height = Math.round(H * DPR);
+    ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
+  }
+  window.addEventListener("resize", resize);
+  resize();
+
+  /* ---------------- Beat clock ---------------- */
+  var BPM = 120;
+  var BEAT = 60 / BPM;                 // 0.5 s per beat
+  var songTime = 0;                    // seconds since play started (visual clock)
+  var lastBeatIndex = -1;
+
+  function beatPhase() { return (songTime % BEAT) / BEAT; }       // 0..1
+  function beatPulse() {                                          // 1 on the beat, decays
+    var p = beatPhase();
+    return Math.exp(-p * 5.5);
+  }
+
+  /* ---------------- Synth audio (Web Audio, fully procedural) ---------------- */
+  var audio = {
+    ctx: null, master: null, muted: true,
+    nextNoteTime: 0, step: 0, timer: null
+  };
+  // minor-key bassline + arp (frequencies computed, no samples)
+  var bassSeq = [0, 0, 3, 0, 5, 0, 3, 2];        // semitone offsets from root, 8th notes
+  var arpSeq  = [12, 15, 19, 24, 19, 15, 12, 10];
+  var ROOT = 55; // A1
+
+  function noteHz(semi) { return ROOT * Math.pow(2, semi / 12); }
+
+  function initAudio() {
+    if (audio.ctx) return;
+    var AC = window.AudioContext || window.webkitAudioContext;
+    if (!AC) return;
+    audio.ctx = new AC();
+    audio.master = audio.ctx.createGain();
+    audio.master.gain.value = 0;
+    audio.master.connect(audio.ctx.destination);
+    audio.nextNoteTime = audio.ctx.currentTime + 0.1;
+    audio.step = 0;
+    audio.timer = setInterval(scheduler, 25);
+  }
+
+  function scheduler() {
+    if (!audio.ctx) return;
+    while (audio.nextNoteTime < audio.ctx.currentTime + 0.12) {
+      scheduleStep(audio.step, audio.nextNoteTime);
+      audio.nextNoteTime += BEAT / 2;   // 8th-note grid
+      audio.step = (audio.step + 1) % 16;
+    }
+  }
+
+  function scheduleStep(step, t) {
+    var c = audio.ctx, m = audio.master;
+    var eighth = step % 8;
+
+    // Kick on every beat (even 8ths)
+    if (step % 2 === 0) {
+      var ko = c.createOscillator(), kg = c.createGain();
+      ko.type = "sine";
+      ko.frequency.setValueAtTime(150, t);
+      ko.frequency.exponentialRampToValueAtTime(45, t + 0.12);
+      kg.gain.setValueAtTime(0.9, t);
+      kg.gain.exponentialRampToValueAtTime(0.001, t + 0.18);
+      ko.connect(kg); kg.connect(m);
+      ko.start(t); ko.stop(t + 0.2);
+    }
+
+    // Hi-hat on off-beats (procedural noise burst)
+    if (step % 2 === 1) {
+      var len = 0.04, buf = c.createBuffer(1, Math.ceil(c.sampleRate * len), c.sampleRate);
+      var d = buf.getChannelData(0);
+      for (var i = 0; i < d.length; i++) d[i] = (Math.random() * 2 - 1) * (1 - i / d.length);
+      var src = c.createBufferSource(); src.buffer = buf;
+      var hp = c.createBiquadFilter(); hp.type = "highpass"; hp.frequency.value = 6000;
+      var hg = c.createGain(); hg.gain.value = 0.18;
+      src.connect(hp); hp.connect(hg); hg.connect(m);
+      src.start(t);
+    }
+
+    // Bassline — every 8th note
+    var bo = c.createOscillator(), bg = c.createGain(), bf = c.createBiquadFilter();
+    bo.type = "square";
+    bo.frequency.value = noteHz(bassSeq[eighth]);
+    bf.type = "lowpass"; bf.frequency.value = 500; bf.Q.value = 6;
+    bg.gain.setValueAtTime(0.16, t);
+    bg.gain.exponentialRampToValueAtTime(0.001, t + 0.22);
+    bo.connect(bf); bf.connect(bg); bg.connect(m);
+    bo.start(t); bo.stop(t + 0.24);
+
+    // Sparkly arp on every 8th, one octave dance
+    var ao = c.createOscillator(), ag = c.createGain();
+    ao.type = "sawtooth";
+    ao.frequency.value = noteHz(arpSeq[eighth] + (step >= 8 ? 3 : 0));
+    ag.gain.setValueAtTime(0.05, t);
+    ag.gain.exponentialRampToValueAtTime(0.001, t + 0.16);
+    ao.connect(ag); ag.connect(m);
+    ao.start(t); ao.stop(t + 0.18);
+  }
+
+  function setMuted(mut) {
+    audio.muted = mut;
+    muteBtn.textContent = mut ? "SOUND: OFF" : "SOUND: ON";
+    if (audio.ctx && audio.master) {
+      if (audio.ctx.state === "suspended") audio.ctx.resume();
+      var now = audio.ctx.currentTime;
+      audio.master.gain.cancelScheduledValues(now);
+      audio.master.gain.linearRampToValueAtTime(mut ? 0 : 0.5, now + 0.08);
+    }
+  }
+
+  muteBtn.addEventListener("click", function (e) {
+    e.stopPropagation();
+    initAudio();               // user gesture — safe to create/resume
+    setMuted(!audio.muted);
+  });
+
+  /* ---------------- Game state ---------------- */
+  var STATE = { START: 0, PLAY: 1, OVER: 2 };
+  var state = STATE.START;
+
+  var LANES = 3;
+  var playerLane = 1;          // target lane index 0..2
+  var playerX = 0;             // smoothed lane position (in lane units)
+  var speed = 0;               // z-units per second (z: 0 player .. 1 horizon)
+  var score = 0;
+  var obstacles = [];          // { lane, z, hue }
+  var particles = [];
+  var shake = 0;
+  var flash = 0;
+
+  var BASE_SPEED = 0.5;
+  var MAX_SPEED = 1.35;
+  var SPEED_RAMP = 0.011;      // per second
+
+  function resetGame() {
+    playerLane = 1;
+    playerX = 1;
+    speed = BASE_SPEED;
+    score = 0;
+    obstacles.length = 0;
+    particles.length = 0;
+    songTime = 0;
+    lastBeatIndex = -1;
+    shake = 0;
+    flash = 0;
+  }
+
+  function startGame() {
+    resetGame();
+    state = STATE.PLAY;
+    startScreen.classList.add("hidden");
+    gameoverScreen.classList.add("hidden");
+  }
+
+  function gameOver() {
+    state = STATE.OVER;
+    shake = 1;
+    flash = 1;
+    finalScoreEl.textContent = Math.floor(score).toString();
+    gameoverScreen.classList.remove("hidden");
+    burst(laneScreenX(playerX, 0), playerScreenY(), 40, 320);
+  }
+
+  /* ---------------- Beat-synced spawning ---------------- */
+  var spawnCount = 0;
+  function onBeat(beatIndex) {
+    if (state !== STATE.PLAY) return;
+    if (songTime < BEAT * 2) return;          // grace period at start
+    spawnCount++;
+    // Every 4th beat: block two lanes (leave one open). Otherwise one lane.
+    var open = Math.floor(Math.random() * LANES);
+    if (spawnCount % 4 === 0) {
+      for (var l = 0; l < LANES; l++) {
+        if (l !== open) obstacles.push({ lane: l, z: 1, hue: 315 });
+      }
+    } else {
+      var lane = Math.floor(Math.random() * LANES);
+      obstacles.push({ lane: lane, z: 1, hue: Math.random() < 0.5 ? 315 : 185 });
+    }
+  }
+
+  /* ---------------- Input ---------------- */
+  function moveLane(dir) {
+    if (state !== STATE.PLAY) return;
+    playerLane = Math.max(0, Math.min(LANES - 1, playerLane + dir));
+  }
+
+  window.addEventListener("keydown", function (e) {
+    var k = e.key;
+    if (k === "ArrowLeft" || k === "a" || k === "A") { moveLane(-1); e.preventDefault(); }
+    else if (k === "ArrowRight" || k === "d" || k === "D") { moveLane(1); e.preventDefault(); }
+    else if (state !== STATE.PLAY && (k === " " || k === "Enter")) { handleStartGesture(); e.preventDefault(); }
+  });
+
+  function handleStartGesture() {
+    initAudio();
+    if (audio.ctx && audio.ctx.state === "suspended") audio.ctx.resume();
+    if (state === STATE.START || state === STATE.OVER) startGame();
+  }
+
+  startScreen.addEventListener("click", handleStartGesture);
+  gameoverScreen.addEventListener("click", handleStartGesture);
+
+  // Touch: swipe left/right, or tap on left/right half
+  var touchStartX = null, touchStartY = null, touchMoved = false;
+  canvas.addEventListener("touchstart", function (e) {
+    var t = e.changedTouches[0];
+    touchStartX = t.clientX; touchStartY = t.clientY; touchMoved = false;
+    e.preventDefault();
+  }, { passive: false });
+
+  canvas.addEventListener("touchmove", function (e) {
+    if (touchStartX === null) return;
+    var t = e.changedTouches[0];
+    var dx = t.clientX - touchStartX;
+    if (!touchMoved && Math.abs(dx) > 28) {
+      touchMoved = true;
+      moveLane(dx > 0 ? 1 : -1);
+    }
+    e.preventDefault();
+  }, { passive: false });
+
+  canvas.addEventListener("touchend", function (e) {
+    if (touchStartX !== null && !touchMoved) {
+      var x = e.changedTouches[0].clientX;
+      moveLane(x < W / 2 ? -1 : 1);
+    }
+    touchStartX = null;
+    e.preventDefault();
+  }, { passive: false });
+
+  // Mouse click on canvas = lane tap (desktop convenience)
+  canvas.addEventListener("mousedown", function (e) {
+    if (state === STATE.PLAY) moveLane(e.clientX < W / 2 ? -1 : 1);
+  });
+
+  /* ---------------- Projection helpers ---------------- */
+  var PERSP = 4.2;   // perspective strength
+  function horizonY() { return H * 0.34; }
+  function bottomY() { return H * 1.02; }
+  function persp(z) {
+    // z: 0 (player) .. 1 (horizon). Returns 0..1 screen interpolation (1 = near)
+    var f = 1 / (1 + z * PERSP);
+    var fFar = 1 / (1 + PERSP);
+    return (f - fFar) / (1 - fFar);
+  }
+  function zToY(z) {
+    return horizonY() + (bottomY() - horizonY()) * persp(z);
+  }
+  function laneScreenX(laneUnits, z) {
+    // laneUnits: 0..2 (lane centers). Center lane = 1.
+    var half = laneHalfWidth(z);
+    return W / 2 + (laneUnits - 1) * half * 2;
+  }
+  function laneHalfWidth(z) {
+    var nearHalf = Math.min(W, H * 0.9) * 0.155;
+    return nearHalf * (0.06 + 0.94 * persp(z));
+  }
+  function playerScreenY() { return zToY(0.045); }
+
+  /* ---------------- Particles ---------------- */
+  function burst(x, y, n, spd) {
+    for (var i = 0; i < n; i++) {
+      var a = Math.random() * Math.PI * 2;
+      var v = (0.3 + Math.random() * 0.7) * spd;
+      particles.push({
+        x: x, y: y,
+        vx: Math.cos(a) * v, vy: Math.sin(a) * v - 60,
+        life: 1, decay: 1.2 + Math.random() * 1.4,
+        hue: Math.random() < 0.5 ? 315 : 185
+      });
+    }
+  }
+
+  /* ---------------- Update ---------------- */
+  function update(dt) {
+    if (state === STATE.PLAY) {
+      songTime += dt;
+      speed = Math.min(MAX_SPEED, speed + SPEED_RAMP * dt);
+      score += speed * dt * 120;
+
+      // fire beat events
+      var bi = Math.floor(songTime / BEAT);
+      if (bi !== lastBeatIndex) {
+        lastBeatIndex = bi;
+        onBeat(bi);
+      }
+
+      // smooth lane movement
+      playerX += (playerLane - playerX) * Math.min(1, dt * 14);
+
+      // obstacles
+      for (var i = obstacles.length - 1; i >= 0; i--) {
+        var o = obstacles[i];
+        o.z -= speed * dt;
+        if (o.z < -0.08) { obstacles.splice(i, 1); continue; }
+        // collision window near the player plane
+        if (o.z < 0.075 && o.z > -0.02 && Math.abs(o.lane - playerX) < 0.55) {
+          gameOver();
+          break;
+        }
+      }
+    } else if (state === STATE.START) {
+      songTime += dt;   // keep pulse alive on menu
+    }
+
+    // particles
+    for (var p = particles.length - 1; p >= 0; p--) {
+      var pt = particles[p];
+      pt.x += pt.vx * dt;
+      pt.y += pt.vy * dt;
+      pt.vy += 300 * dt;
+      pt.life -= pt.decay * dt;
+      if (pt.life <= 0) particles.splice(p, 1);
+    }
+
+    shake = Math.max(0, shake - dt * 2.2);
+    flash = Math.max(0, flash - dt * 1.8);
+  }
+
+  /* ---------------- Render ---------------- */
+  var gridScroll = 0;
+
+  function render(dt) {
+    var pulse = beatPulse();
+    if (state === STATE.PLAY) gridScroll = (gridScroll + speed * dt) % 0.125;
+
+    ctx.save();
+    if (shake > 0) {
+      ctx.translate((Math.random() - 0.5) * 14 * shake, (Math.random() - 0.5) * 14 * shake);
+    }
+
+    // --- sky ---
+    var hy = horizonY();
+    var sky = ctx.createLinearGradient(0, 0, 0, hy);
+    sky.addColorStop(0, "#06040f");
+    sky.addColorStop(0.6, "#140a2e");
+    sky.addColorStop(1, "rgb(" + Math.round(58 + 50 * pulse) + ", 10, " + Math.round(80 + 40 * pulse) + ")");
+    ctx.fillStyle = sky;
+    ctx.fillRect(-20, -20, W + 40, hy + 20);
+
+    // --- sun (beat-pulsing) ---
+    var sunR = Math.min(W, H) * (0.11 + 0.02 * pulse);
+    var sunX = W / 2, sunY = hy - sunR * 0.25;
+    var sg = ctx.createRadialGradient(sunX, sunY, sunR * 0.1, sunX, sunY, sunR * 2.2);
+    sg.addColorStop(0, "rgba(255, 79, 216, " + (0.55 + 0.35 * pulse) + ")");
+    sg.addColorStop(0.45, "rgba(255, 42, 157, 0.25)");
+    sg.addColorStop(1, "rgba(255, 42, 157, 0)");
+    ctx.fillStyle = sg;
+    ctx.fillRect(sunX - sunR * 2.2, sunY - sunR * 2.2, sunR * 4.4, sunR * 4.4);
+    ctx.save();
+    ctx.beginPath();
+    ctx.rect(0, 0, W, hy);
+    ctx.clip();
+    ctx.beginPath();
+    ctx.arc(sunX, sunY, sunR, 0, Math.PI * 2);
+    var sun = ctx.createLinearGradient(0, sunY - sunR, 0, sunY + sunR);
+    sun.addColorStop(0, "#ffd166");
+    sun.addColorStop(0.5, "#ff4fd8");
+    sun.addColorStop(1, "#a021ff");
+    ctx.fillStyle = sun;
+    ctx.fill();
+    // scanline stripes across sun
+    ctx.fillStyle = "rgba(6, 4, 15, 0.85)";
+    for (var s = 0; s < 5; s++) {
+      var sy = sunY - sunR * 0.1 + s * sunR * 0.24;
+      ctx.fillRect(sunX - sunR, sy, sunR * 2, Math.max(1.5, sunR * 0.055 * (s + 1) * 0.5));
+    }
+    ctx.restore();
+
+    // --- ground ---
+    var gg = ctx.createLinearGradient(0, hy, 0, H);
+    gg.addColorStop(0, "#12082a");
+    gg.addColorStop(1, "#05030c");
+    ctx.fillStyle = gg;
+    ctx.fillRect(-20, hy, W + 40, H - hy + 40);
+
+    // --- horizon glow line ---
+    ctx.strokeStyle = "rgba(52, 229, 255, " + (0.55 + 0.4 * pulse) + ")";
+    ctx.lineWidth = 2;
+    ctx.shadowColor = "#34e5ff";
+    ctx.shadowBlur = 14 + 20 * pulse;
+    ctx.beginPath();
+    ctx.moveTo(0, hy);
+    ctx.lineTo(W, hy);
+    ctx.stroke();
+    ctx.shadowBlur = 0;
+
+    // --- grid: horizontal lines rushing toward player ---
+    ctx.lineWidth = 1.5;
+    for (var gi = 0; gi < 9; gi++) {
+      var gz = gi * 0.125 + (0.125 - gridScroll);
+      if (gz > 1) continue;
+      var gy = zToY(gz);
+      var a = (1 - gz) * (0.32 + 0.3 * pulse);
+      ctx.strokeStyle = "rgba(255, 79, 216, " + a.toFixed(3) + ")";
+      ctx.beginPath();
+      ctx.moveTo(0, gy);
+      ctx.lineTo(W, gy);
+      ctx.stroke();
+    }
+
+    // --- grid: converging vertical lines (wider than the play lanes) ---
+    for (var vi = -6; vi <= 6; vi++) {
+      var nearX = W / 2 + vi * laneHalfWidth(0) * 2;
+      var farX = W / 2 + vi * laneHalfWidth(1) * 2;
+      var va = Math.abs(vi) <= 2 ? 0.35 : 0.14;
+      ctx.strokeStyle = "rgba(52, 229, 255, " + va + ")";
+      ctx.beginPath();
+      ctx.moveTo(nearX, bottomY());
+      ctx.lineTo(farX, hy);
+      ctx.stroke();
+    }
+
+    // --- lane track: highlight the 3 play lanes ---
+    var edgeL0 = laneScreenX(-0.5, 0), edgeR0 = laneScreenX(2.5, 0);
+    var edgeL1 = laneScreenX(-0.5, 1), edgeR1 = laneScreenX(2.5, 1);
+    var trk = ctx.createLinearGradient(0, hy, 0, bottomY());
+    trk.addColorStop(0, "rgba(160, 33, 255, 0.02)");
+    trk.addColorStop(1, "rgba(160, 33, 255, " + (0.10 + 0.08 * pulse) + ")");
+    ctx.fillStyle = trk;
+    ctx.beginPath();
+    ctx.moveTo(edgeL1, hy);
+    ctx.lineTo(edgeR1, hy);
+    ctx.lineTo(edgeR0, bottomY());
+    ctx.lineTo(edgeL0, bottomY());
+    ctx.closePath();
+    ctx.fill();
+
+    // track edge rails
+    ctx.lineWidth = 2.5;
+    ctx.shadowColor = "#ff4fd8";
+    ctx.shadowBlur = 8 + 14 * pulse;
+    ctx.strokeStyle = "rgba(255, 79, 216, 0.85)";
+    ctx.beginPath(); ctx.moveTo(edgeL1, hy); ctx.lineTo(edgeL0, bottomY()); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(edgeR1, hy); ctx.lineTo(edgeR0, bottomY()); ctx.stroke();
+    ctx.shadowBlur = 0;
+
+    // --- obstacles (far to near) ---
+    obstacles.sort(function (a, b) { return b.z - a.z; });
+    for (var oi = 0; oi < obstacles.length; oi++) {
+      drawObstacle(obstacles[oi], pulse);
+    }
+
+    // --- player ---
+    if (state !== STATE.OVER) drawPlayer(pulse);
+
+    // --- particles ---
+    for (var pi = 0; pi < particles.length; pi++) {
+      var pt = particles[pi];
+      ctx.globalAlpha = Math.max(0, pt.life);
+      ctx.fillStyle = "hsl(" + pt.hue + ", 100%, 65%)";
+      ctx.fillRect(pt.x - 2, pt.y - 2, 4, 4);
+    }
+    ctx.globalAlpha = 1;
+
+    // --- HUD ---
+    if (state === STATE.PLAY) {
+      ctx.font = "700 " + Math.max(18, Math.min(30, W * 0.035)) + "px 'Segoe UI', system-ui, sans-serif";
+      ctx.textAlign = "left";
+      ctx.fillStyle = "rgba(125, 246, 255, 0.95)";
+      ctx.shadowColor = "#34e5ff";
+      ctx.shadowBlur = 10;
+      ctx.fillText(Math.floor(score).toString().padStart(6, "0"), 16, 40);
+      ctx.shadowBlur = 0;
+
+      // beat indicator dot
+      var br = 5 + 7 * pulse;
+      ctx.beginPath();
+      ctx.arc(26, 66, br, 0, Math.PI * 2);
+      ctx.fillStyle = "rgba(255, 79, 216, " + (0.4 + 0.6 * pulse) + ")";
+      ctx.shadowColor = "#ff4fd8";
+      ctx.shadowBlur = 12 * pulse;
+      ctx.fill();
+      ctx.shadowBlur = 0;
+      ctx.font = "600 11px 'Segoe UI', system-ui, sans-serif";
+      ctx.fillStyle = "rgba(185, 168, 216, 0.8)";
+      ctx.fillText("BEAT  " + BPM + " BPM", 44, 70);
+    }
+
+    // red flash on crash
+    if (flash > 0) {
+      ctx.fillStyle = "rgba(255, 30, 80, " + (flash * 0.35).toFixed(3) + ")";
+      ctx.fillRect(-20, -20, W + 40, H + 40);
+    }
+
+    ctx.restore();
+  }
+
+  function drawObstacle(o, pulse) {
+    var z = Math.max(o.z, 0);
+    var half = laneHalfWidth(z) * (0.72 + 0.08 * pulse);
+    var cx = laneScreenX(o.lane, z);
+    var baseY = zToY(z);
+    var hgt = half * 1.15;
+    var alpha = Math.min(1, (1 - z) * 1.6);
+    var hue = o.hue;
+
+    ctx.globalAlpha = alpha;
+    ctx.shadowColor = "hsl(" + hue + ", 100%, 60%)";
+    ctx.shadowBlur = 10 + 16 * pulse;
+
+    // face
+    var grad = ctx.createLinearGradient(cx, baseY - hgt, cx, baseY);
+    grad.addColorStop(0, "hsla(" + hue + ", 100%, " + (58 + 12 * pulse) + "%, 0.95)");
+    grad.addColorStop(1, "hsla(" + hue + ", 100%, 22%, 0.95)");
+    ctx.fillStyle = grad;
+    ctx.fillRect(cx - half, baseY - hgt, half * 2, hgt);
+
+    // top edge highlight
+    ctx.fillStyle = "hsla(" + hue + ", 100%, 82%, 0.95)";
+    ctx.fillRect(cx - half, baseY - hgt, half * 2, Math.max(2, hgt * 0.08));
+
+    // wire outline
+    ctx.lineWidth = 1.5;
+    ctx.strokeStyle = "hsla(" + hue + ", 100%, 75%, 0.9)";
+    ctx.strokeRect(cx - half, baseY - hgt, half * 2, hgt);
+
+    ctx.shadowBlur = 0;
+    ctx.globalAlpha = 1;
+  }
+
+  function drawPlayer(pulse) {
+    var z = 0.045;
+    var half = laneHalfWidth(z) * 0.52;
+    var cx = laneScreenX(playerX, z);
+    var cy = zToY(z);
+    var lean = (playerLane - playerX) * 0.5;
+
+    ctx.save();
+    ctx.translate(cx, cy);
+    ctx.rotate(lean * 0.45);
+
+    ctx.shadowColor = "#34e5ff";
+    ctx.shadowBlur = 18 + 18 * pulse;
+
+    // ship: neon triangle wedge
+    ctx.beginPath();
+    ctx.moveTo(0, -half * 1.5);
+    ctx.lineTo(half, half * 0.55);
+    ctx.lineTo(0, half * 0.15);
+    ctx.lineTo(-half, half * 0.55);
+    ctx.closePath();
+    var pg = ctx.createLinearGradient(0, -half * 1.5, 0, half * 0.6);
+    pg.addColorStop(0, "#c8fbff");
+    pg.addColorStop(0.5, "#34e5ff");
+    pg.addColorStop(1, "#0f5f8a");
+    ctx.fillStyle = pg;
+    ctx.fill();
+    ctx.lineWidth = 2;
+    ctx.strokeStyle = "#9ff4ff";
+    ctx.stroke();
+
+    // engine glow (pulses with beat)
+    ctx.beginPath();
+    ctx.arc(0, half * 0.62, half * (0.28 + 0.14 * pulse), 0, Math.PI * 2);
+    ctx.fillStyle = "rgba(255, 79, 216, " + (0.6 + 0.4 * pulse) + ")";
+    ctx.shadowColor = "#ff4fd8";
+    ctx.shadowBlur = 16 + 16 * pulse;
+    ctx.fill();
+
+    ctx.restore();
+    ctx.shadowBlur = 0;
+  }
+
+  /* ---------------- Main loop ---------------- */
+  var lastT = performance.now();
+  function frame(now) {
+    var dt = Math.min(0.05, (now - lastT) / 1000);
+    lastT = now;
+    update(dt);
+    render(dt);
+    requestAnimationFrame(frame);
+  }
+  requestAnimationFrame(frame);
+})();
+</script>
+</body>
+</html>

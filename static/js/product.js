@@ -13,6 +13,7 @@
       "pd.buy": "Buy Source Code",
       "pd.order": "Order a Similar One",
       "pd.visit": "Open Live",
+      "pd.demo": "View Demo",
       "pd.note": "Purchase includes the complete source code — and I customize the design for you before delivery.",
       "pd.type.apps": "APPLICATION",
       "pd.type.games": "GAME",
@@ -23,6 +24,7 @@
       "pd.buy": "خرید سورس‌کد",
       "pd.order": "سفارش نمونه مشابه",
       "pd.visit": "مشاهده زنده",
+      "pd.demo": "مشاهده دمو",
       "pd.note": "خرید شامل سورس‌کد کامل است — و طراحی را پیش از تحویل مطابق سلیقه شما شخصی‌سازی می‌کنم.",
       "pd.type.apps": "اپلیکیشن",
       "pd.type.games": "بازی",
@@ -34,8 +36,8 @@
 
   var LANG_KEY = "nima_lang";
   var saved = localStorage.getItem(LANG_KEY);
-  var lang = (saved === "fa" || saved === "en") ? saved
-    : ((navigator.language || "").toLowerCase().indexOf("fa") === 0 ? "fa" : "en");
+  // Persian is the default; a visitor's explicit choice is remembered
+  var lang = (saved === "fa" || saved === "en") ? saved : "fa";
 
   function t(key) {
     var d = window.I18N[lang] || window.I18N.en;
@@ -87,6 +89,9 @@
 
     var actions = [];
     var subject = encodeURIComponent(P.title_en);
+    if (P.demo_url && (/^https?:\/\//i.test(P.demo_url) || P.demo_url.indexOf("/static/") === 0)) {
+      actions.push('<a class="btn btn-ghost" href="' + esc(P.demo_url) + '" target="_blank" rel="noopener">' + t("pd.demo") + "</a>");
+    }
     if (P.url && /^https?:\/\//i.test(P.url)) {
       actions.push('<a class="btn btn-ghost" href="' + esc(P.url) + '" target="_blank" rel="noopener">' + t("pd.visit") + "</a>");
     }

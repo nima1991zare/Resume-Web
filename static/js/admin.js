@@ -261,6 +261,7 @@
     itemForm.desc_fa.value = row ? row.desc_fa : "";
     itemForm.tech.value = row ? row.tech : "";
     itemForm.url.value = row && row.url ? row.url : "";
+    itemForm.demo_url.value = row && row.demo_url ? row.demo_url : "";
     itemForm.price.value = row ? row.price : 0;
     itemForm.currency.value = row ? row.currency : "USD";
     itemForm.sort.value = row ? row.sort : 0;
@@ -286,6 +287,7 @@
     e.preventDefault();
     itemErr.textContent = "";
     if (!checkLink(itemForm.url, itemErr, "Live URL", false)) return;
+    if (!checkLink(itemForm.demo_url, itemErr, "Demo URL", true)) return;
     if (!checkLink(itemForm.image, itemErr, "Image", true)) return;
     var body = {
       title_en: itemForm.title_en.value.trim(),
@@ -294,6 +296,7 @@
       desc_fa: itemForm.desc_fa.value.trim(),
       tech: itemForm.tech.value.trim(),
       url: itemForm.url.value.trim(),
+      demo_url: itemForm.demo_url.value.trim(),
       image: itemForm.image.value.trim(),
       price: Number(itemForm.price.value) || 0,
       currency: itemForm.currency.value,

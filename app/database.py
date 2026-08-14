@@ -45,6 +45,7 @@ CREATE TABLE IF NOT EXISTS apps (
     desc_fa   TEXT NOT NULL DEFAULT '',
     image     TEXT NOT NULL DEFAULT '',
     tech      TEXT NOT NULL DEFAULT '',
+    demo_url  TEXT NOT NULL DEFAULT '',
     price     REAL NOT NULL DEFAULT 0,
     currency  TEXT NOT NULL DEFAULT 'USD',
     buyable   INTEGER NOT NULL DEFAULT 1,
@@ -61,6 +62,7 @@ CREATE TABLE IF NOT EXISTS games (
     image     TEXT NOT NULL DEFAULT '',
     url       TEXT NOT NULL DEFAULT '',
     tech      TEXT NOT NULL DEFAULT '',
+    demo_url  TEXT NOT NULL DEFAULT '',
     price     REAL NOT NULL DEFAULT 0,
     currency  TEXT NOT NULL DEFAULT 'USD',
     buyable   INTEGER NOT NULL DEFAULT 1,
@@ -77,6 +79,7 @@ CREATE TABLE IF NOT EXISTS websites (
     image     TEXT NOT NULL DEFAULT '',
     url       TEXT NOT NULL DEFAULT '',
     tech      TEXT NOT NULL DEFAULT '',
+    demo_url  TEXT NOT NULL DEFAULT '',
     price     REAL NOT NULL DEFAULT 0,
     currency  TEXT NOT NULL DEFAULT 'USD',
     sort      INTEGER NOT NULL DEFAULT 0,
@@ -181,6 +184,12 @@ def init_db() -> None:
     conn = get_db()
     try:
         conn.executescript(SCHEMA)
+        # migration: add demo_url to content tables created before the column existed
+        for table in ("apps", "games", "websites"):
+            cols = [r["name"] for r in conn.execute(f"PRAGMA table_info({table})")]
+            if "demo_url" not in cols:
+                conn.execute(
+                    f"ALTER TABLE {table} ADD COLUMN demo_url TEXT NOT NULL DEFAULT ''")
         # settings seed (only insert missing keys)
         for k, v in DEFAULT_SETTINGS.items():
             conn.execute("INSERT OR IGNORE INTO settings(key, value) VALUES(?, ?)", (k, v))

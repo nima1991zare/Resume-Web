@@ -1,0 +1,943 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CalCounter — Demo Preview</title>
+<style>
+  /* ============ Page shell ============ */
+  * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  :root {
+    --primary: #7FFF00;
+    --primary-dim: #5CBF00;
+    --bg: #000000;
+    --surface: #111111;
+    --surface-light: #1B1B1B;
+    --divider: #262626;
+    --text: #F2F2F2;
+    --text-sec: #9E9E9E;
+    --danger: #FF5252;
+    --protein: #7FFF00;
+    --carbs: #FFD54F;
+    --fat: #FF7043;
+    --water: #4FC3F7;
+    --exercise: #B388FF;
+  }
+  html, body { height: 100%; }
+  body {
+    background: #0b0f0a;
+    background-image: radial-gradient(ellipse at 50% -10%, rgba(127,255,0,0.08), transparent 60%);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    color: var(--text);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    padding: 56px 12px 24px;
+  }
+
+  /* ============ Demo banner ============ */
+  .demo-bar {
+    position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+    height: 38px;
+    background: #131a10;
+    border-bottom: 1px solid #26331d;
+    display: flex; align-items: center; justify-content: center; gap: 14px;
+    font-size: 12.5px; color: #b9c7ad; letter-spacing: .02em;
+    padding: 0 12px;
+  }
+  .demo-bar a {
+    color: var(--primary); text-decoration: none; font-weight: 600;
+    white-space: nowrap;
+  }
+  .demo-bar a:hover { text-decoration: underline; }
+  .demo-bar .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--primary); flex: none;
+    animation: pulse 2s infinite; }
+  @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: .3; } }
+
+  /* ============ Phone frame ============ */
+  .phone {
+    width: 390px; height: 800px; max-height: calc(100vh - 80px);
+    background: #050505;
+    border-radius: 44px;
+    border: 3px solid #2a2a2a;
+    box-shadow: 0 0 0 2px #000, 0 30px 80px rgba(0,0,0,.7), 0 0 60px rgba(127,255,0,.06);
+    position: relative;
+    overflow: hidden;
+    display: flex; flex-direction: column;
+    flex: none;
+  }
+  .notch {
+    position: absolute; top: 10px; left: 50%; transform: translateX(-50%);
+    width: 120px; height: 26px; background: #000;
+    border: 1px solid #1c1c1c;
+    border-radius: 14px; z-index: 50;
+  }
+  .statusbar {
+    height: 46px; flex: none; display: flex; align-items: center;
+    justify-content: space-between; padding: 12px 26px 0;
+    font-size: 13px; font-weight: 600; color: var(--text);
+    background: var(--bg);
+  }
+  .statusbar .sicons { display: flex; gap: 5px; align-items: center; font-size: 11px; }
+
+  @media (max-width: 440px), (max-height: 860px) {
+    body { padding: 44px 0 0; align-items: stretch; }
+    .phone {
+      width: 100%; height: calc(100vh - 44px); max-height: none;
+      border-radius: 0; border: none; box-shadow: none;
+    }
+    .notch { display: none; }
+  }
+
+  /* ============ App layout ============ */
+  .app { flex: 1; display: flex; flex-direction: column; background: var(--bg); overflow: hidden; position: relative; }
+  .screen { flex: 1; overflow-y: auto; display: none; scrollbar-width: thin; scrollbar-color: #333 transparent; }
+  .screen.active { display: block; }
+  .screen::-webkit-scrollbar { width: 4px; }
+  .screen::-webkit-scrollbar-thumb { background: #333; border-radius: 2px; }
+
+  .appbar {
+    display: flex; align-items: center; gap: 10px;
+    padding: 14px 16px 10px;
+    position: sticky; top: 0; background: var(--bg); z-index: 10;
+  }
+  .appbar h1 { font-size: 20px; font-weight: 700; flex: 1; }
+  .appbar .abtn {
+    width: 36px; height: 36px; border-radius: 50%; border: none; cursor: pointer;
+    background: transparent; color: var(--text-sec); font-size: 18px;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .appbar .abtn:hover { background: var(--surface-light); }
+  .flame { color: var(--primary); font-size: 22px; }
+
+  /* ============ Cards ============ */
+  .card {
+    background: var(--surface); border: 1px solid var(--divider);
+    border-radius: 16px; margin: 6px 12px; padding: 16px;
+  }
+  .card-title { font-size: 15px; font-weight: 800; margin-bottom: 12px; }
+
+  /* ============ Date navigator ============ */
+  .datenav { display: flex; align-items: center; justify-content: space-between; padding: 2px 10px; }
+  .datenav button {
+    background: none; border: none; color: var(--text); cursor: pointer;
+    font-size: 22px; padding: 6px 12px; border-radius: 10px;
+  }
+  .datenav button:hover { background: var(--surface-light); }
+  .datenav .dlabel { font-size: 15px; font-weight: 700; color: var(--primary); cursor: pointer; }
+
+  /* ============ Summary ring ============ */
+  .summary { display: flex; align-items: center; gap: 18px; }
+  .ring-wrap { position: relative; width: 128px; height: 128px; flex: none; }
+  .ring-wrap svg { transform: rotate(-90deg); }
+  .ring-center {
+    position: absolute; inset: 0; display: flex; flex-direction: column;
+    align-items: center; justify-content: center; text-align: center;
+  }
+  .ring-center .big { font-size: 25px; font-weight: 800; color: var(--primary); line-height: 1.1; }
+  .ring-center .sub { font-size: 11px; color: var(--text-sec); }
+  .macros { flex: 1; display: flex; flex-direction: column; gap: 12px; }
+  .macro .mrow { display: flex; justify-content: space-between; font-size: 12px; margin-bottom: 5px; }
+  .macro .mname { font-weight: 700; }
+  .macro .mval { color: var(--text-sec); }
+  .mbar { height: 6px; border-radius: 3px; background: var(--surface-light); overflow: hidden; }
+  .mbar > div { height: 100%; border-radius: 3px; transition: width .6s ease; }
+  .budget-row {
+    display: flex; justify-content: space-between; margin-top: 14px; padding-top: 12px;
+    border-top: 1px solid var(--divider); font-size: 12px; color: var(--text-sec); text-align: center;
+  }
+  .budget-row b { display: block; color: var(--text); font-size: 15px; margin-bottom: 2px; }
+  .budget-row .rem b { color: var(--primary); }
+
+  /* ============ Water card ============ */
+  .water-head { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 12px; }
+  .water-head .wtitle { font-weight: 800; font-size: 15px; }
+  .water-head .wcount { font-size: 12px; color: var(--water); font-weight: 700; }
+  .glasses { display: flex; gap: 8px; }
+  .glass {
+    flex: 1; height: 44px; border-radius: 10px; border: 1.5px solid var(--divider);
+    background: var(--surface-light); cursor: pointer; font-size: 18px;
+    display: flex; align-items: center; justify-content: center;
+    transition: all .15s ease; color: #3a3a3a;
+  }
+  .glass.full { border-color: var(--water); background: rgba(79,195,247,.14); color: var(--water); }
+  .glass:hover { transform: translateY(-2px); }
+
+  /* ============ Meal cards ============ */
+  .meal-head { display: flex; align-items: center; gap: 10px; margin-bottom: 4px; }
+  .meal-emoji { font-size: 18px; }
+  .meal-name { font-weight: 800; font-size: 15px; flex: 1; }
+  .meal-kcal { font-size: 13px; color: var(--primary); font-weight: 700; }
+  .food-row {
+    display: flex; align-items: center; gap: 10px;
+    padding: 9px 0; border-bottom: 1px solid var(--divider); cursor: pointer;
+  }
+  .food-row:last-of-type { border-bottom: none; }
+  .food-row:hover { background: rgba(255,255,255,.02); }
+  .food-info { flex: 1; min-width: 0; }
+  .food-name { font-size: 14px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .food-sub { font-size: 11.5px; color: var(--text-sec); }
+  .food-kcal { font-size: 13px; color: var(--text-sec); font-weight: 600; flex: none; }
+  .add-food-btn {
+    margin-top: 8px; width: 100%; padding: 9px; border-radius: 10px;
+    border: 1px dashed #3a3a3a; background: transparent; color: var(--primary);
+    font-size: 13px; font-weight: 700; cursor: pointer;
+  }
+  .add-food-btn:hover { background: rgba(127,255,0,.06); border-color: var(--primary-dim); }
+
+  .exercise-row { display: flex; align-items: center; gap: 10px; padding: 6px 0; }
+  .exercise-row .ic { color: var(--exercise); font-size: 18px; }
+
+  /* ============ FAB ============ */
+  .fab {
+    position: absolute; right: 18px; bottom: 76px; z-index: 20;
+    width: 56px; height: 56px; border-radius: 18px; border: none; cursor: pointer;
+    background: var(--primary); color: #000; font-size: 28px; font-weight: 400;
+    box-shadow: 0 6px 20px rgba(127,255,0,.35);
+    display: none; align-items: center; justify-content: center;
+    transition: transform .15s ease;
+  }
+  .fab:hover { transform: scale(1.06); }
+  .fab.show { display: flex; }
+
+  /* ============ Bottom nav ============ */
+  .bottomnav {
+    flex: none; display: flex; background: var(--surface);
+    border-top: 1px solid var(--divider); padding: 6px 4px 14px;
+  }
+  .navitem {
+    flex: 1; background: none; border: none; cursor: pointer;
+    display: flex; flex-direction: column; align-items: center; gap: 3px;
+    color: var(--text-sec); font-size: 10.5px; font-weight: 600; padding: 5px 0;
+  }
+  .navitem .nicon { font-size: 20px; line-height: 1; filter: grayscale(1) opacity(.55); transition: filter .15s; }
+  .navitem.active { color: var(--primary); }
+  .navitem.active .nicon { filter: none; }
+
+  /* ============ Search ============ */
+  .searchbox {
+    display: flex; align-items: center; gap: 8px;
+    background: var(--surface-light); border: 1px solid var(--divider);
+    border-radius: 12px; padding: 10px 14px; margin: 4px 12px 10px;
+  }
+  .searchbox input {
+    flex: 1; background: none; border: none; outline: none;
+    color: var(--text); font-size: 14px; font-family: inherit;
+  }
+  .searchbox input::placeholder { color: var(--text-sec); }
+  .scan-btn {
+    background: none; border: none; color: var(--primary); cursor: pointer;
+    font-size: 18px; padding: 2px;
+  }
+
+  .chip-row { display: flex; gap: 8px; margin: 0 12px 10px; }
+  .chip {
+    padding: 6px 14px; border-radius: 20px; font-size: 12.5px; font-weight: 700;
+    border: 1px solid var(--divider); background: var(--surface-light);
+    color: var(--text-sec); cursor: pointer;
+  }
+  .chip.on { background: rgba(127,255,0,.14); border-color: var(--primary); color: var(--primary); }
+
+  .food-list { margin: 0 12px; }
+  .food-item {
+    display: flex; align-items: center; gap: 12px;
+    background: var(--surface); border: 1px solid var(--divider);
+    border-radius: 14px; padding: 12px 14px; margin-bottom: 8px; cursor: pointer;
+    transition: border-color .15s;
+  }
+  .food-item:hover { border-color: #3d3d3d; }
+  .food-item .femoji {
+    width: 40px; height: 40px; border-radius: 12px; background: var(--surface-light);
+    display: flex; align-items: center; justify-content: center; font-size: 20px; flex: none;
+  }
+  .food-item .fmeta { flex: 1; min-width: 0; }
+  .food-item .fkcal { text-align: right; flex: none; }
+  .food-item .fkcal b { color: var(--primary); font-size: 15px; }
+  .food-item .fkcal span { display: block; font-size: 10.5px; color: var(--text-sec); }
+  .fadd {
+    width: 30px; height: 30px; border-radius: 50%; border: 1px solid var(--primary);
+    background: transparent; color: var(--primary); cursor: pointer; font-size: 16px;
+    flex: none; display: flex; align-items: center; justify-content: center;
+  }
+  .fadd:hover { background: var(--primary); color: #000; }
+  .empty-msg { text-align: center; color: var(--text-sec); font-size: 13px; padding: 30px 20px; }
+
+  /* ============ Recipes ============ */
+  .recipe-card {
+    background: var(--surface); border: 1px solid var(--divider); border-radius: 16px;
+    margin: 0 12px 10px; overflow: hidden; cursor: pointer; transition: border-color .15s;
+  }
+  .recipe-card:hover { border-color: #3d3d3d; }
+  .recipe-hero { height: 84px; display: flex; align-items: center; justify-content: center; font-size: 40px; }
+  .recipe-body { padding: 12px 14px 14px; }
+  .recipe-body h3 { font-size: 15px; font-weight: 800; margin-bottom: 4px; }
+  .recipe-tags { display: flex; gap: 6px; margin-top: 8px; flex-wrap: wrap; }
+  .rtag { font-size: 10.5px; font-weight: 700; padding: 3px 9px; border-radius: 10px;
+    background: var(--surface-light); color: var(--text-sec); border: 1px solid var(--divider); }
+  .rtag.hl { color: var(--primary); border-color: rgba(127,255,0,.3); background: rgba(127,255,0,.08); }
+
+  /* ============ Stats ============ */
+  .seg { display: flex; border: 1px solid var(--divider); border-radius: 12px; overflow: hidden; }
+  .seg button {
+    flex: 1; background: none; border: none; color: var(--text-sec); cursor: pointer;
+    font-size: 12px; font-weight: 700; padding: 7px 0; font-family: inherit;
+  }
+  .seg button.on { background: rgba(127,255,0,.14); color: var(--primary); }
+  .chart {
+    display: flex; align-items: flex-end; gap: 8px; height: 150px; margin-top: 16px; padding: 0 2px;
+  }
+  .bar-col { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 6px; height: 100%; justify-content: flex-end; }
+  .bar-val { font-size: 9.5px; color: var(--text-sec); font-weight: 600; }
+  .bar {
+    width: 100%; max-width: 30px; border-radius: 6px 6px 3px 3px;
+    background: linear-gradient(180deg, var(--primary), var(--primary-dim));
+    opacity: .85; transition: height .5s ease; min-height: 4px;
+  }
+  .bar.over { background: linear-gradient(180deg, var(--fat), #d84315); }
+  .bar.today-bar { box-shadow: 0 0 12px rgba(127,255,0,.4); opacity: 1; }
+  .bar-day { font-size: 10.5px; color: var(--text-sec); font-weight: 700; }
+  .bar-day.today-lbl { color: var(--primary); }
+  .goal-line-note { font-size: 11px; color: var(--text-sec); margin-top: 12px; text-align: center; }
+  .goal-line-note i { color: var(--primary); font-style: normal; font-weight: 700; }
+
+  .stat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin: 6px 12px; }
+  .stat-tile {
+    background: var(--surface); border: 1px solid var(--divider); border-radius: 14px;
+    padding: 14px;
+  }
+  .stat-tile .sv { font-size: 20px; font-weight: 800; margin: 3px 0 1px; }
+  .stat-tile .sl { font-size: 11px; color: var(--text-sec); }
+  .stat-tile .strend { font-size: 11px; font-weight: 700; margin-top: 3px; }
+  .up { color: var(--primary); } .down { color: var(--fat); }
+
+  /* ============ Profile ============ */
+  .profile-head { display: flex; align-items: center; gap: 14px; padding: 8px 18px 16px; }
+  .avatar {
+    width: 62px; height: 62px; border-radius: 50%; flex: none;
+    background: linear-gradient(135deg, var(--primary), var(--primary-dim));
+    color: #000; font-size: 24px; font-weight: 800;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .profile-head h2 { font-size: 18px; font-weight: 800; }
+  .profile-head p { font-size: 12px; color: var(--text-sec); margin-top: 2px; }
+  .setting-row {
+    display: flex; align-items: center; gap: 12px; padding: 13px 4px;
+    border-bottom: 1px solid var(--divider); cursor: pointer; font-size: 14px;
+  }
+  .setting-row:last-child { border-bottom: none; }
+  .setting-row:hover { background: rgba(255,255,255,.02); }
+  .setting-row .sic { font-size: 17px; width: 24px; text-align: center; }
+  .setting-row .slbl { flex: 1; font-weight: 600; }
+  .setting-row .sval { font-size: 12.5px; color: var(--text-sec); }
+  .setting-row .chev { color: var(--text-sec); font-size: 15px; }
+  .toggle {
+    width: 44px; height: 24px; border-radius: 12px; background: var(--surface-light);
+    border: 1px solid var(--divider); position: relative; cursor: pointer; flex: none;
+    transition: background .2s;
+  }
+  .toggle::after {
+    content: ""; position: absolute; top: 2px; left: 2px; width: 18px; height: 18px;
+    border-radius: 50%; background: var(--text-sec); transition: all .2s;
+  }
+  .toggle.on { background: var(--primary); border-color: var(--primary); }
+  .toggle.on::after { left: 22px; background: #000; }
+
+  /* ============ Sheet & toast ============ */
+  .sheet-backdrop {
+    position: absolute; inset: 0; background: rgba(0,0,0,.6); z-index: 40;
+    display: none; align-items: flex-end;
+  }
+  .sheet-backdrop.show { display: flex; }
+  .sheet {
+    width: 100%; background: var(--surface); border-radius: 20px 20px 0 0;
+    padding: 10px 8px 22px; animation: slideup .22s ease;
+  }
+  @keyframes slideup { from { transform: translateY(100%); } to { transform: translateY(0); } }
+  .sheet .handle { width: 36px; height: 4px; border-radius: 2px; background: var(--divider); margin: 4px auto 10px; }
+  .sheet-item {
+    display: flex; align-items: center; gap: 14px; padding: 12px 14px;
+    border-radius: 12px; cursor: pointer; border: none; background: none;
+    width: 100%; text-align: left; color: var(--text); font-family: inherit;
+  }
+  .sheet-item:hover { background: var(--surface-light); }
+  .sheet-item .shic { font-size: 20px; width: 26px; text-align: center; }
+  .sheet-item .sht { font-size: 14.5px; font-weight: 600; }
+  .sheet-item .shs { font-size: 11.5px; color: var(--text-sec); margin-top: 2px; }
+
+  .toast {
+    position: absolute; bottom: 84px; left: 50%; transform: translateX(-50%) translateY(16px);
+    background: var(--surface-light); border: 1px solid var(--divider);
+    color: var(--text); font-size: 12.5px; font-weight: 600;
+    padding: 10px 18px; border-radius: 12px; z-index: 60;
+    opacity: 0; pointer-events: none; transition: all .25s ease;
+    box-shadow: 0 8px 24px rgba(0,0,0,.5); white-space: nowrap; max-width: 92%;
+    overflow: hidden; text-overflow: ellipsis;
+  }
+  .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+  .pad-bottom { height: 96px; }
+</style>
+</head>
+<body>
+
+<!-- ===== Demo banner (outside the phone) ===== -->
+<div class="demo-bar">
+  <a href="/p/apps/6">&larr; Back</a>
+  <span class="dot"></span>
+  <span>DEMO PREVIEW — front-end only, sample data</span>
+</div>
+
+<!-- ===== Phone ===== -->
+<div class="phone">
+  <div class="notch"></div>
+  <div class="statusbar">
+    <span>9:41</span>
+    <span class="sicons">▲▮ ⏦ ▐▋</span>
+  </div>
+
+  <div class="app">
+
+    <!-- ============ DIARY ============ -->
+    <div class="screen active" id="screen-diary">
+      <div class="appbar">
+        <span class="flame">🔥</span>
+        <h1>Alex's Diary</h1>
+        <button class="abtn" onclick="toast()" title="Nutrition report">📊</button>
+      </div>
+
+      <div class="datenav">
+        <button onclick="toast()">‹</button>
+        <span class="dlabel" onclick="toast()">📅 Today</span>
+        <button onclick="toast()">›</button>
+      </div>
+
+      <!-- Summary card -->
+      <div class="card">
+        <div class="summary">
+          <div class="ring-wrap">
+            <svg width="128" height="128" viewBox="0 0 128 128">
+              <circle cx="64" cy="64" r="56" fill="none" stroke="#1B1B1B" stroke-width="10"/>
+              <circle id="kcalRing" cx="64" cy="64" r="56" fill="none" stroke="#7FFF00" stroke-width="10"
+                      stroke-linecap="round" stroke-dasharray="351.86" stroke-dashoffset="351.86"/>
+            </svg>
+            <div class="ring-center">
+              <span class="big">1,450</span>
+              <span class="sub">of 2,200 kcal</span>
+            </div>
+          </div>
+          <div class="macros">
+            <div class="macro">
+              <div class="mrow"><span class="mname" style="color:var(--protein)">Protein</span><span class="mval">86 / 140 g</span></div>
+              <div class="mbar"><div style="width:61%;background:var(--protein)"></div></div>
+            </div>
+            <div class="macro">
+              <div class="mrow"><span class="mname" style="color:var(--carbs)">Carbs</span><span class="mval">152 / 240 g</span></div>
+              <div class="mbar"><div style="width:63%;background:var(--carbs)"></div></div>
+            </div>
+            <div class="macro">
+              <div class="mrow"><span class="mname" style="color:var(--fat)">Fat</span><span class="mval">48 / 73 g</span></div>
+              <div class="mbar"><div style="width:66%;background:var(--fat)"></div></div>
+            </div>
+          </div>
+        </div>
+        <div class="budget-row">
+          <div><b>2,200</b>Budget</div>
+          <div><b>1,450</b>Food</div>
+          <div><b>310</b>Exercise</div>
+          <div class="rem"><b>1,060</b>Remaining</div>
+        </div>
+      </div>
+
+      <!-- Water card -->
+      <div class="card">
+        <div class="water-head">
+          <span class="wtitle">💧 Water</span>
+          <span class="wcount" id="waterLabel">1,250 / 2,000 ml</span>
+        </div>
+        <div class="glasses" id="glasses"></div>
+      </div>
+
+      <!-- Meals -->
+      <div id="meals"></div>
+
+      <!-- Exercise -->
+      <div class="card">
+        <div class="meal-head">
+          <span class="meal-emoji">🏋️</span>
+          <span class="meal-name">Exercise</span>
+          <span class="meal-kcal" style="color:var(--exercise)">−310 kcal</span>
+        </div>
+        <div class="food-row" onclick="toast()">
+          <div class="food-info">
+            <div class="food-name">Morning Run</div>
+            <div class="food-sub">32 min · moderate pace</div>
+          </div>
+          <span class="food-kcal">−240</span>
+        </div>
+        <div class="food-row" onclick="toast()">
+          <div class="food-info">
+            <div class="food-name">Strength Training</div>
+            <div class="food-sub">20 min · upper body</div>
+          </div>
+          <span class="food-kcal">−70</span>
+        </div>
+        <button class="add-food-btn" onclick="toast()">＋ Add exercise</button>
+      </div>
+
+      <div class="pad-bottom"></div>
+    </div>
+
+    <!-- ============ FOODS ============ -->
+    <div class="screen" id="screen-foods">
+      <div class="appbar"><h1>Foods</h1></div>
+      <div class="searchbox">
+        <span style="color:var(--text-sec)">🔍</span>
+        <input type="text" id="foodSearch" placeholder="Search foods…" autocomplete="off">
+        <button class="scan-btn" onclick="showToast('Demo mode')" title="Scan barcode">▣</button>
+      </div>
+      <div class="chip-row" id="foodChips">
+        <button class="chip on" data-cat="all">All</button>
+        <button class="chip" data-cat="protein">High protein</button>
+        <button class="chip" data-cat="fruit">Fruits</button>
+        <button class="chip" data-cat="snack">Snacks</button>
+      </div>
+      <div class="food-list" id="foodList"></div>
+      <div class="pad-bottom"></div>
+    </div>
+
+    <!-- ============ RECIPES ============ -->
+    <div class="screen" id="screen-recipes">
+      <div class="appbar">
+        <h1>Recipes</h1>
+        <button class="abtn" onclick="toast()" title="New recipe">＋</button>
+      </div>
+      <div id="recipeList"></div>
+      <div class="pad-bottom"></div>
+    </div>
+
+    <!-- ============ STATS ============ -->
+    <div class="screen" id="screen-stats">
+      <div class="appbar"><h1>Stats</h1></div>
+
+      <div class="card">
+        <div style="display:flex;align-items:center;gap:12px;margin-bottom:4px">
+          <span class="card-title" style="margin:0;flex:1">Calories consumed</span>
+          <div class="seg" style="width:150px">
+            <button class="on" onclick="setRange(this,7)">7d</button>
+            <button onclick="setRange(this,14)">14d</button>
+            <button onclick="setRange(this,30)">30d</button>
+          </div>
+        </div>
+        <div class="chart" id="kcalChart"></div>
+        <div class="goal-line-note">Daily goal <i>2,200 kcal</i> · weekly avg <i>1,986 kcal</i></div>
+      </div>
+
+      <div class="stat-grid">
+        <div class="stat-tile">
+          <div class="sl">Weight</div>
+          <div class="sv">76.4 kg</div>
+          <div class="strend down">▼ 1.2 kg this month</div>
+        </div>
+        <div class="stat-tile">
+          <div class="sl">Avg protein</div>
+          <div class="sv">118 g</div>
+          <div class="strend up">▲ 12% vs last week</div>
+        </div>
+        <div class="stat-tile">
+          <div class="sl">Logging streak</div>
+          <div class="sv">23 days</div>
+          <div class="strend up">🔥 Personal best</div>
+        </div>
+        <div class="stat-tile">
+          <div class="sl">Avg water</div>
+          <div class="sv">1.8 L</div>
+          <div class="strend up">▲ 0.3 L vs last week</div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="water-head">
+          <span class="wtitle">💧 Water today</span>
+          <span class="wcount" id="waterLabel2">1,250 / 2,000 ml</span>
+        </div>
+        <div class="glasses" id="glasses2"></div>
+      </div>
+
+      <div class="pad-bottom"></div>
+    </div>
+
+    <!-- ============ PROFILE ============ -->
+    <div class="screen" id="screen-profile">
+      <div class="appbar"><h1>Profile</h1></div>
+      <div class="profile-head">
+        <div class="avatar">A</div>
+        <div>
+          <h2>Alex Morgan</h2>
+          <p>Goal: lose 0.5 kg / week · 2,200 kcal budget</p>
+        </div>
+      </div>
+
+      <div class="card" style="padding:4px 14px">
+        <div class="setting-row" onclick="toast()">
+          <span class="sic">🎯</span><span class="slbl">Daily calorie budget</span>
+          <span class="sval">2,200 kcal</span><span class="chev">›</span>
+        </div>
+        <div class="setting-row" onclick="toast()">
+          <span class="sic">🥩</span><span class="slbl">Macro targets</span>
+          <span class="sval">25 / 45 / 30 %</span><span class="chev">›</span>
+        </div>
+        <div class="setting-row" onclick="toast()">
+          <span class="sic">⚖️</span><span class="slbl">Biometrics</span>
+          <span class="sval">76.4 kg · 178 cm</span><span class="chev">›</span>
+        </div>
+        <div class="setting-row" onclick="toast()">
+          <span class="sic">💧</span><span class="slbl">Water goal</span>
+          <span class="sval">2,000 ml</span><span class="chev">›</span>
+        </div>
+      </div>
+
+      <div class="card" style="padding:4px 14px">
+        <div class="setting-row">
+          <span class="sic">🏃</span><span class="slbl">Count exercise in budget</span>
+          <div class="toggle on" onclick="this.classList.toggle('on');toast()"></div>
+        </div>
+        <div class="setting-row">
+          <span class="sic">🔔</span><span class="slbl">Meal reminders</span>
+          <div class="toggle on" onclick="this.classList.toggle('on');toast()"></div>
+        </div>
+        <div class="setting-row">
+          <span class="sic">🌙</span><span class="slbl">Dark theme</span>
+          <div class="toggle on" onclick="showToast('Always dark — easy on the eyes 😉')"></div>
+        </div>
+      </div>
+
+      <div class="card" style="padding:4px 14px">
+        <div class="setting-row" onclick="toast()">
+          <span class="sic">📤</span><span class="slbl">Export data (CSV)</span><span class="chev">›</span>
+        </div>
+        <div class="setting-row" onclick="toast()">
+          <span class="sic">☁️</span><span class="slbl">Backup &amp; sync</span><span class="chev">›</span>
+        </div>
+        <div class="setting-row" onclick="showToast('CalCounter demo v1.0')">
+          <span class="sic">ℹ️</span><span class="slbl">About</span>
+          <span class="sval">v1.0.0</span><span class="chev">›</span>
+        </div>
+      </div>
+
+      <div class="pad-bottom"></div>
+    </div>
+
+    <!-- FAB -->
+    <button class="fab show" id="fab" onclick="openSheet()">＋</button>
+
+    <!-- Add sheet -->
+    <div class="sheet-backdrop" id="sheetBackdrop" onclick="closeSheet(event)">
+      <div class="sheet">
+        <div class="handle"></div>
+        <button class="sheet-item" onclick="closeSheetGo('foods')">
+          <span class="shic">🍽️</span>
+          <div><div class="sht">Add Food</div><div class="shs">Search foods, custom foods &amp; recipes</div></div>
+        </button>
+        <button class="sheet-item" onclick="closeSheetToast('Demo mode')">
+          <span class="shic" style="color:var(--primary)">▣</span>
+          <div><div class="sht">Scan Barcode</div><div class="shs">Look up packaged foods instantly</div></div>
+        </button>
+        <button class="sheet-item" onclick="closeSheetToast()">
+          <span class="shic">🏋️</span>
+          <div><div class="sht">Add Exercise</div></div>
+        </button>
+        <button class="sheet-item" onclick="closeSheetWater()">
+          <span class="shic">💧</span>
+          <div><div class="sht">Add Water</div></div>
+        </button>
+        <button class="sheet-item" onclick="closeSheetToast()">
+          <span class="shic">⚖️</span>
+          <div><div class="sht">Add Biometric</div><div class="shs">Weight, body fat, blood pressure…</div></div>
+        </button>
+      </div>
+    </div>
+
+    <!-- Toast -->
+    <div class="toast" id="toast"></div>
+
+    <!-- Bottom navigation -->
+    <nav class="bottomnav">
+      <button class="navitem active" data-screen="diary"><span class="nicon">📖</span>Diary</button>
+      <button class="navitem" data-screen="foods"><span class="nicon">🍎</span>Foods</button>
+      <button class="navitem" data-screen="recipes"><span class="nicon">🥗</span>Recipes</button>
+      <button class="navitem" data-screen="stats"><span class="nicon">📈</span>Stats</button>
+      <button class="navitem" data-screen="profile"><span class="nicon">👤</span>Profile</button>
+    </nav>
+  </div>
+</div>
+
+<script>
+"use strict";
+/* ============================================================
+   CalCounter — static portfolio demo. All data below is FAKE,
+   hardcoded sample data. No storage, no network, no backend.
+   ============================================================ */
+
+var DEMO_MSG = "Demo version — full app available for purchase";
+
+/* ---------- Fake diary data ---------- */
+var MEALS = [
+  { name: "Breakfast", emoji: "🍳", items: [
+    { n: "Oatmeal with banana", s: "1 bowl · 250 g", k: 310 },
+    { n: "Greek yogurt", s: "170 g · 2% fat", k: 120 },
+    { n: "Black coffee", s: "1 cup · 240 ml", k: 5 }
+  ]},
+  { name: "Lunch", emoji: "🥗", items: [
+    { n: "Grilled chicken breast", s: "150 g", k: 248 },
+    { n: "Quinoa salad", s: "1 serving · 200 g", k: 220 },
+    { n: "Olive oil dressing", s: "1 tbsp", k: 119 }
+  ]},
+  { name: "Dinner", emoji: "🍝", items: [
+    { n: "Salmon fillet", s: "120 g · baked", k: 245 },
+    { n: "Steamed broccoli", s: "150 g", k: 51 },
+    { n: "Brown rice", s: "1 cup cooked", k: 216 }
+  ]},
+  { name: "Snacks", emoji: "🍎", items: [
+    { n: "Almonds", s: "20 g · ~14 nuts", k: 116 },
+    { n: "Apple", s: "1 medium", k: 95 }
+  ]}
+];
+
+/* ---------- Fake food database ---------- */
+var FOODS = [
+  { n: "Chicken breast, grilled", s: "per 100 g", k: 165, e: "🍗", cat: "protein" },
+  { n: "Salmon, Atlantic", s: "per 100 g", k: 208, e: "🐟", cat: "protein" },
+  { n: "Eggs, large", s: "1 egg · 50 g", k: 72, e: "🥚", cat: "protein" },
+  { n: "Greek yogurt, plain", s: "per 100 g", k: 59, e: "🥛", cat: "protein" },
+  { n: "Cottage cheese", s: "per 100 g", k: 98, e: "🧀", cat: "protein" },
+  { n: "Tofu, firm", s: "per 100 g", k: 76, e: "🍲", cat: "protein" },
+  { n: "Banana", s: "1 medium · 118 g", k: 105, e: "🍌", cat: "fruit" },
+  { n: "Apple", s: "1 medium · 182 g", k: 95, e: "🍎", cat: "fruit" },
+  { n: "Blueberries", s: "per 100 g", k: 57, e: "🫐", cat: "fruit" },
+  { n: "Orange", s: "1 medium · 131 g", k: 62, e: "🍊", cat: "fruit" },
+  { n: "Strawberries", s: "per 100 g", k: 32, e: "🍓", cat: "fruit" },
+  { n: "Avocado", s: "½ fruit · 100 g", k: 160, e: "🥑", cat: "fruit" },
+  { n: "Almonds", s: "per 28 g", k: 164, e: "🥜", cat: "snack" },
+  { n: "Dark chocolate 85%", s: "per 25 g", k: 149, e: "🍫", cat: "snack" },
+  { n: "Rice cakes", s: "1 cake · 9 g", k: 35, e: "🍘", cat: "snack" },
+  { n: "Protein bar", s: "1 bar · 60 g", k: 210, e: "🍫", cat: "snack" },
+  { n: "Popcorn, air-popped", s: "per 28 g", k: 110, e: "🍿", cat: "snack" },
+  { n: "Oats, rolled", s: "per 40 g dry", k: 152, e: "🌾", cat: "all" },
+  { n: "Brown rice, cooked", s: "per 100 g", k: 112, e: "🍚", cat: "all" },
+  { n: "Whole wheat bread", s: "1 slice · 32 g", k: 82, e: "🍞", cat: "all" },
+  { n: "Sweet potato, baked", s: "per 100 g", k: 90, e: "🍠", cat: "all" },
+  { n: "Broccoli, steamed", s: "per 100 g", k: 35, e: "🥦", cat: "all" },
+  { n: "Olive oil", s: "1 tbsp · 14 g", k: 119, e: "🫒", cat: "all" },
+  { n: "Milk, 2%", s: "per 240 ml", k: 122, e: "🥛", cat: "all" }
+];
+
+/* ---------- Fake recipes ---------- */
+var RECIPES = [
+  { n: "High-Protein Chicken Bowl", s: "4 ingredients · 1 serving", k: 520, e: "🍗", bg: "#16210f", tags: ["42 g protein", "meal prep"] },
+  { n: "Berry Overnight Oats", s: "5 ingredients · 1 jar", k: 385, e: "🫐", bg: "#141b26", tags: ["breakfast", "make ahead"] },
+  { n: "Salmon & Quinoa Plate", s: "6 ingredients · 1 serving", k: 610, e: "🐟", bg: "#20160f", tags: ["omega-3", "dinner"] },
+  { n: "Green Power Smoothie", s: "5 ingredients · 400 ml", k: 240, e: "🥬", bg: "#12200f", tags: ["low cal", "quick"] },
+  { n: "Turkey Lettuce Wraps", s: "7 ingredients · 2 wraps", k: 340, e: "🥬", bg: "#1d1a0e", tags: ["low carb", "lunch"] }
+];
+
+/* ---------- Fake weekly calories (Stats) ---------- */
+var WEEK = [
+  { d: "Mon", v: 2050 }, { d: "Tue", v: 1890 }, { d: "Wed", v: 2320 },
+  { d: "Thu", v: 1760 }, { d: "Fri", v: 2140 }, { d: "Sat", v: 2290 },
+  { d: "Sun", v: 1450, today: true }
+];
+var GOAL = 2200;
+
+/* ---------- Toast ---------- */
+var toastTimer = null;
+function showToast(msg) {
+  var t = document.getElementById("toast");
+  t.textContent = msg || DEMO_MSG;
+  t.classList.add("show");
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(function () { t.classList.remove("show"); }, 2200);
+}
+function toast() { showToast(DEMO_MSG); }
+
+/* ---------- Tab navigation ---------- */
+var navItems = document.querySelectorAll(".navitem");
+function switchTab(name) {
+  document.querySelectorAll(".screen").forEach(function (s) {
+    s.classList.toggle("active", s.id === "screen-" + name);
+  });
+  navItems.forEach(function (b) {
+    b.classList.toggle("active", b.getAttribute("data-screen") === name);
+  });
+  document.getElementById("fab").classList.toggle("show", name === "diary");
+  var active = document.getElementById("screen-" + name);
+  if (active) active.scrollTop = 0;
+}
+navItems.forEach(function (b) {
+  b.addEventListener("click", function () { switchTab(b.getAttribute("data-screen")); });
+});
+
+/* ---------- Diary: render meals ---------- */
+(function renderMeals() {
+  var host = document.getElementById("meals");
+  var html = "";
+  MEALS.forEach(function (m) {
+    var total = m.items.reduce(function (a, i) { return a + i.k; }, 0);
+    html += '<div class="card">' +
+      '<div class="meal-head"><span class="meal-emoji">' + m.emoji + '</span>' +
+      '<span class="meal-name">' + m.name + '</span>' +
+      '<span class="meal-kcal">' + total.toLocaleString("en-US") + ' kcal</span></div>';
+    m.items.forEach(function (i) {
+      html += '<div class="food-row" onclick="toast()">' +
+        '<div class="food-info"><div class="food-name">' + i.n + '</div>' +
+        '<div class="food-sub">' + i.s + '</div></div>' +
+        '<span class="food-kcal">' + i.k + '</span></div>';
+    });
+    html += '<button class="add-food-btn" onclick="toast()">＋ Add food</button></div>';
+  });
+  host.innerHTML = html;
+})();
+
+/* ---------- Diary: animate calorie ring ---------- */
+(function animateRing() {
+  var C = 2 * Math.PI * 56; // 351.86
+  var pct = 1450 / 2200;
+  var ring = document.getElementById("kcalRing");
+  ring.style.transition = "stroke-dashoffset 1s ease .2s";
+  requestAnimationFrame(function () {
+    setTimeout(function () { ring.style.strokeDashoffset = String(C * (1 - pct)); }, 60);
+  });
+})();
+
+/* ---------- Water tracker (shared between Diary & Stats) ---------- */
+var GLASS_ML = 250, GLASS_COUNT = 8;
+var waterFilled = 5; // 1,250 ml
+
+function renderGlasses() {
+  ["glasses", "glasses2"].forEach(function (id) {
+    var host = document.getElementById(id);
+    if (!host) return;
+    var html = "";
+    for (var i = 0; i < GLASS_COUNT; i++) {
+      html += '<button class="glass' + (i < waterFilled ? " full" : "") +
+        '" onclick="tapGlass(' + i + ')" title="' + GLASS_ML + ' ml">💧</button>';
+    }
+    host.innerHTML = html;
+  });
+  var lbl = (waterFilled * GLASS_ML).toLocaleString("en-US") + " / 2,000 ml";
+  document.getElementById("waterLabel").textContent = lbl;
+  document.getElementById("waterLabel2").textContent = lbl;
+}
+function tapGlass(i) {
+  waterFilled = (i < waterFilled) ? i : i + 1;
+  renderGlasses();
+  showToast("Water updated — demo only, not saved");
+}
+renderGlasses();
+
+/* ---------- Foods: search + filter ---------- */
+var foodQuery = "", foodCat = "all";
+
+function renderFoods() {
+  var host = document.getElementById("foodList");
+  var q = foodQuery.trim().toLowerCase();
+  var list = FOODS.filter(function (f) {
+    var okCat = foodCat === "all" || f.cat === foodCat;
+    var okQ = !q || f.n.toLowerCase().indexOf(q) !== -1;
+    return okCat && okQ;
+  });
+  if (!list.length) {
+    host.innerHTML = '<div class="empty-msg">No foods match "' + foodQuery.replace(/</g, "&lt;") + '"<br>Try a different search.</div>';
+    return;
+  }
+  var html = "";
+  list.forEach(function (f) {
+    html += '<div class="food-item" onclick="toast()">' +
+      '<div class="femoji">' + f.e + '</div>' +
+      '<div class="fmeta"><div class="food-name">' + f.n + '</div>' +
+      '<div class="food-sub">' + f.s + '</div></div>' +
+      '<div class="fkcal"><b>' + f.k + '</b><span>kcal</span></div>' +
+      '<button class="fadd" onclick="event.stopPropagation();toast()">＋</button></div>';
+  });
+  host.innerHTML = html;
+}
+document.getElementById("foodSearch").addEventListener("input", function (e) {
+  foodQuery = e.target.value;
+  renderFoods();
+});
+document.getElementById("foodChips").addEventListener("click", function (e) {
+  var chip = e.target.closest(".chip");
+  if (!chip) return;
+  foodCat = chip.getAttribute("data-cat");
+  document.querySelectorAll("#foodChips .chip").forEach(function (c) {
+    c.classList.toggle("on", c === chip);
+  });
+  renderFoods();
+});
+renderFoods();
+
+/* ---------- Recipes ---------- */
+(function renderRecipes() {
+  var host = document.getElementById("recipeList");
+  var html = "";
+  RECIPES.forEach(function (r) {
+    html += '<div class="recipe-card" onclick="toast()">' +
+      '<div class="recipe-hero" style="background:' + r.bg + '">' + r.e + '</div>' +
+      '<div class="recipe-body"><h3>' + r.n + '</h3>' +
+      '<div class="food-sub">' + r.s + '</div>' +
+      '<div class="recipe-tags"><span class="rtag hl">' + r.k + ' kcal</span>';
+    r.tags.forEach(function (t) { html += '<span class="rtag">' + t + '</span>'; });
+    html += '</div></div></div>';
+  });
+  host.innerHTML = html;
+})();
+
+/* ---------- Stats: bar chart ---------- */
+function renderChart() {
+  var host = document.getElementById("kcalChart");
+  var max = Math.max(GOAL, Math.max.apply(null, WEEK.map(function (w) { return w.v; }))) * 1.08;
+  var html = "";
+  WEEK.forEach(function (w) {
+    var h = Math.round((w.v / max) * 100);
+    var cls = "bar" + (w.v > GOAL ? " over" : "") + (w.today ? " today-bar" : "");
+    html += '<div class="bar-col">' +
+      '<span class="bar-val">' + w.v.toLocaleString("en-US") + '</span>' +
+      '<div class="' + cls + '" style="height:0%" data-h="' + h + '"></div>' +
+      '<span class="bar-day' + (w.today ? " today-lbl" : "") + '">' + w.d + '</span></div>';
+  });
+  host.innerHTML = html;
+  requestAnimationFrame(function () {
+    setTimeout(function () {
+      host.querySelectorAll(".bar").forEach(function (b) {
+        b.style.height = b.getAttribute("data-h") + "%";
+      });
+    }, 60);
+  });
+}
+function setRange(btn, days) {
+  btn.parentElement.querySelectorAll("button").forEach(function (b) {
+    b.classList.toggle("on", b === btn);
+  });
+  if (days !== 7) showToast(DEMO_MSG);
+  renderChart();
+}
+renderChart();
+
+/* ---------- Add sheet (FAB) ---------- */
+function openSheet() { document.getElementById("sheetBackdrop").classList.add("show"); }
+function closeSheet(e) {
+  if (!e || e.target === document.getElementById("sheetBackdrop")) {
+    document.getElementById("sheetBackdrop").classList.remove("show");
+  }
+}
+function forceCloseSheet() { document.getElementById("sheetBackdrop").classList.remove("show"); }
+function closeSheetGo(tab) { forceCloseSheet(); switchTab(tab); }
+function closeSheetToast(msg) { forceCloseSheet(); showToast(msg || DEMO_MSG); }
+function closeSheetWater() {
+  forceCloseSheet();
+  if (waterFilled < GLASS_COUNT) { waterFilled++; renderGlasses(); }
+  showToast("＋250 ml water — demo only, not saved");
+}
+</script>
+</body>
+</html>

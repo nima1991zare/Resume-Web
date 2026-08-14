@@ -187,6 +187,7 @@ class ItemIn(BaseModel):
     image: str = ""
     url: str = ""
     tech: str = ""
+    demo_url: str = ""
     price: float = 0
     currency: str = "USD"
     buyable: int = 1
@@ -233,13 +234,13 @@ def _load_public_content() -> dict:
     try:
         settings = {k: get_setting(conn, k) for k in PUBLIC_SETTINGS}
         apps = [dict(r) for r in conn.execute(
-            "SELECT id,title_en,title_fa,desc_en,desc_fa,image,tech,price,currency,buyable "
+            "SELECT id,title_en,title_fa,desc_en,desc_fa,image,tech,demo_url,price,currency,buyable "
             "FROM apps WHERE active=1 ORDER BY sort, id")]
         games = [dict(r) for r in conn.execute(
-            "SELECT id,title_en,title_fa,desc_en,desc_fa,image,url,tech,price,currency,buyable "
+            "SELECT id,title_en,title_fa,desc_en,desc_fa,image,url,tech,demo_url,price,currency,buyable "
             "FROM games WHERE active=1 ORDER BY sort, id")]
         websites = [dict(r) for r in conn.execute(
-            "SELECT id,title_en,title_fa,desc_en,desc_fa,image,url,tech,price,currency "
+            "SELECT id,title_en,title_fa,desc_en,desc_fa,image,url,tech,demo_url,price,currency "
             "FROM websites WHERE active=1 ORDER BY sort, id")]
         brands = [dict(r) for r in conn.execute(
             "SELECT id,name,logo,url FROM brands WHERE active=1 ORDER BY sort, id")]
@@ -353,12 +354,12 @@ TABLES = {"apps": "apps", "games": "games", "websites": "websites"}
 
 # writable columns per table (games have both a demo URL and a buyable flag)
 TABLE_COLS = {
-    "apps": ["title_en", "title_fa", "desc_en", "desc_fa", "image", "tech",
+    "apps": ["title_en", "title_fa", "desc_en", "desc_fa", "image", "tech", "demo_url",
              "price", "currency", "buyable", "sort", "active"],
     "games": ["title_en", "title_fa", "desc_en", "desc_fa", "image", "url", "tech",
-              "price", "currency", "buyable", "sort", "active"],
+              "demo_url", "price", "currency", "buyable", "sort", "active"],
     "websites": ["title_en", "title_fa", "desc_en", "desc_fa", "image", "url", "tech",
-                 "price", "currency", "sort", "active"],
+                 "demo_url", "price", "currency", "sort", "active"],
 }
 
 
@@ -382,6 +383,7 @@ def admin_create_item(table: str, data: ItemIn, authorization: Optional[str] = H
         raise HTTPException(status_code=404)
     data.url = _validate_link(data.url, "URL")
     data.image = _validate_link(data.image, "Image", allow_local=True)
+    data.demo_url = _validate_link(data.demo_url, "Demo URL", allow_local=True)
     cols = TABLE_COLS[table]
     conn = get_db()
     try:
@@ -403,6 +405,7 @@ def admin_update_item(table: str, item_id: int, data: ItemIn,
         raise HTTPException(status_code=404)
     data.url = _validate_link(data.url, "URL")
     data.image = _validate_link(data.image, "Image", allow_local=True)
+    data.demo_url = _validate_link(data.demo_url, "Demo URL", allow_local=True)
     cols = TABLE_COLS[table]
     conn = get_db()
     try:
@@ -811,6 +814,7 @@ def _render_product(request: Request, table: str, item_id: int) -> Optional[str]
         "tech": item.get("tech", ""), "price": item.get("price", 0),
         "currency": item.get("currency", "USD"),
         "buyable": item.get("buyable", 0), "url": item.get("url", ""),
+        "demo_url": item.get("demo_url", ""),
     }
 
     tech_html = "".join(
@@ -916,4 +920,5 @@ async def not_found(request: Request, exc):
     return HTMLResponse(_render_index(request), status_code=404)
 
 
-app.mount("/static", StaticFiles(directory=STATIC_DIR), name="static")
+# html=True serves index.html for directory URLs (used by /static/demos/<slug>/)
+app.mount("/static", StaticFiles(directory=STATIC_DIR, html=True), name="static")

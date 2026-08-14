@@ -32,6 +32,7 @@ window.I18N = {
     "apps.sub": "Full source code available. Design customization included with every purchase.",
     "apps.buy": "Buy Source",
     "apps.buyable": "For Sale",
+    "apps.demo": "View Demo",
 
     "web.title": "Websites I've Built",
     "web.sub": "Sample projects — every one built from scratch with clean architecture.",
@@ -99,6 +100,7 @@ window.I18N = {
     "apps.sub": "سورس‌کد کامل قابل خریداری است. شخصی‌سازی طراحی همراه با هر خرید انجام می‌شود.",
     "apps.buy": "خرید سورس",
     "apps.buyable": "قابل خرید",
+    "apps.demo": "مشاهده دمو",
 
     "web.title": "وب‌سایت‌هایی که ساخته‌ام",
     "web.sub": "نمونه پروژه‌ها — همگی از صفر و با معماری تمیز ساخته شده‌اند.",

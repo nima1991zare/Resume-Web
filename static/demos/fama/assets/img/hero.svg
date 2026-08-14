@@ -1,0 +1,77 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 560 480" role="img" aria-label="محصولات آرایشی فاما">
+  <defs>
+    <linearGradient id="hbg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#FBCFE8"/>
+      <stop offset="0.55" stop-color="#F9A8D4"/>
+      <stop offset="1" stop-color="#E9D5FF"/>
+    </linearGradient>
+    <linearGradient id="hp1" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#F472B6"/><stop offset="1" stop-color="#BE185D"/>
+    </linearGradient>
+    <linearGradient id="hp2" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#C4B5FD"/><stop offset="1" stop-color="#7C3AED"/>
+    </linearGradient>
+    <linearGradient id="hp3" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#FDA4AF"/><stop offset="1" stop-color="#E11D48"/>
+    </linearGradient>
+  </defs>
+
+  <rect width="560" height="480" rx="32" fill="url(#hbg)"/>
+
+  <!-- soft deco circles -->
+  <circle cx="470" cy="70" r="90" fill="#FFFFFF" opacity="0.18"/>
+  <circle cx="70" cy="410" r="110" fill="#FFFFFF" opacity="0.14"/>
+  <circle cx="500" cy="400" r="55" fill="#831843" opacity="0.06"/>
+
+  <!-- petals scatter -->
+  <g fill="#FFFFFF" opacity="0.5">
+    <path d="M95 90 q10 -18 20 0 q-10 18 -20 0z" transform="rotate(20 105 90)"/>
+    <path d="M460 300 q10 -18 20 0 q-10 18 -20 0z" transform="rotate(-30 470 300)"/>
+    <path d="M120 300 q8 -14 16 0 q-8 14 -16 0z" transform="rotate(50 128 300)"/>
+    <path d="M420 150 q8 -14 16 0 q-8 14 -16 0z" transform="rotate(-15 428 150)"/>
+  </g>
+
+  <!-- podium -->
+  <ellipse cx="280" cy="404" rx="190" ry="26" fill="#831843" opacity="0.10"/>
+  <rect x="130" y="330" width="300" height="70" rx="14" fill="#FFFFFF" opacity="0.55"/>
+
+  <!-- perfume bottle (center) -->
+  <g>
+    <circle cx="280" cy="290" r="82" fill="url(#hp1)"/>
+    <circle cx="252" cy="262" r="26" fill="#FFFFFF" opacity="0.35"/>
+    <rect x="262" y="176" width="36" height="34" rx="8" fill="#4A0D2C"/>
+    <rect x="269" y="148" width="22" height="30" rx="6" fill="#6B2145"/>
+    <circle cx="330" cy="150" r="5" fill="#BE185D"/>
+    <circle cx="348" cy="136" r="3.6" fill="#BE185D" opacity="0.8"/>
+    <circle cx="342" cy="162" r="2.8" fill="#BE185D" opacity="0.6"/>
+  </g>
+
+  <!-- lipstick (right) -->
+  <g transform="translate(398 210)">
+    <rect x="0" y="78" width="52" height="102" rx="10" fill="#4A0D2C"/>
+    <rect x="6" y="58" width="40" height="24" rx="6" fill="#E3B7CC"/>
+    <path d="M10 62 L10 6 Q10 -8 26 -8 L42 8 L42 62 Z" fill="url(#hp3)"/>
+  </g>
+
+  <!-- serum (left) -->
+  <g transform="translate(96 218)">
+    <path d="M8 60 Q8 46 24 46 L64 46 Q80 46 80 60 L80 146 Q80 166 58 166 L30 166 Q8 166 8 146 Z" fill="url(#hp2)"/>
+    <rect x="32" y="18" width="24" height="30" rx="5" fill="#4A0D2C"/>
+    <rect x="39" y="-8" width="10" height="28" rx="4" fill="#6B2145"/>
+    <path d="M44 84 Q60 104 44 120 Q28 104 44 84 Z" fill="#FFFFFF" opacity="0.55"/>
+  </g>
+
+  <!-- floating blush compact -->
+  <g transform="translate(150 92)">
+    <circle cx="36" cy="36" r="36" fill="#FFFFFF" opacity="0.9"/>
+    <circle cx="36" cy="36" r="25" fill="url(#hp1)" opacity="0.85"/>
+    <circle cx="28" cy="28" r="8" fill="#FFFFFF" opacity="0.4"/>
+  </g>
+
+  <!-- sparkles -->
+  <g fill="#FFFFFF">
+    <path d="M382 76 l4 12 12 4 -12 4 -4 12 -4 -12 -12 -4 12 -4 z" opacity="0.9"/>
+    <path d="M112 180 l3 9 9 3 -9 3 -3 9 -3 -9 -9 -3 9 -3 z" opacity="0.7"/>
+    <path d="M470 230 l3 9 9 3 -9 3 -3 9 -3 -9 -9 -3 9 -3 z" opacity="0.8"/>
+  </g>
+</svg>
