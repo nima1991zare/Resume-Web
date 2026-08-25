@@ -17,6 +17,7 @@
       "v2.brandsTag": "IN THEIR ORBIT",
       "v2.chPhone": "Phone",
       "v2.chEmail": "Email",
+      "v2.chWhatsapp": "WhatsApp",
       "v2.chTelegram": "Telegram",
       "v2.chGithub": "GitHub",
       "v2.chLinkedin": "LinkedIn"
@@ -34,6 +35,7 @@
       "v2.brandsTag": "در مدارِ آن‌ها",
       "v2.chPhone": "تلفن",
       "v2.chEmail": "ایمیل",
+      "v2.chWhatsapp": "واتس‌اپ",
       "v2.chTelegram": "تلگرام",
       "v2.chGithub": "گیت‌هاب",
       "v2.chLinkedin": "لینکدین"
@@ -396,7 +398,8 @@
     var s = c.settings;
     var ch = [];
     if (s.phone) ch.push(['v2.chPhone', s.phone, "tel:" + String(s.phone).replace(/\s+/g, "")]);
-    if (s.email) ch.push(['v2.chEmail', s.email, "mailto:" + s.email]);
+    if (s.email) ch.push(['v2.chEmail', s.email, "https://mail.google.com/mail/?view=cm&fs=1&to=" + encodeURIComponent(s.email)]);
+    if (s.whatsapp) ch.push(['v2.chWhatsapp', s.whatsapp.replace(/^https?:\/\/(?:www\.)?(?:wa\.me\/|api\.whatsapp\.com\/send\?phone=)/i, "+"), s.whatsapp]);
     if (s.telegram) ch.push(['v2.chTelegram', "@telegram", s.telegram]);
     if (s.github) ch.push(['v2.chGithub', "github", s.github]);
     if (s.linkedin) ch.push(['v2.chLinkedin', "linkedin", s.linkedin]);
