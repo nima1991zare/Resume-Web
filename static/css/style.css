@@ -308,7 +308,7 @@ main { position: relative; z-index: 10; }
 .vcard-demo-only .vfoot-demo .btn { min-width: 132px; }
 
 /* Website cards borrow a small accent from each project's own identity. */
-#websites-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 26px; }
+#websites-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 22px; }
 .website-card {
   --site-accent: var(--acc-3);
   --site-secondary: #A7D8F5;
@@ -521,6 +521,7 @@ h3 a:hover { color: var(--acc-0); }
 /* ---------------- responsive ---------------- */
 @media (max-width: 980px) {
   .about-cols, .contact-cols { grid-template-columns: 1fr; }
+  #websites-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
 @media (max-width: 720px) {
   .rail .rail-label { display: none; }
