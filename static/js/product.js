@@ -83,6 +83,7 @@
     document.getElementById("pd-badge").textContent = t("pd.type." + P.type);
     document.getElementById("pd-title").textContent = title;
     document.getElementById("pd-desc").textContent = desc;
+    document.getElementById("pd-desc").hidden = !!P.demo_only;
     document.getElementById("pd-price").textContent = fmtPrice(P.price, P.currency);
 
     var note = document.getElementById("pd-note");
@@ -100,10 +101,12 @@
       actions.push('<a class="btn btn-ghost" href="' + esc(P.url) + '" target="_blank" rel="noopener">' +
         t(P.type === "bots" ? "pd.source" : "pd.visit") + "</a>");
     }
-    if (P.buyable) {
-      actions.push('<a class="btn btn-primary" href="/?subject=' + subject + '#contact">' + t("pd.buy") + "</a>");
-    } else {
-      actions.push('<a class="btn btn-primary" href="/?subject=' + subject + '#contact">' + t("pd.order") + "</a>");
+    if (!P.demo_only) {
+      if (P.buyable) {
+        actions.push('<a class="btn btn-primary" href="/?subject=' + subject + '#contact">' + t("pd.buy") + "</a>");
+      } else {
+        actions.push('<a class="btn btn-primary" href="/?subject=' + subject + '#contact">' + t("pd.order") + "</a>");
+      }
     }
     document.getElementById("pd-actions").innerHTML = actions.join("");
   }

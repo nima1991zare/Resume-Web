@@ -97,6 +97,7 @@ CREATE TABLE IF NOT EXISTS websites (
     url       TEXT NOT NULL DEFAULT '',
     tech      TEXT NOT NULL DEFAULT '',
     demo_url  TEXT NOT NULL DEFAULT '',
+    demo_only INTEGER NOT NULL DEFAULT 0,
     price     REAL NOT NULL DEFAULT 0,
     currency  TEXT NOT NULL DEFAULT 'USD',
     sort      INTEGER NOT NULL DEFAULT 0,
@@ -223,11 +224,25 @@ FEATURED_BOTS = [
      "/static/demos/instagram-dm-automation/index.html", 0, "IRT", 0, 3),
 ]
 
-SEED_BRANDS = [
-    ("Brand One", "", ""),
-    ("Brand Two", "", ""),
-    ("Brand Three", "", ""),
+FEATURED_WEBSITES = [
+    ("Depoti", "دیپوتی", "", "", "/static/projects/depoti-site.png", "", "",
+     "https://depoti.ir/", 0, "IRT", 1, 10),
+    ("Weenk Creative Studio", "استودیو وینک", "", "", "/static/projects/weenk-site.png", "", "",
+     "https://weenk.ir/", 0, "IRT", 1, 11),
+    ("ORO Coffee", "قهوه ارو", "", "", "/static/projects/oro-site.png", "", "",
+     "https://orocoffee.ir/", 0, "IRT", 1, 12),
+    ("Coffeete", "کافیته", "", "", "/static/projects/coffete-site.png", "", "",
+     "/static/demos/coffete/index.html", 0, "IRT", 1, 13),
 ]
+
+FEATURED_BRANDS = [
+    ("Depoti", "/static/projects/depoti-site.png", "https://depoti.ir/", 1),
+    ("Weenk.ir", "/static/projects/weenk-site.png", "https://weenk.ir/", 2),
+    ("ORO Coffee", "/static/projects/oro-site.png", "https://orocoffee.ir/", 3),
+    ("Coffeete", "/static/projects/coffete-site.png", "/static/demos/coffete/index.html", 4),
+]
+
+SEED_BRANDS = []
 
 
 def init_db() -> None:
@@ -240,6 +255,11 @@ def init_db() -> None:
             if "demo_url" not in cols:
                 conn.execute(
                     f"ALTER TABLE {table} ADD COLUMN demo_url TEXT NOT NULL DEFAULT ''")
+        website_cols_existing = [
+            r["name"] for r in conn.execute("PRAGMA table_info(websites)")]
+        if "demo_only" not in website_cols_existing:
+            conn.execute(
+                "ALTER TABLE websites ADD COLUMN demo_only INTEGER NOT NULL DEFAULT 0")
         # settings seed (only insert missing keys)
         for k, v in DEFAULT_SETTINGS.items():
             conn.execute("INSERT OR IGNORE INTO settings(key, value) VALUES(?, ?)", (k, v))
@@ -272,8 +292,38 @@ def init_db() -> None:
                     "SELECT 1 FROM telegram_bots WHERE title_en=?", (row[0],)).fetchone() is None:
                 conn.execute(
                     f"INSERT INTO telegram_bots({featured_cols}) VALUES({','.join('?' * 12)})", row)
+        website_cols = (
+            "title_en,title_fa,desc_en,desc_fa,image,url,tech,demo_url,"
+            "price,currency,demo_only,sort"
+        )
+        for row in FEATURED_WEBSITES:
+            if conn.execute(
+                    "SELECT 1 FROM websites WHERE title_en=?", (row[0],)).fetchone() is None:
+                conn.execute(
+                    f"INSERT INTO websites({website_cols}) VALUES({','.join('?' * 12)})", row)
+            else:
+                conn.execute(
+                    "UPDATE websites SET title_fa=?,desc_en=?,desc_fa=?,image=?,url=?,tech=?,"
+                    "demo_url=?,price=?,currency=?,demo_only=?,sort=?,active=1 WHERE title_en=?",
+                    row[1:] + (row[0],))
+        conn.execute(
+            "UPDATE websites SET active=0 WHERE title_en IN "
+            "('Restaurant Ordering Website','Corporate Landing Page')")
         if conn.execute("SELECT COUNT(*) c FROM brands").fetchone()["c"] == 0:
             conn.executemany("INSERT INTO brands(name,logo,url) VALUES(?,?,?)", SEED_BRANDS)
+        conn.execute(
+            "UPDATE brands SET active=0 WHERE name IN ('Brand One','Brand Two','Brand Three')")
+        for name, image, url, sort in FEATURED_BRANDS:
+            existing = conn.execute(
+                "SELECT id FROM brands WHERE lower(name)=lower(?)", (name,)).fetchone()
+            if existing:
+                conn.execute(
+                    "UPDATE brands SET logo=?,url=?,sort=?,active=1 WHERE id=?",
+                    (image, url, sort, existing["id"]))
+            else:
+                conn.execute(
+                    "INSERT INTO brands(name,logo,url,sort,active) VALUES(?,?,?,?,1)",
+                    (name, image, url, sort))
         conn.commit()
     finally:
         conn.close()

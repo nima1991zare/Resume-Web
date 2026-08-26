@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta http-equiv="Content-Security-Policy" content="connect-src 'none'" />
+  <title>راهنمای جامع قهوه و اسپرسوساز | کافیته</title>
+  <meta name="description" content="راهنمای کامل خط قهوه کافیته و جزئیات فنی اسپرسوسازها: انتخاب دانه، ترکیب‌ها، فشار پمپ، بویلر، پرتافیلتر و نگهداری دستگاه." />
+  <meta name="robots" content="noindex, nofollow" />
+  <meta name="theme-color" content="#2B36A9" />
+  <link rel="icon" href="icons/favicon.svg" type="image/svg+xml" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Lalezar&family=Vazirmatn:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="css/styles.css?v=12" />
+  <style>
+    .guide-hero {
+      background: linear-gradient(150deg, var(--primary-darker), var(--primary));
+      color: #fff; text-align: center;
+      padding: clamp(44px, 7vw, 80px) 0;
+    }
+    .guide-hero h1 { font-family: var(--font-display); font-weight: 400; font-size: clamp(1.9rem, 5vw, 2.9rem); margin-bottom: 10px; }
+    .guide-hero p { color: rgba(255,255,255,.85); max-width: 62ch; margin-inline: auto; }
+
+    .guide-main { max-width: 860px; margin-inline: auto; padding: 30px 0 60px; }
+
+    .guide-toc {
+      display: flex; flex-wrap: wrap; gap: 8px; justify-content: center;
+      margin-bottom: 26px;
+    }
+    .guide-toc a {
+      padding: 8px 18px; border-radius: 999px;
+      background: var(--surface); border: 1.5px solid var(--line);
+      font-size: var(--fs-sm); font-weight: 700; color: var(--ink-soft);
+      transition: all .18s;
+    }
+    .guide-toc a:hover { border-color: var(--primary); color: var(--primary); }
+
+    .guide-section {
+      background: var(--surface); border: 1px solid var(--line);
+      border-radius: var(--r-xl);
+      padding: clamp(22px, 4vw, 36px);
+      margin-bottom: 20px;
+      scroll-margin-top: 90px;
+    }
+    .guide-section h2 {
+      font-family: var(--font-display); font-weight: 400; font-size: 1.6rem;
+      color: var(--ink);
+      display: flex; align-items: center; gap: 12px;
+      margin-bottom: 14px;
+    }
+    .guide-section h2 .num {
+      display: grid; place-items: center; flex-shrink: 0;
+      width: 42px; height: 42px; border-radius: 14px;
+      background: var(--primary); color: #fff;
+      font-size: 1.15rem; padding-top: 4px;
+    }
+    .guide-section .body { color: var(--ink-soft); line-height: 2.2; display: grid; gap: 12px; }
+    .guide-section .body ul, .guide-section .body ol { padding-inline-start: 22px; display: grid; gap: 8px; }
+    .guide-section .body strong { color: var(--ink); }
+    .guide-section .body a { color: var(--primary); text-decoration: underline; }
+    .guide-section .body img { border-radius: var(--r-md); max-width: 100%; }
+  </style>
+</head>
+<body class="blog-body has-bottomnav">
+
+  <header class="header">
+    <div class="container post-header">
+      <a href="index.html" class="brand" aria-label="کافیته - صفحه اصلی">
+        <svg class="brand__mascot" viewBox="0 0 220 175" aria-hidden="true">
+          <g stroke="#2b36a9" stroke-width="7" stroke-linecap="round" stroke-linejoin="round">
+            <ellipse cx="35" cy="98" rx="16" ry="23" transform="rotate(-64 35 98)" fill="#F8F3E9"/>
+            <ellipse cx="185" cy="98" rx="16" ry="23" transform="rotate(64 185 98)" fill="#F8F3E9"/>
+            <ellipse cx="70" cy="86" rx="27" ry="36" transform="rotate(-24 70 86)" fill="#F8F3E9"/>
+            <ellipse cx="150" cy="86" rx="27" ry="36" transform="rotate(24 150 86)" fill="#F8F3E9"/>
+            <ellipse cx="110" cy="84" rx="45" ry="48" fill="#F8F3E9"/>
+          </g>
+          <circle cx="98" cy="80" r="4.5" fill="#2b36a9"/><circle cx="124" cy="80" r="4.5" fill="#2b36a9"/>
+          <path d="M100 93q11 9 22 0" stroke="#2b36a9" stroke-width="5" stroke-linecap="round" fill="none"/>
+        </svg>
+        <span class="brand__name">کافیته</span>
+      </a>
+      <nav class="post-nav">
+        <a href="products.html" class="d-link">فروشگاه</a>
+        <a href="roast.html" class="d-link">راهنمای رست</a>
+        <a href="index.html" class="btn btn--primary">صفحه اصلی</a>
+      </nav>
+    </div>
+  </header>
+
+  <div class="guide-hero">
+    <div class="container">
+      <h1 id="guideTitle">راهنمای جامع قهوه و اسپرسوساز</h1>
+      <p id="guideIntro">هر آنچه باید درباره خط قهوه کافیته و انتخاب اسپرسوساز مناسب بدانید؛ از دانه تا دستگاه، به زبان ساده.</p>
+    </div>
+  </div>
+
+  <main class="container guide-main">
+    <nav class="guide-toc" id="guideToc" aria-label="فهرست بخش‌ها"></nav>
+    <div id="guideSections"></div>
+
+    <aside class="post-cta">
+      <h2>آماده انتخابی؟</h2>
+      <p>دانه‌های تازه‌رست و اسپرسوسازها را در فروشگاه ببین.</p>
+      <a href="products.html" class="btn btn--light btn--lg">مشاهده فروشگاه</a>
+    </aside>
+  </main>
+
+  <footer class="post-footer">
+    <div class="container">
+      <p>© ۱۴۰۵ کافیته — قهوه به اندازه، به قیمتِ درست.</p>
+    </div>
+  </footer>
+
+  <script>
+    "use strict";
+    const faDigits = ["۰","۱","۲","۳","۴","۵","۶","۷","۸","۹"];
+    const toFa = (n) => String(n).replace(/\d/g, (d) => faDigits[+d]);
+
+    /* Fallback content — replaced by /api/data when the server runs */
+    let GUIDE = {
+      title: "راهنمای جامع قهوه و اسپرسوساز",
+      intro: "هر آنچه باید درباره خط قهوه کافیته و انتخاب اسپرسوساز مناسب بدانید؛ از دانه تا دستگاه، به زبان ساده.",
+      sections: [
+        { title: "خط قهوه کافیته", body: "<p>قهوه‌های کافیته در چهار خانواده عرضه می‌شوند:</p><ul><li><strong>تک‌خاستگاه:</strong> دانه‌هایی از یک مزرعه مشخص مثل اتیوپی یرگاچف و کلمبیا سوپریمو.</li><li><strong>ترکیب ۷۰/۳۰:</strong> تعادل عطر و کرما، محبوب‌ترین انتخاب اسپرسو خانگی.</li><li><strong>ترکیب ۵۰/۵۰:</strong> قدرت و کافئین بالاتر با کرمای غلیظ.</li><li><strong>قهوه آسیاب‌شده:</strong> قهوه ترک و فرانسه، آماده دم‌آوری.</li></ul>" },
+        { title: "چطور دانه مناسب انتخاب کنیم؟", body: "<ul><li><strong>بدون شیر:</strong> رست روشن یا مدیوم تک‌خاستگاه.</li><li><strong>با شیر:</strong> رست دارک یا ترکیب‌ها.</li><li><strong>کافئین بالا:</strong> ربوستا و ترکیب ۵۰/۵۰.</li></ul>" },
+        { title: "اسپرسوساز خانگی؛ مشخصات مهم", body: "<ul><li><strong>فشار پمپ:</strong> عصاره‌گیری استاندارد در ۹ بار انجام می‌شود؛ ثبات فشار مهم‌تر از عدد تبلیغاتی است.</li><li><strong>پرتافیلتر:</strong> ۵۸ میلی‌متر استاندارد حرفه‌ای است.</li><li><strong>بویلر:</strong> ترموبلاک برای مصرف سبک؛ بویلر مسی برای ثبات دما.</li><li><strong>PID:</strong> کنترل دقیق دما، کیفیت شات را متحول می‌کند.</li></ul>" },
+        { title: "اسپرسوساز نیمه‌صنعتی", body: "<ul><li><strong>دوگروپ:</strong> دو نوشیدنی هم‌زمان.</li><li><strong>بویلر مسی:</strong> شات‌های پشت‌سرهم بدون افت دما.</li><li><strong>پمپ روتاری:</strong> بی‌صدا و قابل اتصال به آب شهری.</li></ul>" },
+        { title: "نگهداری و سرویس دستگاه", body: "<ul><li>بک‌فلاش هفتگی با پودر مخصوص</li><li>رسوب‌زدایی هر ۲ تا ۳ ماه</li><li>تمیز کردن استیم‌وند بعد از هر استفاده</li></ul>" }
+      ]
+    };
+
+    function render() {
+      document.getElementById("guideTitle").textContent = GUIDE.title;
+      document.getElementById("guideIntro").textContent = GUIDE.intro || "";
+      document.title = GUIDE.title + " | کافیته";
+
+      document.getElementById("guideToc").innerHTML = GUIDE.sections
+        .map((s, i) => `<a href="#sec-${i + 1}">${s.title}</a>`).join("");
+
+      document.getElementById("guideSections").innerHTML = GUIDE.sections
+        .map((s, i) => `
+          <section class="guide-section" id="sec-${i + 1}">
+            <h2><span class="num">${toFa(i + 1)}</span>${s.title}</h2>
+            <div class="body">${s.body}</div>
+          </section>`).join("");
+    }
+
+    render();
+
+  </script>
+
+  <!-- Bottom navigation (mobile) -->
+  <nav class="bottom-nav" dir="ltr" aria-label="ناوبری موبایل">
+    <a href="index.html" class="bottom-nav__item" aria-label="خانه">
+      <svg viewBox="0 0 24 24" width="25" height="25" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m3 10 9-7 9 7v10a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2Z"/><path d="M9 22V12h6v10"/></svg>
+    </a>
+    <a href="index.html#categories" class="bottom-nav__item" aria-label="دسته‌بندی‌ها">
+      <svg viewBox="0 0 24 24" width="25" height="25" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>
+    </a>
+    <a href="products.html" class="bottom-nav__cart" aria-label="سبد خرید"><svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="8" cy="21" r="1.5"/><circle cx="18" cy="21" r="1.5"/><path d="M2.5 3h2l2.6 12.4a2 2 0 0 0 2 1.6h7.7a2 2 0 0 0 2-1.6L21 7H6"/></svg></a>
+    <a href="guide.html" class="bottom-nav__item is-active" aria-label="راهنمای خرید">
+      <svg viewBox="0 0 24 24" width="25" height="25" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z"/><path d="M3 6h18"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>
+    </a>
+    <a href="profile.html" class="bottom-nav__item" aria-label="پروفایل">
+      <svg viewBox="0 0 24 24" width="25" height="25" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 3.6-6.5 8-6.5s8 2.5 8 6.5"/></svg>
+    </a>
+  </nav></body>
+</html>

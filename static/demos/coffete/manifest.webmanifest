@@ -1,0 +1,46 @@
+{
+  "name": "کافیته — فروشگاه آنلاین قهوه",
+  "short_name": "کافیته",
+  "description": "خرید آنلاین دانه قهوه تازه‌رست، اسپرسوساز و لوازم جانبی قهوه",
+  "lang": "fa",
+  "dir": "rtl",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "background_color": "#f7f2e8",
+  "theme_color": "#2B36A9",
+  "categories": ["shopping", "food"],
+  "icons": [
+    {
+      "src": "icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "icons/maskable-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "فروشگاه",
+      "url": "./index.html#products",
+      "description": "مشاهده همه محصولات"
+    },
+    {
+      "name": "دسته‌بندی‌ها",
+      "url": "./index.html#categories",
+      "description": "مرور دسته‌بندی‌ها"
+    }
+  ]
+}

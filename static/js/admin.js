@@ -252,6 +252,7 @@
       (table === "websites" || table === "bots" || table === "games") ? "" : "none";
     document.getElementById("buyable-field").style.display =
       (table === "apps" || table === "bots" || table === "games") ? "" : "none";
+    document.getElementById("demo-only-field").hidden = table !== "websites";
 
     itemForm.reset();
     itemErr.textContent = "";
@@ -266,6 +267,7 @@
     itemForm.currency.value = row ? row.currency : "USD";
     itemForm.sort.value = row ? row.sort : 0;
     itemForm.buyable.checked = row ? !!row.buyable : true;
+    itemForm.demo_only.checked = row ? !!row.demo_only : false;
     itemForm.active.checked = row ? !!row.active : true;
     itemForm.image.value = row ? row.image : "";
     updatePreview();
@@ -302,6 +304,7 @@
       currency: itemForm.currency.value,
       sort: Number(itemForm.sort.value) || 0,
       buyable: itemForm.buyable.checked ? 1 : 0,
+      demo_only: itemForm.demo_only.checked ? 1 : 0,
       active: itemForm.active.checked ? 1 : 0
     };
     var p = editCtx.id
@@ -386,7 +389,7 @@
   brandForm.addEventListener("submit", function (e) {
     e.preventDefault();
     brandErr.textContent = "";
-    if (!checkLink(brandForm.url, brandErr, "Website URL", false)) return;
+    if (!checkLink(brandForm.url, brandErr, "Website URL", true)) return;
     if (!checkLink(brandForm.logo, brandErr, "Logo", true)) return;
     var body = {
       name: brandForm.name.value.trim(),

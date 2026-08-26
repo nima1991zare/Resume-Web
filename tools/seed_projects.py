@@ -192,7 +192,31 @@ WEBSITES = [
         "demo_url": "/static/demos/fama/index.html",
         "url": "",
         "tech": "HTML · CSS · JavaScript · RTL",
-        "price": 4000000, "currency": "IRT", "sort": 1,
+        "price": 4000000, "currency": "IRT", "demo_only": 0, "sort": 1,
+    },
+    {
+        "title_en": "Depoti", "title_fa": "دیپوتی",
+        "desc_en": "", "desc_fa": "", "image": "/static/projects/depoti-site.png",
+        "demo_url": "https://depoti.ir/", "url": "", "tech": "",
+        "price": 0, "currency": "IRT", "demo_only": 1, "sort": 10,
+    },
+    {
+        "title_en": "Weenk Creative Studio", "title_fa": "استودیو وینک",
+        "desc_en": "", "desc_fa": "", "image": "/static/projects/weenk-site.png",
+        "demo_url": "https://weenk.ir/", "url": "", "tech": "",
+        "price": 0, "currency": "IRT", "demo_only": 1, "sort": 11,
+    },
+    {
+        "title_en": "ORO Coffee", "title_fa": "قهوه ارو",
+        "desc_en": "", "desc_fa": "", "image": "/static/projects/oro-site.png",
+        "demo_url": "https://orocoffee.ir/", "url": "", "tech": "",
+        "price": 0, "currency": "IRT", "demo_only": 1, "sort": 12,
+    },
+    {
+        "title_en": "Coffeete", "title_fa": "کافیته",
+        "desc_en": "", "desc_fa": "", "image": "/static/projects/coffete-site.png",
+        "demo_url": "/static/demos/coffete/index.html", "url": "", "tech": "",
+        "price": 0, "currency": "IRT", "demo_only": 1, "sort": 13,
     },
 ]
 
@@ -230,7 +254,7 @@ def seed():
                                     "buyable", "sort"]
         bot_cols = game_cols
         web_cols = ["title_en", "title_fa", "desc_en", "desc_fa", "image", "url", "tech",
-                    "demo_url", "price", "currency", "sort"]
+                    "demo_url", "demo_only", "price", "currency", "sort"]
 
         for item in APPS:
             print("apps:", item["title_en"], "->", upsert(conn, "apps", item, app_cols))

@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta http-equiv="Content-Security-Policy" content="connect-src 'none'" />
+  <title>همه محصولات | کافیته</title>
+  <meta name="description" content="همه محصولات کافیته: دانه قهوه تازه‌رست، قهوه آسیاب‌شده، اسپرسوساز و لوازم جانبی — با فیلتر دسته‌بندی و برند." />
+  <meta name="robots" content="noindex, nofollow" />
+  <meta name="theme-color" content="#2B36A9" />
+  <link rel="manifest" href="manifest.webmanifest" />
+  <link rel="icon" href="icons/favicon.svg" type="image/svg+xml" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Lalezar&family=Vazirmatn:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="css/styles.css?v=12" />
+</head>
+<body class="blog-body has-bottomnav">
+
+  <!-- ===== Header ===== -->
+  <header class="page-header">
+    <div class="container page-header__inner">
+      <a href="index.html" class="brand" aria-label="کافیته - صفحه اصلی">
+        <svg class="brand__mascot" viewBox="0 0 220 175" aria-hidden="true">
+          <g stroke="#2b36a9" stroke-width="7" stroke-linecap="round" stroke-linejoin="round">
+            <ellipse cx="35" cy="98" rx="16" ry="23" transform="rotate(-64 35 98)" fill="#F8F3E9"/>
+            <ellipse cx="185" cy="98" rx="16" ry="23" transform="rotate(64 185 98)" fill="#F8F3E9"/>
+            <ellipse cx="70" cy="86" rx="27" ry="36" transform="rotate(-24 70 86)" fill="#F8F3E9"/>
+            <ellipse cx="150" cy="86" rx="27" ry="36" transform="rotate(24 150 86)" fill="#F8F3E9"/>
+            <ellipse cx="110" cy="84" rx="45" ry="48" fill="#F8F3E9"/>
+          </g>
+          <circle cx="98" cy="80" r="4.5" fill="#2b36a9"/><circle cx="124" cy="80" r="4.5" fill="#2b36a9"/>
+          <path d="M100 93q11 9 22 0" stroke="#2b36a9" stroke-width="5" stroke-linecap="round" fill="none"/>
+        </svg>
+        <span class="brand__name">کافیته</span>
+      </a>
+
+      <label class="d-search" style="flex:1">
+        <input type="search" id="shopSearch" placeholder="جستجو در محصولات..." aria-label="جستجوی محصولات" />
+        <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
+      </label>
+
+      <nav class="page-header__links">
+        <a href="index.html#blog" class="d-link">مجله</a>
+        <a href="roast.html" class="d-link">راهنمای رست</a>
+        <a href="about.html" class="d-link">درباره ما</a>
+      </nav>
+
+      <button class="d-cart" id="cartOpenBtn" aria-label="سبد خرید">
+        <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="8" cy="21" r="1.5"/><circle cx="18" cy="21" r="1.5"/><path d="M2.5 3h2l2.6 12.4a2 2 0 0 0 2 1.6h7.7a2 2 0 0 0 2-1.6L21 7H6"/></svg>
+        <span class="d-cart__count" id="cartBadge">۰</span>
+        <span class="d-cart__total" id="cartTotalHeader">۰ تومان</span>
+      </button>
+    </div>
+  </header>
+
+  <!-- ===== Main ===== -->
+  <main class="container shop-main">
+
+    <!-- Taste finder -->
+    <section class="taste-finder" id="tasteFinder" aria-label="سلیقه‌یاب">
+      <div class="taste-finder__head">
+        <h2>سلیقه‌یاب کافیته</h2>
+        <p>لازم نیست ترکیب‌ها و اصطلاح‌ها را بشناسی؛ فقط بگو چه دوست داری تا قهوه‌ات را پیدا کنیم.</p>
+      </div>
+      <div class="taste-finder__groups">
+        <div class="taste-group">
+          <h3>چه طعمی دوست داری؟</h3>
+          <div class="taste-chips" id="tasteChips">
+            <button class="taste-chip" data-taste="bitter">تلخ و قوی</button>
+            <button class="taste-chip" data-taste="balanced">متعادل و شکلاتی</button>
+            <button class="taste-chip" data-taste="fruity">میوه‌ای و ترش</button>
+          </div>
+        </div>
+        <div class="taste-group">
+          <h3>چقدر کافئین می‌خواهی؟</h3>
+          <div class="taste-chips" id="cafChips">
+            <button class="taste-chip" data-caf="high">زیاد — حسابی بیدارم کن</button>
+            <button class="taste-chip" data-caf="med">متوسط</button>
+            <button class="taste-chip" data-caf="low">کم</button>
+          </div>
+        </div>
+      </div>
+      <div class="taste-finder__actions">
+        <button class="btn btn--light" id="tasteApply" disabled>قهوه من را پیدا کن</button>
+        <button class="taste-finder__clear" id="tasteClear" hidden>پاک کردن سلیقه</button>
+      </div>
+      <p class="taste-finder__result" id="tasteResult" hidden></p>
+    </section>
+
+    <h1 class="shop-title">همه محصولات</h1>
+    <p class="shop-count" id="shopCount"></p>
+
+    <button class="btn btn--ghost filters-toggle" id="filtersToggle" aria-expanded="false">
+      <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 6h16M7 12h10M10 18h4"/></svg>
+      فیلترها
+    </button>
+
+    <div class="shop-layout">
+      <aside class="fpanel" id="filtersPanel">
+        <h2>فیلترها</h2>
+
+        <div class="fgroup">
+          <h3>دسته‌بندی</h3>
+          <label class="fcheck"><input type="checkbox" value="beans" data-fcat /> دانه قهوه</label>
+          <label class="fcheck"><input type="checkbox" value="ground" data-fcat /> قهوه آسیاب‌شده</label>
+          <label class="fcheck"><input type="checkbox" value="machine" data-fcat /> اسپرسوساز</label>
+          <label class="fcheck"><input type="checkbox" value="accessory" data-fcat /> لوازم جانبی</label>
+        </div>
+
+        <div class="fgroup">
+          <h3>برند</h3>
+          <input type="search" class="fbrand-search" id="brandSearch" placeholder="جستجوی برند..." />
+          <div id="brandChecks"></div>
+        </div>
+
+        <button class="fclear" id="clearFilters">حذف همه فیلترها</button>
+      </aside>
+
+      <section>
+        <div class="products-grid" id="productsGrid"></div>
+        <p class="products-empty" id="productsEmpty" hidden>محصولی مطابق فیلترهای شما پیدا نشد.</p>
+      </section>
+    </div>
+  </main>
+
+  <footer class="post-footer">
+    <div class="container">
+      <p>© ۱۴۰۵ کافیته — قهوه به اندازه، به قیمتِ درست.</p>
+    </div>
+  </footer>
+
+  <!-- ===== Cart drawer ===== -->
+  <div class="overlay" id="overlay" hidden></div>
+  <aside class="cart-drawer" id="cartDrawer" role="dialog" aria-modal="true" aria-label="سبد خرید" hidden>
+    <header class="cart-drawer__head">
+      <h2>سبد خرید</h2>
+      <button class="icon-btn" id="cartCloseBtn" aria-label="بستن سبد خرید">
+        <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg>
+      </button>
+    </header>
+    <div class="cart-drawer__body" id="cartItems"></div>
+    <div class="cart-drawer__empty" id="cartEmpty">
+      <svg viewBox="0 0 24 24" width="56" height="56" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="8" cy="21" r="1.5"/><circle cx="18" cy="21" r="1.5"/><path d="M2.5 3h2l2.6 12.4a2 2 0 0 0 2 1.6h7.7a2 2 0 0 0 2-1.6L21 7H6"/></svg>
+      <p>سبد خرید شما خالی است</p>
+      <button class="btn btn--primary" id="cartEmptyShopBtn">شروع خرید</button>
+    </div>
+    <footer class="cart-drawer__foot" id="cartFoot" hidden>
+      <div class="cart-drawer__total">
+        <span>جمع کل</span>
+        <strong id="cartTotal">۰ تومان</strong>
+      </div>
+      <button class="btn btn--primary btn--block" id="checkoutBtn">ادامه فرایند خرید</button>
+    </footer>
+  </aside>
+
+  <div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
+
+
+  <!-- Bottom navigation (mobile) -->
+  <nav class="bottom-nav" dir="ltr" aria-label="ناوبری موبایل">
+    <a href="index.html" class="bottom-nav__item" aria-label="خانه">
+      <svg viewBox="0 0 24 24" width="25" height="25" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m3 10 9-7 9 7v10a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2Z"/><path d="M9 22V12h6v10"/></svg>
+    </a>
+    <a href="index.html#categories" class="bottom-nav__item" aria-label="دسته‌بندی‌ها">
+      <svg viewBox="0 0 24 24" width="25" height="25" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>
+    </a>
+    <button class="bottom-nav__cart" id="cartOpenBtnMobile" aria-label="سبد خرید"><svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="8" cy="21" r="1.5"/><circle cx="18" cy="21" r="1.5"/><path d="M2.5 3h2l2.6 12.4a2 2 0 0 0 2 1.6h7.7a2 2 0 0 0 2-1.6L21 7H6"/></svg><span class="cart-badge cart-badge--mobile" id="cartBadgeMobile" hidden>۰</span></button>
+    <a href="guide.html" class="bottom-nav__item" aria-label="راهنمای خرید">
+      <svg viewBox="0 0 24 24" width="25" height="25" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z"/><path d="M3 6h18"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>
+    </a>
+    <a href="profile.html" class="bottom-nav__item" aria-label="پروفایل">
+      <svg viewBox="0 0 24 24" width="25" height="25" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 3.6-6.5 8-6.5s8 2.5 8 6.5"/></svg>
+    </a>
+  </nav>  <script src="js/shop.js?v=11"></script>
+</body>
+</html>

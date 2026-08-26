@@ -142,6 +142,8 @@ async def security_middleware(request: Request, call_next):
             CSP_DEMOS if path.startswith("/static/demos/") else CSP)
     if path.startswith("/api/") or path == "/admin":
         response.headers["Cache-Control"] = "no-store"
+    elif path.startswith("/static/demos/"):
+        response.headers["X-Robots-Tag"] = "noindex, nofollow"
     elif path in ("/static/js/admin.js", "/static/css/admin.css"):
         # admin panel code must always be fresh (revalidate every load)
         response.headers["Cache-Control"] = "no-cache"
@@ -205,6 +207,7 @@ class ItemIn(BaseModel):
     url: str = ""
     tech: str = ""
     demo_url: str = ""
+    demo_only: int = 0
     price: float = 0
     currency: str = "USD"
     buyable: int = 1
@@ -260,7 +263,7 @@ def _load_public_content() -> dict:
             "SELECT id,title_en,title_fa,desc_en,desc_fa,image,url,tech,demo_url,price,currency,buyable "
             "FROM telegram_bots WHERE active=1 ORDER BY sort, id")]
         websites = [dict(r) for r in conn.execute(
-            "SELECT id,title_en,title_fa,desc_en,desc_fa,image,url,tech,demo_url,price,currency "
+            "SELECT id,title_en,title_fa,desc_en,desc_fa,image,url,tech,demo_url,demo_only,price,currency "
             "FROM websites WHERE active=1 ORDER BY sort, id")]
         brands = [dict(r) for r in conn.execute(
             "SELECT id,name,logo,url FROM brands WHERE active=1 ORDER BY sort, id")]
@@ -384,7 +387,7 @@ TABLE_COLS = {
     "bots": ["title_en", "title_fa", "desc_en", "desc_fa", "image", "url", "tech",
              "demo_url", "price", "currency", "buyable", "sort", "active"],
     "websites": ["title_en", "title_fa", "desc_en", "desc_fa", "image", "url", "tech",
-                 "demo_url", "price", "currency", "sort", "active"],
+                  "demo_url", "demo_only", "price", "currency", "sort", "active"],
 }
 
 
@@ -409,6 +412,11 @@ def admin_create_item(table: str, data: ItemIn, authorization: Optional[str] = H
     data.url = _validate_link(data.url, "URL")
     data.image = _validate_link(data.image, "Image", allow_local=True)
     data.demo_url = _validate_link(data.demo_url, "Demo URL", allow_local=True)
+    if table == "websites" and data.demo_only:
+        if not data.demo_url:
+            raise HTTPException(status_code=422, detail="Demo-only websites require a demo URL")
+        data.desc_en = data.desc_fa = data.tech = data.url = ""
+        data.price = 0
     cols = TABLE_COLS[table]
     conn = get_db()
     try:
@@ -431,6 +439,11 @@ def admin_update_item(table: str, item_id: int, data: ItemIn,
     data.url = _validate_link(data.url, "URL")
     data.image = _validate_link(data.image, "Image", allow_local=True)
     data.demo_url = _validate_link(data.demo_url, "Demo URL", allow_local=True)
+    if table == "websites" and data.demo_only:
+        if not data.demo_url:
+            raise HTTPException(status_code=422, detail="Demo-only websites require a demo URL")
+        data.desc_en = data.desc_fa = data.tech = data.url = ""
+        data.price = 0
     cols = TABLE_COLS[table]
     conn = get_db()
     try:
@@ -470,7 +483,7 @@ def admin_list_brands(authorization: Optional[str] = Header(None)):
 @app.post("/api/admin/brands")
 def admin_create_brand(data: BrandIn, authorization: Optional[str] = Header(None)):
     require_admin(authorization)
-    data.url = _validate_link(data.url, "Website URL")
+    data.url = _validate_link(data.url, "Website URL", allow_local=True)
     data.logo = _validate_link(data.logo, "Logo", allow_local=True)
     conn = get_db()
     try:
@@ -487,7 +500,7 @@ def admin_create_brand(data: BrandIn, authorization: Optional[str] = Header(None
 def admin_update_brand(brand_id: int, data: BrandIn,
                        authorization: Optional[str] = Header(None)):
     require_admin(authorization)
-    data.url = _validate_link(data.url, "Website URL")
+    data.url = _validate_link(data.url, "Website URL", allow_local=True)
     data.logo = _validate_link(data.logo, "Logo", allow_local=True)
     conn = get_db()
     try:
@@ -763,6 +776,8 @@ def _build_noscript(content: dict) -> str:
     if content["websites"]:
         parts.append("<h2>Websites built</h2><ul>")
         for w in content["websites"]:
+            if w.get("demo_only"):
+                continue
             link = (' — <a href="' + _esc(w["url"]) + '">' + _esc(w["url"]) + "</a>") if w.get("url") else ""
             parts.append("<li><strong>" + _esc(w["title_en"]) + "</strong>: "
                          + _esc(w["desc_en"]) + link + "</li>")
@@ -850,6 +865,7 @@ def _render_product(request: Request, table: str, item_id: int) -> Optional[str]
         "currency": item.get("currency", "USD"),
         "buyable": item.get("buyable", 0), "url": item.get("url", ""),
         "demo_url": item.get("demo_url", ""),
+        "demo_only": bool(item.get("demo_only", 0)),
     }
 
     tech_html = "".join(
@@ -913,8 +929,9 @@ def sitemap(request: Request):
         settings = {"site_url": get_setting(conn, "site_url")}
         product_urls = []
         for table in ("apps", "bots", "games", "websites"):
+            extra = " AND demo_only=0" if table == "websites" else ""
             for r in conn.execute(
-                    f"SELECT id FROM {TABLES[table]} WHERE active=1 ORDER BY id"):
+                    f"SELECT id FROM {TABLES[table]} WHERE active=1{extra} ORDER BY id"):
                 product_urls.append(f"/p/{table}/{r['id']}")
     finally:
         conn.close()

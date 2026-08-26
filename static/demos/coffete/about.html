@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta http-equiv="Content-Security-Policy" content="connect-src 'none'" />
+  <title>درباره ما | کافیته</title>
+  <meta name="description" content="داستان کافیته؛ فروشگاه آنلاین قهوه با ماموریت رساندن قهوه تازه‌رست و باکیفیت با قیمت منصفانه به خانه شما. کافیته یعنی قهوه به اندازه." />
+  <meta name="robots" content="noindex, nofollow" />
+  <meta name="theme-color" content="#2B36A9" />
+  <link rel="icon" href="icons/favicon.svg" type="image/svg+xml" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Lalezar&family=Vazirmatn:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="css/styles.css?v=12" />
+  <style>
+    .about-hero {
+      background: linear-gradient(150deg, var(--primary-darker), var(--primary));
+      color: #fff; text-align: center;
+      padding: clamp(48px, 8vw, 90px) 0 60px;
+    }
+    .about-hero h1 { font-family: var(--font-display); font-weight: 400; font-size: clamp(2rem, 5vw, 3rem); margin-bottom: 10px; }
+    .about-hero p { color: rgba(255,255,255,.85); max-width: 56ch; margin-inline: auto; }
+    .about-hero .hero__mascot { width: min(240px, 55%); height: auto; margin: 24px auto 0; color: #fff; --mascot-cream: rgba(255,255,255,.16); filter: drop-shadow(0 14px 24px rgba(0,0,0,.18)); }
+
+    .about-main { max-width: 860px; margin-inline: auto; padding: 40px 0 60px; }
+    .about-story {
+      background: var(--surface); border: 1px solid var(--line);
+      border-radius: var(--r-xl); padding: clamp(24px, 4vw, 40px);
+      margin-bottom: 26px;
+      display: grid; gap: 14px;
+      line-height: 2.2; color: var(--ink-soft);
+    }
+    .about-story h2 { font-family: var(--font-display); font-weight: 400; font-size: 1.7rem; color: var(--ink); }
+    .about-story strong { color: var(--primary); }
+
+    .about-values { display: grid; gap: 14px; margin-bottom: 26px; }
+    @media (min-width: 640px) { .about-values { grid-template-columns: repeat(3, 1fr); } }
+    .value-card {
+      background: var(--surface); border: 1px solid var(--line);
+      border-radius: var(--r-lg); padding: 24px 20px;
+      display: grid; gap: 10px; justify-items: center; text-align: center;
+    }
+    .value-card .icon {
+      display: grid; place-items: center;
+      width: 60px; height: 60px; border-radius: 20px;
+      background: var(--primary-light); color: var(--primary);
+    }
+    .value-card h3 { font-size: var(--fs-lg); font-weight: 800; }
+    .value-card p { font-size: var(--fs-sm); color: var(--ink-mute); }
+
+    .about-stats {
+      display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px;
+      background: linear-gradient(150deg, var(--primary-darker), var(--primary));
+      border-radius: var(--r-xl); padding: clamp(24px, 4vw, 40px);
+      color: #fff; text-align: center; margin-bottom: 26px;
+    }
+    .about-stats strong { display: block; font-family: var(--font-display); font-weight: 400; font-size: clamp(1.6rem, 4vw, 2.4rem); }
+    .about-stats span { font-size: var(--fs-sm); color: rgba(255,255,255,.8); }
+
+    .about-contact {
+      background: var(--surface); border: 1px solid var(--line);
+      border-radius: var(--r-xl); padding: clamp(24px, 4vw, 40px);
+      display: grid; gap: 12px;
+    }
+    .about-contact h2 { font-family: var(--font-display); font-weight: 400; font-size: 1.6rem; }
+    .about-contact p { display: flex; align-items: center; gap: 12px; color: var(--ink-soft); font-size: var(--fs-sm); }
+    .about-contact svg { color: var(--primary); flex-shrink: 0; }
+  </style>
+</head>
+<body class="blog-body has-bottomnav">
+
+  <header class="header">
+    <div class="container post-header">
+      <a href="index.html" class="brand" aria-label="کافیته - صفحه اصلی">
+        <svg class="brand__mascot" viewBox="0 0 220 175" aria-hidden="true">
+          <g stroke="#2b36a9" stroke-width="7" stroke-linecap="round" stroke-linejoin="round">
+            <ellipse cx="35" cy="98" rx="16" ry="23" transform="rotate(-64 35 98)" fill="#F8F3E9"/>
+            <ellipse cx="185" cy="98" rx="16" ry="23" transform="rotate(64 185 98)" fill="#F8F3E9"/>
+            <ellipse cx="70" cy="86" rx="27" ry="36" transform="rotate(-24 70 86)" fill="#F8F3E9"/>
+            <ellipse cx="150" cy="86" rx="27" ry="36" transform="rotate(24 150 86)" fill="#F8F3E9"/>
+            <ellipse cx="110" cy="84" rx="45" ry="48" fill="#F8F3E9"/>
+          </g>
+          <circle cx="98" cy="80" r="4.5" fill="#2b36a9"/><circle cx="124" cy="80" r="4.5" fill="#2b36a9"/>
+          <path d="M100 93q11 9 22 0" stroke="#2b36a9" stroke-width="5" stroke-linecap="round" fill="none"/>
+        </svg>
+        <span class="brand__name">کافیته</span>
+      </a>
+      <nav class="post-nav">
+        <a href="products.html" class="d-link">فروشگاه</a>
+        <a href="index.html#blog" class="d-link">مجله</a>
+        <a href="index.html" class="btn btn--primary">صفحه اصلی</a>
+      </nav>
+    </div>
+  </header>
+
+  <div class="about-hero">
+    <div class="container">
+      <h1>داستان کافیته</h1>
+      <p>کافیته یعنی «قهوه به اندازه» — ترکیبی از «قهوه» و «کافیه». باور ما ساده است: قهوه خوب نباید گران، کهنه یا دور از دسترس باشد.</p>
+      <svg class="hero__mascot" viewBox="0 0 220 175" aria-hidden="true"><use href="#mascotAbout"/></svg>
+      <svg width="0" height="0" style="position:absolute" aria-hidden="true">
+        <symbol id="mascotAbout" viewBox="0 0 220 175">
+          <ellipse cx="112" cy="162" rx="52" ry="8" fill="currentColor" opacity=".28"/>
+          <path d="M94 118 84 148M128 118l12 22" stroke="currentColor" stroke-width="7" stroke-linecap="round" fill="none"/>
+          <rect x="62" y="146" width="36" height="12" rx="6" fill="currentColor"/>
+          <rect x="128" y="136" width="34" height="12" rx="6" fill="currentColor" transform="rotate(26 145 142)"/>
+          <g stroke="currentColor" stroke-width="7" stroke-linecap="round" stroke-linejoin="round">
+            <ellipse cx="35" cy="98" rx="16" ry="23" transform="rotate(-64 35 98)" fill="var(--mascot-cream, #F8F3E9)"/>
+            <ellipse cx="185" cy="98" rx="16" ry="23" transform="rotate(64 185 98)" fill="var(--mascot-cream, #F8F3E9)"/>
+            <ellipse cx="70" cy="86" rx="27" ry="36" transform="rotate(-24 70 86)" fill="var(--mascot-cream, #F8F3E9)"/>
+            <ellipse cx="150" cy="86" rx="27" ry="36" transform="rotate(24 150 86)" fill="var(--mascot-cream, #F8F3E9)"/>
+            <ellipse cx="110" cy="84" rx="45" ry="48" fill="var(--mascot-cream, #F8F3E9)"/>
+          </g>
+          <circle cx="98" cy="80" r="4.5" fill="currentColor"/>
+          <circle cx="124" cy="80" r="4.5" fill="currentColor"/>
+          <path d="M100 93q11 9 22 0" stroke="currentColor" stroke-width="5" stroke-linecap="round" fill="none"/>
+          <path d="M172 148q9 6 17 3M175 158q7 4 13 3" stroke="currentColor" stroke-width="5" stroke-linecap="round" fill="none"/>
+        </symbol>
+      </svg>
+    </div>
+  </div>
+
+  <main class="container about-main">
+
+    <section class="about-story">
+      <h2>از یک دغدغه ساده شروع شد</h2>
+      <p>کافیته از یک سوال ساده متولد شد: <strong>چرا قهوه تازه و باکیفیت باید این‌قدر گران و پیدا کردنش این‌قدر سخت باشد؟</strong> ما — جمعی از عاشقان قهوه — تصمیم گرفتیم واسطه‌ها را حذف کنیم، دانه سبز را مستقیم از بهترین مزارع دنیا تهیه کنیم و هر هفته در تهران رست کنیم.</p>
+      <p>امروز کافیته خانه‌ی بیش از <strong>۱۲ هزار مشتری</strong> است؛ از کسانی که اولین فرنچ‌پرس زندگی‌شان را از ما خریدند تا باریستاهای حرفه‌ای که دانه اسپرسوی بارشان را هر ماه از ما می‌گیرند. تاریخ رست روی همه بسته‌های ما درج می‌شود، چون باور داریم شفافیت، اولین قدم اعتماد است.</p>
+    </section>
+
+    <div class="about-values">
+      <div class="value-card">
+        <span class="icon"><svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l7 4v5c0 4.5-3 8-7 9-4-1-7-4.5-7-9V7z"/><path d="m9 12 2 2 4-4"/></svg></span>
+        <h3>تازگی تضمینی</h3>
+        <p>رست هفتگی با درج تاریخ رست روی هر بسته؛ اگر راضی نبودید تا ۷ روز پس می‌گیریم.</p>
+      </div>
+      <div class="value-card">
+        <span class="icon"><svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7h11v10H3zM14 10h4l3 3v4h-7z"/><circle cx="7" cy="19" r="1.8"/><circle cx="17" cy="19" r="1.8"/></svg></span>
+        <h3>ارسال سریع</h3>
+        <p>تهران ۲۴ ساعته، سراسر ایران ۲ تا ۴ روز کاری با بسته‌بندی مخصوص حفظ عطر.</p>
+      </div>
+      <div class="value-card">
+        <span class="icon"><svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8h13a2 2 0 0 1 2 2v3a7 7 0 0 1-7 7h-1a7 7 0 0 1-7-7V8Z"/><path d="M19 10h1a2.5 2.5 0 0 1 0 5h-1"/><path d="M8 5c0-1 1-1 1-2M12 5c0-1 1-1 1-2"/></svg></span>
+        <h3>قیمت منصفانه</h3>
+        <p>بدون واسطه، مستقیم از رستری به خانه شما؛ کیفیت تخصصی با قیمت به اندازه.</p>
+      </div>
+    </div>
+
+    <div class="about-stats">
+      <div><strong>+۱۲هزار</strong><span>مشتری راضی</span></div>
+      <div><strong>+۴۰</strong><span>نوع دانه قهوه</span></div>
+      <div><strong>۵ سال</strong><span>تجربه رست تخصصی</span></div>
+    </div>
+
+    <section class="about-contact">
+      <h2>با ما در تماس باشید</h2>
+      <p>
+        <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3.1 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2.1 4.2 2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.1 1 .4 2 .7 2.9a2 2 0 0 1-.5 2.1L8 10a16 16 0 0 0 6 6l1.3-1.3a2 2 0 0 1 2.1-.5c.9.3 1.9.6 2.9.7a2 2 0 0 1 1.7 2Z"/></svg>
+        تلفن پشتیبانی (همه‌روزه ۹ تا ۲۱): <span dir="ltr">۰۲۱-۹۱۰۰۹۱۰۰</span>
+      </p>
+      <p>
+        <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m2 7 10 6L22 7"/></svg>
+        ایمیل: <span dir="ltr">hello@coffeete.ir</span>
+      </p>
+      <p>
+        <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 10c0 6-8 12-8 12S4 16 4 10a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg>
+        آدرس: تهران، خیابان ولیعصر، کوچه قهوه، پلاک ۱۲
+      </p>
+    </section>
+
+    <aside class="post-cta" style="margin-top:26px">
+      <h2>یک فنجان با ما شریک شو</h2>
+      <p>اولین سفارشت را با کد تخفیف خبرنامه ثبت کن.</p>
+      <a href="products.html" class="btn btn--light btn--lg">مشاهده فروشگاه</a>
+    </aside>
+
+  </main>
+
+  <footer class="post-footer">
+    <div class="container">
+      <p>© ۱۴۰۵ کافیته — قهوه به اندازه، به قیمتِ درست.</p>
+    </div>
+  </footer>
+
+
+  <!-- Bottom navigation (mobile) -->
+  <nav class="bottom-nav" dir="ltr" aria-label="ناوبری موبایل">
+    <a href="index.html" class="bottom-nav__item" aria-label="خانه">
+      <svg viewBox="0 0 24 24" width="25" height="25" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m3 10 9-7 9 7v10a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2Z"/><path d="M9 22V12h6v10"/></svg>
+    </a>
+    <a href="index.html#categories" class="bottom-nav__item" aria-label="دسته‌بندی‌ها">
+      <svg viewBox="0 0 24 24" width="25" height="25" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>
+    </a>
+    <a href="products.html" class="bottom-nav__cart" aria-label="سبد خرید"><svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="8" cy="21" r="1.5"/><circle cx="18" cy="21" r="1.5"/><path d="M2.5 3h2l2.6 12.4a2 2 0 0 0 2 1.6h7.7a2 2 0 0 0 2-1.6L21 7H6"/></svg></a>
+    <a href="guide.html" class="bottom-nav__item" aria-label="راهنمای خرید">
+      <svg viewBox="0 0 24 24" width="25" height="25" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z"/><path d="M3 6h18"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>
+    </a>
+    <a href="profile.html" class="bottom-nav__item" aria-label="پروفایل">
+      <svg viewBox="0 0 24 24" width="25" height="25" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 3.6-6.5 8-6.5s8 2.5 8 6.5"/></svg>
+    </a>
+  </nav></body>
+</html>

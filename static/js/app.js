@@ -391,24 +391,30 @@
     }).join("");
 
     document.getElementById("websites-grid").innerHTML = c.websites.map(function (w, i) {
-      var link = "/p/websites/" + w.id;
-      return '<article class="vcard reveal in">' +
-        '<a class="vcard-media" href="' + link + '">' + media(w) +
+      var demoOnly = !!w.demo_only;
+      var link = demoOnly ? w.demo_url : "/p/websites/" + w.id;
+      var target = demoOnly ? ' target="_blank" rel="noopener"' : "";
+      return '<article class="vcard reveal in' + (demoOnly ? " vcard-demo-only" : "") + '">' +
+        '<a class="vcard-media" href="' + esc(link) + '"' + target + ">" + media(w) +
           '<span class="vcard-index">WEB/' + pad(i + 1) + "</span></a>" +
-        '<div class="vcard-body"><h3><a href="' + link + '">' + esc(pick(w, "title")) + "</a></h3>" +
-          '<p class="desc">' + esc(pick(w, "desc")) + "</p>" + tech(w.tech) +
-          '<div class="vfoot"><span class="vprice">' + fmtPrice(w.price, w.currency) + "</span>" +
-            demoBtn(w) +
-            (isLink(w.url)
-              ? '<a class="btn btn-ghost" href="' + esc(w.url) + '" target="_blank" rel="noopener">' + t("web.visit") + "</a>"
-              : '<a class="btn btn-ghost" href="#contact" data-subject="' + esc(pick(w, "title")) + '">' + t("web.order") + "</a>") +
-          "</div></div></article>";
+        '<div class="vcard-body"><h3><a href="' + esc(link) + '"' + target + '>' + esc(pick(w, "title")) + "</a></h3>" +
+          (demoOnly
+            ? '<div class="vfoot vfoot-demo">' + demoBtn(w) + "</div>"
+            : '<p class="desc">' + esc(pick(w, "desc")) + "</p>" + tech(w.tech) +
+              '<div class="vfoot"><span class="vprice">' + fmtPrice(w.price, w.currency) + "</span>" +
+                demoBtn(w) +
+                (isLink(w.url)
+                  ? '<a class="btn btn-ghost" href="' + esc(w.url) + '" target="_blank" rel="noopener">' + t("web.visit") + "</a>"
+                  : '<a class="btn btn-ghost" href="#contact" data-subject="' + esc(pick(w, "title")) + '">' + t("web.order") + "</a>") +
+              "</div>") +
+        "</div></article>";
     }).join("");
 
     document.getElementById("brands-row").innerHTML = c.brands.map(function (b) {
       var inner = (b.logo ? '<img src="' + esc(b.logo) + '" alt="' + esc(b.name) + '" loading="lazy">' : "") +
         "<span>" + esc(b.name) + "</span>";
-      return isLink(b.url)
+      var linked = isLink(b.url) || (typeof b.url === "string" && b.url.indexOf("/static/") === 0);
+      return linked
         ? '<a class="brand" href="' + esc(b.url) + '" target="_blank" rel="noopener">' + inner + "</a>"
         : '<div class="brand">' + inner + "</div>";
     }).join("");

@@ -1,0 +1,382 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta http-equiv="Content-Security-Policy" content="connect-src 'none'" />
+  <title>بازی شکارچی قهوه | کافیته</title>
+  <meta name="description" content="دانه‌های قهوه و لوگوی کافیته را با فنجان بگیر، از موانع دوری کن و بالاترین امتیاز رویداد را ثبت کن." />
+  <meta name="robots" content="noindex, nofollow" />
+  <meta name="theme-color" content="#2B36A9" />
+  <link rel="icon" href="icons/favicon.svg" type="image/svg+xml" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Lalezar&family=Vazirmatn:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="css/styles.css?v=12" />
+  <style>
+    .game-page { min-height: 100vh; padding-bottom: 90px; background: var(--bg); }
+    .game-header {
+      display: flex; align-items: center; justify-content: space-between; gap: 12px;
+      padding-block: 12px;
+    }
+    .game-main { display: grid; gap: 18px; padding-bottom: 40px; }
+    .game-intro { text-align: center; padding-top: 16px; }
+    .game-intro h1 { font-family: var(--font-display); font-weight: 400; font-size: clamp(2rem, 6vw, 3rem); color: var(--primary); }
+    .game-intro p { color: var(--ink-mute); font-size: var(--fs-sm); }
+
+    .game-layout { display: grid; gap: 18px; align-items: start; }
+    .game-shell {
+      position: relative; overflow: hidden;
+      background: #171e62;
+      border: 6px solid var(--surface);
+      border-radius: 28px;
+      box-shadow: var(--shadow-lg);
+    }
+    .game-stage {
+      position: relative; overflow: hidden;
+      height: min(68vh, 680px); min-height: 470px;
+      direction: ltr;
+      touch-action: none; user-select: none;
+      background:
+        radial-gradient(circle at 80% 14%, rgba(255,255,255,.1) 0, transparent 26%),
+        radial-gradient(circle at 18% 85%, rgba(255,216,138,.1) 0, transparent 30%),
+        linear-gradient(180deg, #222d93 0%, #2b36a9 58%, #19216a 100%);
+    }
+    .game-stage::before {
+      content: ""; position: absolute; inset: 0;
+      opacity: .1;
+      background-image: radial-gradient(circle, #fff 1px, transparent 1px);
+      background-size: 28px 28px;
+    }
+    .game-hud {
+      position: absolute; top: 14px; right: 14px; left: 14px; z-index: 20;
+      display: flex; justify-content: space-between; align-items: center;
+      direction: rtl; pointer-events: none;
+    }
+    .game-pill {
+      min-width: 96px;
+      display: flex; align-items: center; justify-content: center; gap: 7px;
+      padding: 8px 14px; border-radius: 999px;
+      background: rgba(255,255,255,.15); border: 1px solid rgba(255,255,255,.25);
+      color: #fff; font-weight: 800; backdrop-filter: blur(8px);
+    }
+    .game-pill strong { color: #ffd88a; }
+    .game-cup {
+      position: absolute; bottom: 12px; left: 50%; z-index: 10;
+      width: 92px; height: 72px;
+      transform: translateX(-50%);
+      filter: drop-shadow(0 10px 12px rgba(0,0,0,.28));
+      will-change: left;
+    }
+    .falling { position: absolute; top: 0; z-index: 5; will-change: transform; display: grid; place-items: center; }
+    .falling--bean {
+      width: 27px; height: 39px; border-radius: 50%;
+      background: #9c6635; box-shadow: inset -5px 0 rgba(0,0,0,.2), 0 5px 8px rgba(0,0,0,.18);
+    }
+    .falling--bean::after { content: ""; width: 3px; height: 28px; border-radius: 9px; background: #57331c; }
+    .falling--logo { width: 52px; height: 52px; border-radius: 15px; background: var(--cream); padding: 5px; box-shadow: 0 7px 12px rgba(0,0,0,.2); }
+    .falling--logo img { width: 100%; height: 100%; }
+    .falling--obstacle {
+      width: 45px; height: 45px; border-radius: 14px;
+      background: #11152f; color: #ff7676;
+      border: 3px solid #ff7676; box-shadow: 0 7px 12px rgba(0,0,0,.3);
+    }
+    .score-pop {
+      position: absolute; z-index: 30; pointer-events: none;
+      font-weight: 900; font-size: 1.1rem; color: #ffd88a;
+      animation: scoreUp .65s ease forwards;
+    }
+    .score-pop.bad { color: #ff8585; }
+    @keyframes scoreUp { to { translate: 0 -45px; opacity: 0; } }
+
+    .game-overlay {
+      position: absolute; inset: 0; z-index: 40;
+      display: grid; place-items: center;
+      padding: 24px;
+      background: rgba(13,18,48,.72); backdrop-filter: blur(8px);
+      text-align: center; color: #fff;
+    }
+    .game-overlay__card { max-width: 430px; display: grid; gap: 14px; justify-items: center; }
+    .game-overlay h2 { font-family: var(--font-display); font-weight: 400; font-size: 2rem; }
+    .game-overlay p { color: rgba(255,255,255,.82); font-size: var(--fs-sm); }
+    .game-rules { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; }
+    .game-rule { padding: 6px 12px; border-radius: 999px; background: rgba(255,255,255,.12); font-size: var(--fs-xs); font-weight: 700; }
+    .game-final-score { font-family: var(--font-display); font-size: 3rem; color: #ffd88a; line-height: 1; }
+    .game-result-note { min-height: 22px; }
+
+    .game-side { display: grid; gap: 14px; }
+    .game-card { background: var(--surface); border: 1px solid var(--line); border-radius: var(--r-lg); padding: 20px; }
+    .game-card h2 { font-family: var(--font-display); font-weight: 400; font-size: 1.45rem; margin-bottom: 10px; }
+    .reward-card { background: linear-gradient(150deg, var(--accent-dark), var(--accent)); color: var(--primary); border: 1px solid #ebe2bd; }
+    .reward-card p { color: var(--ink-soft); font-size: var(--fs-sm); }
+    .leaderboard { display: grid; gap: 5px; }
+    .leader-row { display: grid; grid-template-columns: 34px 1fr auto; align-items: center; gap: 8px; padding: 9px 7px; border-bottom: 1px solid var(--line); font-size: var(--fs-sm); }
+    .leader-row:last-child { border-bottom: 0; }
+    .leader-rank { display: grid; place-items: center; width: 30px; height: 30px; border-radius: 10px; background: var(--primary-light); color: var(--primary); font-weight: 900; }
+    .leader-row:nth-child(-n+3) .leader-rank { background: #fff0cc; color: #9a5b00; }
+    .leader-score { color: var(--primary); font-weight: 900; }
+    .game-controls-note { text-align: center; color: var(--ink-mute); font-size: var(--fs-xs); }
+
+    @media (min-width: 980px) {
+      .game-layout { grid-template-columns: minmax(0, 1fr) 330px; }
+      .game-side { position: sticky; top: 20px; }
+    }
+  </style>
+</head>
+<body class="game-page has-bottomnav">
+  <header class="header">
+    <div class="container game-header">
+      <a href="index.html" class="brand">
+        <img src="icons/favicon.svg" width="45" height="45" alt="" />
+        <span class="brand__name">کافیته</span>
+      </a>
+      <a href="index.html" class="btn btn--ghost">بازگشت به سایت</a>
+    </div>
+  </header>
+
+  <main class="container game-main">
+    <div class="game-intro">
+      <h1 id="gameTitle">شکارچی قهوه</h1>
+      <p>فنجان را حرکت بده؛ دانه‌ها و کافیته را بگیر، از موانع فرار کن.</p>
+    </div>
+
+    <div class="game-layout">
+      <div>
+        <div class="game-shell">
+          <div class="game-stage" id="gameStage">
+            <div class="game-hud">
+              <span class="game-pill">امتیاز <strong id="gameScore">۰</strong></span>
+              <span class="game-pill">زمان <strong id="gameTime">۰</strong></span>
+              <span class="game-pill">جان <strong id="gameLives">۳</strong></span>
+            </div>
+
+            <svg class="game-cup" id="gameCup" viewBox="0 0 120 90" aria-label="فنجان">
+              <ellipse cx="57" cy="81" rx="44" ry="7" fill="rgba(0,0,0,.22)"/>
+              <path d="M18 22h76v28a34 34 0 0 1-34 34h-8a34 34 0 0 1-34-34V22Z" fill="#FFFDF7"/>
+              <path d="M94 31h8a14 14 0 0 1 0 28h-8" stroke="#FFFDF7" stroke-width="9" fill="none" stroke-linecap="round"/>
+              <path d="M22 23h68" stroke="#FFD88A" stroke-width="7" stroke-linecap="round"/>
+              <ellipse cx="56" cy="25" rx="29" ry="5" fill="#7A4D2A"/>
+              <path d="M47 41h18" stroke="#2B36A9" stroke-width="5" stroke-linecap="round"/>
+            </svg>
+
+            <div class="game-overlay" id="startOverlay">
+              <div class="game-overlay__card">
+                <img src="icons/icon-192.png" width="80" height="80" alt="" style="border-radius:22px" />
+                <h2>آماده‌ای؟</h2>
+                <div class="game-rules">
+                  <span class="game-rule">دانه قهوه: +۱</span>
+                  <span class="game-rule">کافیته: +۵</span>
+                  <span class="game-rule">بمب: −۱۰ و یک جان</span>
+                </div>
+                <p>با لمس و حرکت انگشت، موس، یا کلیدهای ← → فنجان را کنترل کن.</p>
+                <button class="btn btn--light btn--lg" id="startGame">شروع بازی</button>
+              </div>
+            </div>
+
+            <div class="game-overlay" id="endOverlay" hidden>
+              <div class="game-overlay__card">
+                <h2>وقت تمام شد!</h2>
+                <span class="game-final-score" id="finalScore">۰</span>
+                <p class="game-result-note" id="resultNote"></p>
+                <button class="btn btn--light btn--lg" id="restartGame">دوباره بازی کن</button>
+                <a href="login.html" class="btn btn--outline-light" id="gameLogin" hidden>ورود برای ثبت امتیاز</a>
+              </div>
+            </div>
+          </div>
+        </div>
+        <p class="game-controls-note">روی موبایل فنجان را با انگشت بکش؛ روی دسکتاپ موس یا کلیدهای جهت را استفاده کن.</p>
+      </div>
+
+      <aside class="game-side">
+        <section class="game-card reward-card">
+          <h2 id="rewardTitle">جایزه رویداد</h2>
+          <p id="rewardDescription">جایزه این رویداد به‌زودی اعلام می‌شود.</p>
+          <p id="rewardRules" style="margin-top:10px;font-weight:800"></p>
+        </section>
+        <section class="game-card">
+          <h2>برترین بازیکن‌ها</h2>
+          <div class="leaderboard" id="leaderboard"></div>
+        </section>
+      </aside>
+    </div>
+  </main>
+
+  <nav class="bottom-nav" dir="ltr" aria-label="ناوبری موبایل">
+    <a href="index.html" class="bottom-nav__item" aria-label="خانه"><svg viewBox="0 0 24 24" width="25" height="25" fill="none" stroke="currentColor" stroke-width="2"><path d="m3 10 9-7 9 7v10a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2Z"/><path d="M9 22V12h6v10"/></svg></a>
+    <a href="index.html#categories" class="bottom-nav__item" aria-label="دسته‌بندی‌ها"><svg viewBox="0 0 24 24" width="25" height="25" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg></a>
+    <a href="products.html" class="bottom-nav__cart" aria-label="فروشگاه"><svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="2"><circle cx="8" cy="21" r="1.5"/><circle cx="18" cy="21" r="1.5"/><path d="M2.5 3h2l2.6 12.4a2 2 0 0 0 2 1.6h7.7a2 2 0 0 0 2-1.6L21 7H6"/></svg></a>
+    <a href="guide.html" class="bottom-nav__item" aria-label="راهنمای خرید"><svg viewBox="0 0 24 24" width="25" height="25" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z"/><path d="M3 6h18"/></svg></a>
+    <a href="profile.html" class="bottom-nav__item" aria-label="پروفایل"><svg viewBox="0 0 24 24" width="25" height="25" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 3.6-6.5 8-6.5s8 2.5 8 6.5"/></svg></a>
+  </nav>
+
+  <script>
+    "use strict";
+    const $ = (s) => document.querySelector(s);
+    const faDigits = ["۰","۱","۲","۳","۴","۵","۶","۷","۸","۹"];
+    const toFa = (n) => String(n).replace(/\d/g, (d) => faDigits[+d]);
+
+    const stage = $("#gameStage");
+    const cup = $("#gameCup");
+    let config = { lives: 3, active: true, winnerCount: 3, minimumScore: 50 };
+    let score = 0;
+    let lives = 3;
+    let playedSeconds = 0;
+    let runStartedAt = 0;
+    let running = false;
+    let objects = [];
+    let cupX = .5;
+    let lastFrame = 0;
+    let spawnClock = 0;
+    let elapsed = 0;
+    let timerId = null;
+    let runToken = null;
+
+    function renderLeaderboard(rows = []) {
+      $("#leaderboard").innerHTML = rows.length ? rows.map((r) => `
+        <div class="leader-row"><span class="leader-rank">${toFa(r.rank)}</span><strong>${r.name}</strong><span class="leader-score">${toFa(r.score)}</span></div>
+      `).join("") : '<p style="color:var(--ink-mute);font-size:.85rem;text-align:center;padding:16px">اولین رکورد را تو ثبت کن!</p>';
+    }
+
+    async function loadGameData() {
+      $("#gameLives").textContent = toFa(config.lives || 3);
+      renderLeaderboard([]);
+    }
+
+    function setCup(clientX) {
+      const r = stage.getBoundingClientRect();
+      cupX = Math.max(.07, Math.min(.93, (clientX - r.left) / r.width));
+      cup.style.left = `${cupX * 100}%`;
+    }
+    stage.addEventListener("pointermove", (e) => { if (running) setCup(e.clientX); });
+    stage.addEventListener("pointerdown", (e) => { if (running) setCup(e.clientX); });
+    document.addEventListener("keydown", (e) => {
+      if (!running) return;
+      if (e.key === "ArrowLeft") cupX = Math.max(.07, cupX - .07);
+      if (e.key === "ArrowRight") cupX = Math.min(.93, cupX + .07);
+      cup.style.left = `${cupX * 100}%`;
+    });
+
+    function spawnObject() {
+      const roll = Math.random();
+      // Bomb frequency rises slowly from 10% to a capped 30%; no bombs in the first 5 seconds.
+      const bombChance = elapsed < 5 ? 0 : Math.min(.30, .10 + elapsed * .0011);
+      const logoChance = .13;
+      const type = roll < bombChance ? "obstacle" : roll < bombChance + logoChance ? "logo" : "bean";
+      const el = document.createElement("div");
+      el.className = `falling falling--${type}`;
+      if (type === "logo") el.innerHTML = '<img src="icons/favicon.svg" alt="" />';
+      if (type === "obstacle") el.innerHTML = '<svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M7 7l10 10M17 7 7 17"/></svg>';
+      stage.appendChild(el);
+      const size = type === "bean" ? 39 : type === "logo" ? 52 : 45;
+      objects.push({
+        el, type, x: 5 + Math.random() * 90, y: -size,
+        // Gradual, capped speed increase keeps long runs difficult but playable.
+        speed: 112 + Math.random() * 78 + Math.min(180, elapsed * .7), size,
+        rotation: Math.random() * 360, spin: (Math.random() - .5) * 140,
+      });
+    }
+
+    function scorePopup(value, x, y) {
+      const p = document.createElement("span");
+      p.className = `score-pop${value < 0 ? " bad" : ""}`;
+      p.textContent = `${value > 0 ? "+" : ""}${toFa(value)}`;
+      p.style.left = `${x}%`; p.style.top = `${y}px`;
+      stage.appendChild(p);
+      setTimeout(() => p.remove(), 700);
+    }
+
+    function catchValue(o) {
+      const value = o.type === "bean" ? 1 : o.type === "logo" ? 5 : -10;
+      score = Math.max(0, score + value);
+      if (o.type === "obstacle") {
+        lives = Math.max(0, lives - 1);
+        $("#gameLives").textContent = toFa(lives);
+        if (lives === 0) setTimeout(finishGame, 0);
+      }
+      $("#gameScore").textContent = toFa(score);
+      scorePopup(value, o.x, o.y);
+    }
+
+    function frame(ts) {
+      if (!running) return;
+      if (!lastFrame) lastFrame = ts;
+      const dt = Math.min(.04, (ts - lastFrame) / 1000);
+      lastFrame = ts;
+      elapsed += dt;
+      spawnClock += dt;
+      // Spawn rate reaches its safe cap after roughly 3.5 minutes.
+      const spawnEvery = Math.max(.30, .80 - elapsed * .0024);
+      if (spawnClock >= spawnEvery) { spawnClock = 0; spawnObject(); }
+
+      const stageH = stage.clientHeight;
+      const stageW = stage.clientWidth;
+      const cupRect = { x: cupX * stageW - 46, y: stageH - 84, w: 92, h: 65 };
+      objects = objects.filter((o) => {
+        o.y += o.speed * dt;
+        o.rotation += o.spin * dt;
+        o.el.style.left = `${o.x}%`;
+        o.el.style.transform = `translate(-50%, ${o.y}px) rotate(${o.rotation}deg)`;
+        const ox = o.x / 100 * stageW - o.size / 2;
+        const oy = o.y;
+        const hit = ox < cupRect.x + cupRect.w && ox + o.size > cupRect.x && oy < cupRect.y + cupRect.h && oy + o.size > cupRect.y;
+        if (hit) { catchValue(o); o.el.remove(); return false; }
+        if (o.y > stageH + 70) { o.el.remove(); return false; }
+        return true;
+      });
+      requestAnimationFrame(frame);
+    }
+
+    function clearObjects() { objects.forEach((o) => o.el.remove()); objects = []; }
+
+    async function requestRunToken() {
+      runToken = null;
+    }
+
+    async function startGame() {
+      if (config.active === false) return;
+      await requestRunToken();
+      clearObjects();
+      score = 0; elapsed = 0; spawnClock = 0; lastFrame = 0; cupX = .5;
+      lives = Number(config.lives || 3);
+      playedSeconds = 0;
+      runStartedAt = Date.now();
+      $("#gameScore").textContent = "۰";
+      $("#gameTime").textContent = "۰";
+      $("#gameLives").textContent = toFa(lives);
+      cup.style.left = "50%";
+      $("#startOverlay").hidden = true;
+      $("#endOverlay").hidden = true;
+      running = true;
+      clearInterval(timerId);
+      timerId = setInterval(() => {
+        playedSeconds = Math.floor((Date.now() - runStartedAt) / 1000);
+        const min = Math.floor(playedSeconds / 60);
+        const sec = String(playedSeconds % 60).padStart(2, "0");
+        $("#gameTime").textContent = `${toFa(min)}:${toFa(sec)}`;
+      }, 1000);
+      requestAnimationFrame(frame);
+    }
+
+    async function submitScore() {
+      $("#resultNote").textContent = "امتیاز فقط در همین نسخه نمایشی نمایش داده می‌شود.";
+    }
+
+    function finishGame() {
+      if (!running) return;
+      running = false;
+      clearInterval(timerId);
+      playedSeconds = Math.max(playedSeconds, Math.floor((Date.now() - runStartedAt) / 1000));
+      clearObjects();
+      $("#finalScore").textContent = toFa(score);
+      $("#gameLogin").hidden = true;
+      $("#resultNote").textContent = "نتیجه نسخه نمایشی";
+      $("#endOverlay").hidden = false;
+      submitScore();
+    }
+
+    $("#startGame").addEventListener("click", startGame);
+    $("#restartGame").addEventListener("click", startGame);
+    loadGameData();
+  </script>
+</body>
+</html>
