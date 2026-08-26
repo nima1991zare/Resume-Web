@@ -1,0 +1,34 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 900" role="img" aria-labelledby="title desc">
+  <title id="title">Motive Studio website preview</title>
+  <desc id="desc">A coral, lilac and burgundy creative studio interface.</desc>
+  <rect width="1440" height="900" fill="#fff8f0"/>
+  <rect x="40" y="28" width="1360" height="82" rx="28" fill="#321632"/>
+  <circle cx="82" cy="69" r="18" fill="#ff7a74"/>
+  <text x="112" y="80" fill="#fff8f0" font-family="Arial, sans-serif" font-size="34" font-weight="800">MOTIVE</text>
+  <text x="800" y="75" fill="#eadbea" font-family="Arial, sans-serif" font-size="15">WORK</text>
+  <text x="905" y="75" fill="#eadbea" font-family="Arial, sans-serif" font-size="15">SERVICES</text>
+  <text x="1038" y="75" fill="#eadbea" font-family="Arial, sans-serif" font-size="15">STUDIO</text>
+  <rect x="1180" y="47" width="178" height="44" rx="22" fill="#c8a7ff"/>
+  <text x="1221" y="75" fill="#321632" font-family="Arial, sans-serif" font-size="14" font-weight="700">START A PROJECT</text>
+  <rect x="40" y="136" width="870" height="416" rx="34" fill="#ff7a74"/>
+  <text x="88" y="202" fill="#321632" font-family="Arial, sans-serif" font-size="16" font-weight="700" letter-spacing="3">INDEPENDENT CREATIVE STUDIO</text>
+  <text x="88" y="306" fill="#321632" font-family="Arial, sans-serif" font-size="82" font-weight="900">IDEAS WITH</text>
+  <text x="88" y="398" fill="#321632" font-family="Arial, sans-serif" font-size="82" font-weight="900">A PULSE.</text>
+  <path d="M720 196c92 0 140 74 140 154s-48 154-140 154-140-74-140-154 48-154 140-154Z" fill="#321632"/>
+  <path d="M650 350h140M720 280v140" stroke="#c8a7ff" stroke-width="18" stroke-linecap="round"/>
+  <rect x="934" y="136" width="466" height="198" rx="34" fill="#c8a7ff"/>
+  <text x="978" y="195" fill="#321632" font-family="Arial, sans-serif" font-size="15" font-weight="700">CURRENTLY MAKING</text>
+  <text x="978" y="259" fill="#321632" font-family="Arial, sans-serif" font-size="41" font-weight="900">BRANDS MOVE.</text>
+  <rect x="934" y="358" width="223" height="194" rx="34" fill="#321632"/>
+  <text x="968" y="414" fill="#c8a7ff" font-family="Arial, sans-serif" font-size="14" font-weight="700">PROJECTS</text>
+  <text x="968" y="492" fill="#fff8f0" font-family="Arial, sans-serif" font-size="62" font-weight="900">48</text>
+  <rect x="1181" y="358" width="219" height="194" rx="34" fill="#f2cf54"/>
+  <text x="1217" y="414" fill="#321632" font-family="Arial, sans-serif" font-size="14" font-weight="700">SINCE</text>
+  <text x="1217" y="492" fill="#321632" font-family="Arial, sans-serif" font-size="54" font-weight="900">'19</text>
+  <rect x="40" y="578" width="1360" height="86" rx="30" fill="#321632"/>
+  <text x="78" y="632" fill="#fff8f0" font-family="Arial, sans-serif" font-size="19" font-weight="700">STRATEGY  ·  IDENTITY  ·  CAMPAIGNS  ·  DIGITAL  ·  CONTENT  ·  EXPERIENCES</text>
+  <text x="40" y="735" fill="#321632" font-family="Arial, sans-serif" font-size="34" font-weight="900">SELECTED WORK</text>
+  <rect x="40" y="770" width="424" height="96" rx="26" fill="#c8a7ff"/>
+  <rect x="488" y="770" width="424" height="96" rx="26" fill="#ff7a74"/>
+  <rect x="936" y="770" width="464" height="96" rx="26" fill="#f2cf54"/>
+</svg>

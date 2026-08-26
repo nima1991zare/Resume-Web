@@ -328,6 +328,72 @@
 
   function pad(n) { return n < 10 ? "0" + n : "" + n; }
 
+  function websiteTheme(item) {
+    var title = String(item.title_en || "").toLowerCase();
+    if (title.indexOf("kava") >= 0) return " website-kava";
+    if (title.indexOf("motive") >= 0) return " website-motive";
+    if (title.indexOf("serein") >= 0) return " website-serein";
+    if (title.indexOf("rova") >= 0) return " website-rova";
+    return "";
+  }
+
+  // Persisted deployments may still contain the previous sample metadata.
+  // Apply the new presentation in the browser as well as in the DB migration.
+  var WEBSITE_SAMPLE_OVERRIDES = [
+    {
+      aliases: ["depoti", "kava market"],
+      title_en: "KAVA Market", title_fa: "کاوا مارکت",
+      desc_en: "A streamlined hospitality marketplace for sourcing beans, ingredients, packaging and cafe equipment. Fast category browsing, smart search, delivery planning and order tracking keep daily purchasing simple.",
+      desc_fa: "مارکت‌پلیس یکپارچه برای تأمین دانه قهوه، مواد اولیه، بسته‌بندی و تجهیزات کافه. دسته‌بندی سریع، جستجوی هوشمند، برنامه‌ریزی ارسال و پیگیری سفارش، خرید روزانه را ساده می‌کند.",
+      image: "/static/projects/kava-market.svg", tech: "HTML · CSS · JavaScript · RTL",
+      demo_url: "/static/demos/kava-market/index.html"
+    },
+    {
+      aliases: ["weenk creative studio", "motive studio"],
+      title_en: "Motive Studio", title_fa: "استودیو موتیو",
+      desc_en: "An expressive portfolio for a multidisciplinary creative studio. A playful modular layout brings together brand strategy, campaigns, digital design, selected work and a clear collaboration process.",
+      desc_fa: "پورتفولیوی پویا برای یک استودیوی خلاق چندتخصصی. چیدمان ماژولار و بازیگوش، استراتژی برند، کمپین‌ها، طراحی دیجیتال، پروژه‌های منتخب و فرایند همکاری را کنار هم قرار می‌دهد.",
+      image: "/static/projects/motive-studio.svg", tech: "HTML · CSS · JavaScript · RTL",
+      demo_url: "/static/demos/motive-studio/index.html"
+    },
+    {
+      aliases: ["oro coffee", "serein coffee"],
+      title_en: "Serein Coffee", title_fa: "قهوه سرین",
+      desc_en: "An editorial storefront for a small-batch coffee roaster, pairing origin stories and tasting notes with a calm shopping flow. The warm, tactile interface stays focused from discovery to checkout.",
+      desc_fa: "فروشگاهی با حال‌وهوای ادیتوریال برای قهوه‌های رست محدود که داستان خاستگاه و نت‌های طعمی را با خریدی آرام و روان ترکیب می‌کند. رابط گرم و ملموس از کشف محصول تا پرداخت متمرکز باقی می‌ماند.",
+      image: "/static/projects/serein-coffee.svg", tech: "HTML · CSS · JavaScript · RTL",
+      demo_url: "/static/demos/serein-coffee/index.html"
+    },
+    {
+      aliases: ["coffeete", "coffite", "rova coffee"],
+      title_en: "ROVA Coffee", title_fa: "قهوه رووا",
+      desc_en: "A modern coffee shop with guided product discovery for beans, brewers and accessories. Useful filters, brew recommendations, account tools and a persistent offline-ready cart support confident purchases.",
+      desc_fa: "فروشگاه مدرن قهوه با مسیر انتخاب راهنما برای دانه‌ها، ابزارهای دم‌آوری و لوازم جانبی. فیلترهای کاربردی، پیشنهاد دم‌آوری، ابزارهای حساب کاربری و سبد خرید آفلاین، انتخاب مطمئن‌تری می‌سازند.",
+      image: "/static/projects/rova-coffee.svg", tech: "HTML · CSS · JavaScript · PWA · RTL",
+      demo_url: "/static/demos/rova-coffee/index.html"
+    }
+  ];
+
+  function normalizePersistedContent(content) {
+    (content.websites || []).forEach(function (website) {
+      var title = String(website.title_en || "").toLowerCase();
+      WEBSITE_SAMPLE_OVERRIDES.forEach(function (sample) {
+        if (sample.aliases.indexOf(title) < 0) return;
+        Object.keys(sample).forEach(function (key) {
+          if (key !== "aliases") website[key] = sample[key];
+        });
+        website.demo_only = 0;
+      });
+    });
+    (content.brands || []).forEach(function (brand) {
+      if (/^(?:coffite|coffeete)$/i.test(String(brand.name || ""))) {
+        brand.name = "Coffite";
+        brand.url = "https://coffite.ir/";
+      }
+    });
+    return content;
+  }
+
   function demoBtn(item) {
     var u = item.demo_url || "";
     if (!/^https?:\/\//i.test(u) && u.indexOf("/static/") !== 0) return "";
@@ -394,7 +460,7 @@
       var demoOnly = !!w.demo_only;
       var link = demoOnly ? w.demo_url : "/p/websites/" + w.id;
       var target = demoOnly ? ' target="_blank" rel="noopener"' : "";
-      return '<article class="vcard reveal in' + (demoOnly ? " vcard-demo-only" : "") + '">' +
+      return '<article class="vcard website-card reveal in' + websiteTheme(w) + (demoOnly ? " vcard-demo-only" : "") + '">' +
         '<a class="vcard-media" href="' + esc(link) + '"' + target + ">" + media(w) +
           '<span class="vcard-index">WEB/' + pad(i + 1) + "</span></a>" +
         '<div class="vcard-body"><h3><a href="' + esc(link) + '"' + target + '>' + esc(pick(w, "title")) + "</a></h3>" +
@@ -446,6 +512,7 @@
   }
 
   function hydrate(data) {
+    data = normalizePersistedContent(data);
     state.content = data;
     renderContent();
     updateSectionVisibility(data);
@@ -541,7 +608,9 @@
   /* ---------------- PWA ---------------- */
   if ("serviceWorker" in navigator) {
     window.addEventListener("load", function () {
-      navigator.serviceWorker.register("/sw.js").catch(function () {});
+      navigator.serviceWorker.register("/sw.js", { updateViaCache: "none" })
+        .then(function (registration) { return registration.update(); })
+        .catch(function () {});
     });
   }
   applyLang();

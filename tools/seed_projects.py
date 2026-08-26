@@ -194,28 +194,52 @@ WEBSITES = [
         "price": 4000000, "currency": "IRT", "demo_only": 0, "sort": 1,
     },
     {
-        "title_en": "Depoti", "title_fa": "دیپوتی",
-        "desc_en": "", "desc_fa": "", "image": "/static/projects/depoti-site.png",
-        "demo_url": "https://depoti.ir/", "url": "", "tech": "",
-        "price": 0, "currency": "IRT", "demo_only": 1, "sort": 10,
+        "title_en": "KAVA Market", "title_fa": "کاوا مارکت",
+        "desc_en": ("A streamlined hospitality marketplace for sourcing beans, ingredients, packaging "
+                    "and cafe equipment. Fast category browsing, smart search, delivery planning and "
+                    "order tracking keep daily purchasing simple."),
+        "desc_fa": ("مارکت‌پلیس یکپارچه برای تأمین دانه قهوه، مواد اولیه، بسته‌بندی و تجهیزات کافه. "
+                    "دسته‌بندی سریع، جستجوی هوشمند، برنامه‌ریزی ارسال و پیگیری سفارش، خرید روزانه را "
+                    "ساده می‌کند."),
+        "image": "/static/projects/kava-market.svg",
+        "demo_url": "/static/demos/kava-market/index.html", "url": "", "tech": "HTML · CSS · JavaScript · RTL",
+        "price": 0, "currency": "IRT", "demo_only": 0, "sort": 10,
     },
     {
-        "title_en": "Weenk Creative Studio", "title_fa": "استودیو وینک",
-        "desc_en": "", "desc_fa": "", "image": "/static/projects/weenk-site.png",
-        "demo_url": "https://weenk.ir/", "url": "", "tech": "",
-        "price": 0, "currency": "IRT", "demo_only": 1, "sort": 11,
+        "title_en": "Motive Studio", "title_fa": "استودیو موتیو",
+        "desc_en": ("An expressive portfolio for a multidisciplinary creative studio. A playful modular "
+                    "layout brings together brand strategy, campaigns, digital design, selected work and "
+                    "a clear collaboration process."),
+        "desc_fa": ("پورتفولیوی پویا برای یک استودیوی خلاق چندتخصصی. چیدمان ماژولار و بازیگوش، "
+                    "استراتژی برند، کمپین‌ها، طراحی دیجیتال، پروژه‌های منتخب و فرایند همکاری را کنار هم "
+                    "قرار می‌دهد."),
+        "image": "/static/projects/motive-studio.svg",
+        "demo_url": "/static/demos/motive-studio/index.html", "url": "", "tech": "HTML · CSS · JavaScript · RTL",
+        "price": 0, "currency": "IRT", "demo_only": 0, "sort": 11,
     },
     {
-        "title_en": "ORO Coffee", "title_fa": "قهوه ارو",
-        "desc_en": "", "desc_fa": "", "image": "/static/projects/oro-site.png",
-        "demo_url": "https://orocoffee.ir/", "url": "", "tech": "",
-        "price": 0, "currency": "IRT", "demo_only": 1, "sort": 12,
+        "title_en": "Serein Coffee", "title_fa": "قهوه سرین",
+        "desc_en": ("An editorial storefront for a small-batch coffee roaster, pairing origin stories "
+                    "and tasting notes with a calm shopping flow. The warm, tactile interface stays "
+                    "focused from discovery to checkout."),
+        "desc_fa": ("فروشگاهی با حال‌وهوای ادیتوریال برای قهوه‌های رست محدود که داستان خاستگاه و "
+                    "نت‌های طعمی را با خریدی آرام و روان ترکیب می‌کند. رابط گرم و ملموس از کشف محصول "
+                    "تا پرداخت متمرکز باقی می‌ماند."),
+        "image": "/static/projects/serein-coffee.svg",
+        "demo_url": "/static/demos/serein-coffee/index.html", "url": "", "tech": "HTML · CSS · JavaScript · RTL",
+        "price": 0, "currency": "IRT", "demo_only": 0, "sort": 12,
     },
     {
-        "title_en": "Coffeete", "title_fa": "کافیته",
-        "desc_en": "", "desc_fa": "", "image": "/static/projects/coffete-site.png",
-        "demo_url": "/static/demos/coffete/index.html", "url": "", "tech": "",
-        "price": 0, "currency": "IRT", "demo_only": 1, "sort": 13,
+        "title_en": "ROVA Coffee", "title_fa": "قهوه رووا",
+        "desc_en": ("A modern coffee shop with guided product discovery for beans, brewers and accessories. "
+                    "Useful filters, brew recommendations, account tools and a persistent offline-ready "
+                    "cart support confident purchases."),
+        "desc_fa": ("فروشگاه مدرن قهوه با مسیر انتخاب راهنما برای دانه‌ها، ابزارهای دم‌آوری و لوازم "
+                    "جانبی. فیلترهای کاربردی، پیشنهاد دم‌آوری، ابزارهای حساب کاربری و سبد خرید آفلاین، "
+                    "انتخاب مطمئن‌تری می‌سازند."),
+        "image": "/static/projects/rova-coffee.svg",
+        "demo_url": "/static/demos/rova-coffee/index.html", "url": "", "tech": "HTML · CSS · JavaScript · PWA · RTL",
+        "price": 0, "currency": "IRT", "demo_only": 0, "sort": 13,
     },
 ]
 
@@ -240,6 +264,11 @@ def seed():
     init_db()
     conn = get_db()
     try:
+        conn.execute("UPDATE websites SET title_en='KAVA Market' WHERE title_en='Depoti'")
+        conn.execute("UPDATE websites SET title_en='Motive Studio' WHERE title_en='Weenk Creative Studio'")
+        conn.execute("UPDATE websites SET title_en='Serein Coffee' WHERE title_en='ORO Coffee'")
+        conn.execute("UPDATE websites SET title_en='ROVA Coffee' WHERE title_en IN ('Coffeete','Coffite')")
+        conn.execute("UPDATE brands SET name='Coffite' WHERE name='Coffeete'")
         conn.execute(
             f"UPDATE apps SET active=0 WHERE title_en IN ({','.join('?' * len(PLACEHOLDER_APPS))})",
             PLACEHOLDER_APPS)

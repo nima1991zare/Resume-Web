@@ -1,0 +1,39 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 900" role="img" aria-labelledby="title desc">
+  <title id="title">ROVA Coffee website preview</title>
+  <desc id="desc">A terracotta and peach modern coffee shop interface.</desc>
+  <rect width="1440" height="900" fill="#fff4ee"/>
+  <rect x="40" y="28" width="1360" height="84" rx="26" fill="#7f2f2b"/>
+  <text x="80" y="81" fill="#ffc9a8" font-family="Arial, sans-serif" font-size="38" font-weight="900">ROVA</text>
+  <text x="206" y="78" fill="#f5c8bb" font-family="Arial, sans-serif" font-size="13" letter-spacing="3">COFFEE CO.</text>
+  <text x="770" y="77" fill="#fff4ee" font-family="Arial, sans-serif" font-size="14">COFFEE</text>
+  <text x="873" y="77" fill="#fff4ee" font-family="Arial, sans-serif" font-size="14">BREW GEAR</text>
+  <text x="1012" y="77" fill="#fff4ee" font-family="Arial, sans-serif" font-size="14">LEARN</text>
+  <rect x="1150" y="48" width="210" height="44" rx="22" fill="#ff8e72"/>
+  <text x="1200" y="76" fill="#4c1615" font-family="Arial, sans-serif" font-size="14" font-weight="700">YOUR BAG · 02</text>
+  <rect x="40" y="138" width="890" height="404" rx="34" fill="#ff8e72"/>
+  <text x="88" y="204" fill="#7f2f2b" font-family="Arial, sans-serif" font-size="15" font-weight="700" letter-spacing="3">COFFEE, WITHOUT THE GUESSWORK</text>
+  <text x="88" y="302" fill="#4c1615" font-family="Arial, sans-serif" font-size="72" font-weight="900">YOUR PERFECT CUP</text>
+  <text x="88" y="383" fill="#4c1615" font-family="Arial, sans-serif" font-size="72" font-weight="900">STARTS HERE.</text>
+  <text x="88" y="447" fill="#7f2f2b" font-family="Arial, sans-serif" font-size="18">Tell us how you brew. We'll match you with the right roast.</text>
+  <rect x="88" y="478" width="184" height="48" rx="24" fill="#7f2f2b"/>
+  <text x="132" y="508" fill="#fff4ee" font-family="Arial, sans-serif" font-size="14" font-weight="700">TAKE THE QUIZ</text>
+  <circle cx="799" cy="347" r="112" fill="#ffc9a8"/>
+  <path d="M742 286h114l-13 144h-88Z" fill="#fff4ee"/>
+  <path d="M756 321h86" stroke="#7f2f2b" stroke-width="14"/>
+  <text x="768" y="386" fill="#7f2f2b" font-family="Arial, sans-serif" font-size="20" font-weight="900">ROVA</text>
+  <rect x="954" y="138" width="446" height="190" rx="34" fill="#7f2f2b"/>
+  <text x="996" y="194" fill="#ff8e72" font-family="Arial, sans-serif" font-size="14" font-weight="700">BREW BETTER</text>
+  <text x="996" y="253" fill="#fff4ee" font-family="Arial, sans-serif" font-size="38" font-weight="900">THE ROVA GUIDE</text>
+  <text x="996" y="292" fill="#f5c8bb" font-family="Arial, sans-serif" font-size="15">Simple recipes for every brewer.</text>
+  <rect x="954" y="352" width="446" height="190" rx="34" fill="#ffc9a8"/>
+  <text x="996" y="410" fill="#7f2f2b" font-family="Arial, sans-serif" font-size="14" font-weight="700">SUBSCRIBE &amp; SAVE</text>
+  <text x="996" y="470" fill="#4c1615" font-family="Arial, sans-serif" font-size="38" font-weight="900">NEVER RUN OUT.</text>
+  <text x="996" y="508" fill="#7f2f2b" font-family="Arial, sans-serif" font-size="15">Fresh coffee, right on schedule.</text>
+  <text x="40" y="622" fill="#4c1615" font-family="Arial, sans-serif" font-size="32" font-weight="900">Shop by your brew</text>
+  <g font-family="Arial, sans-serif" font-size="17" font-weight="800" fill="#4c1615">
+    <rect x="40" y="660" width="316" height="188" rx="30" fill="#ffc9a8"/><circle cx="198" cy="720" r="28" fill="#ff8e72"/><text x="119" y="801">ESPRESSO</text>
+    <rect x="380" y="660" width="316" height="188" rx="30" fill="#ffffff"/><circle cx="538" cy="720" r="28" fill="#7f2f2b"/><text x="458" y="801">POUR OVER</text>
+    <rect x="720" y="660" width="316" height="188" rx="30" fill="#ff8e72"/><circle cx="878" cy="720" r="28" fill="#fff4ee"/><text x="818" y="801">MOKA POT</text>
+    <rect x="1060" y="660" width="340" height="188" rx="30" fill="#7f2f2b"/><circle cx="1230" cy="720" r="28" fill="#ffc9a8"/><text x="1169" y="801" fill="#fff4ee">FILTER</text>
+  </g>
+</svg>

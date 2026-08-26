@@ -1,0 +1,760 @@
+<!doctype html>
+<html lang="fa" dir="rtl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#f3eadc">
+  <meta name="description" content="موتیو استودیو؛ استودیوی مستقل هویت بصری، تجربه دیجیتال و روایت برند.">
+  <title>موتیو استودیو | طراحی برای برندهای رو به حرکت</title>
+  <style>
+    :root {
+      --paper: #f3eadc;
+      --paper-2: #fff8ef;
+      --ink: #3c1735;
+      --ink-soft: #684457;
+      --coral: #f26f5b;
+      --coral-dark: #bd3d37;
+      --lilac: #c7b6f2;
+      --acid: #d6df72;
+      --line: 2px solid var(--ink);
+      --shadow: 7px 7px 0 var(--ink);
+      --radius: 22px;
+      --max: 1440px;
+      --pad: clamp(1rem, 3vw, 3.2rem);
+    }
+
+    *, *::before, *::after { box-sizing: border-box; }
+    html { scroll-behavior: smooth; scroll-padding-top: 6rem; }
+    body {
+      margin: 0;
+      color: var(--ink);
+      background:
+        linear-gradient(rgba(60, 23, 53, .045) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(60, 23, 53, .045) 1px, transparent 1px),
+        var(--paper);
+      background-size: 28px 28px;
+      font-family: Tahoma, Arial, sans-serif;
+      font-size: 1rem;
+      line-height: 1.75;
+      overflow-x: hidden;
+    }
+    body.menu-open { overflow: hidden; }
+    button, input, textarea { font: inherit; }
+    button, a { -webkit-tap-highlight-color: transparent; }
+    a { color: inherit; text-decoration: none; }
+    img, svg { display: block; max-width: 100%; }
+    button { color: inherit; }
+    ::selection { color: var(--paper-2); background: var(--ink); }
+    :focus-visible { outline: 3px solid var(--coral-dark); outline-offset: 4px; }
+    [hidden] { display: none !important; }
+    .sr-status {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      padding: 0;
+      margin: -1px;
+      overflow: hidden;
+      clip: rect(0, 0, 0, 0);
+      white-space: nowrap;
+      border: 0;
+    }
+
+    .skip-link {
+      position: fixed;
+      z-index: 1000;
+      top: .75rem;
+      right: .75rem;
+      padding: .7rem 1rem;
+      background: var(--paper-2);
+      border: var(--line);
+      transform: translateY(-150%);
+    }
+    .skip-link:focus { transform: none; }
+
+    .shell { width: min(100%, var(--max)); margin-inline: auto; padding-inline: var(--pad); }
+    .section { padding-block: clamp(4.5rem, 9vw, 9rem); }
+    .eyebrow {
+      display: inline-flex;
+      align-items: center;
+      gap: .65rem;
+      margin: 0 0 1rem;
+      font-size: .78rem;
+      font-weight: 800;
+      letter-spacing: .08em;
+    }
+    .eyebrow::before { content: ""; width: 2.4rem; height: 3px; background: currentColor; }
+    .section-title {
+      max-width: 900px;
+      margin: 0;
+      font-size: clamp(2.3rem, 6.5vw, 6.8rem);
+      line-height: .98;
+      letter-spacing: -.06em;
+      text-wrap: balance;
+    }
+    .section-intro {
+      max-width: 640px;
+      margin: 1.5rem 0 0;
+      color: var(--ink-soft);
+      font-size: clamp(1rem, 1.5vw, 1.22rem);
+    }
+
+    .site-header {
+      position: sticky;
+      z-index: 100;
+      top: 0;
+      background: var(--paper);
+      background: color-mix(in srgb, var(--paper) 90%, transparent);
+      border-bottom: var(--line);
+      backdrop-filter: blur(12px);
+    }
+    .nav-wrap { min-height: 78px; display: flex; align-items: center; justify-content: space-between; gap: 1.5rem; }
+    .logo { display: inline-flex; align-items: center; gap: .7rem; min-height: 44px; font-weight: 900; }
+    .logo-mark { width: 34px; height: 34px; transition: transform .35s ease; }
+    .logo:hover .logo-mark { transform: rotate(-12deg); }
+    .logo-en { font-family: Arial, sans-serif; font-size: .95rem; letter-spacing: .08em; direction: ltr; }
+    .nav-links { display: flex; align-items: center; gap: clamp(.5rem, 2vw, 2rem); }
+    .nav-link {
+      position: relative;
+      display: grid;
+      place-items: center;
+      min-height: 44px;
+      font-size: .9rem;
+      font-weight: 700;
+    }
+    .nav-link::after { content: ""; position: absolute; inset-inline: 0; bottom: 5px; height: 2px; background: var(--coral); transform: scaleX(0); transition: transform .2s ease; }
+    .nav-link:hover::after, .nav-link:focus-visible::after { transform: scaleX(1); }
+    .nav-cta, .button {
+      min-height: 48px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: .65rem;
+      padding: .65rem 1.15rem;
+      border: var(--line);
+      border-radius: 999px;
+      background: var(--coral);
+      font-weight: 800;
+      cursor: pointer;
+      box-shadow: 3px 3px 0 var(--ink);
+      transition: transform .2s ease, box-shadow .2s ease, background .2s ease;
+    }
+    .nav-cta:hover, .button:hover { transform: translate(2px, 2px); box-shadow: 1px 1px 0 var(--ink); background: #ff846e; }
+    .button--paper { background: var(--paper-2); }
+    .button svg { width: 20px; height: 20px; }
+    .menu-toggle {
+      display: none;
+      width: 48px;
+      height: 48px;
+      place-items: center;
+      padding: 0;
+      border: var(--line);
+      border-radius: 50%;
+      background: var(--lilac);
+      cursor: pointer;
+    }
+    .menu-toggle svg { width: 24px; }
+
+    .hero { min-height: calc(100svh - 80px); display: grid; align-items: center; padding-block: clamp(3rem, 7vw, 7rem); position: relative; isolation: isolate; }
+    .hero-grid { display: grid; grid-template-columns: minmax(0, 1.15fr) minmax(310px, .85fr); align-items: center; gap: clamp(2rem, 5vw, 6rem); }
+    .hero-kicker { display: flex; align-items: center; gap: .8rem; margin: 0 0 1.3rem; font-weight: 800; }
+    .pulse { width: 12px; height: 12px; border-radius: 50%; background: var(--coral); box-shadow: 0 0 0 0 rgba(242, 111, 91, .55); animation: pulse 2s infinite; }
+    .hero h1 { margin: 0; font-size: clamp(3.4rem, 10.8vw, 10.8rem); line-height: .82; letter-spacing: -.085em; }
+    .hero h1 span { display: block; }
+    .hero h1 .outline { color: transparent; -webkit-text-stroke: 2px var(--ink); transform: translateX(-.08em); }
+    .hero-copy { max-width: 560px; margin: 2rem 0; color: var(--ink-soft); font-size: clamp(1.05rem, 1.5vw, 1.28rem); }
+    .hero-actions { display: flex; flex-wrap: wrap; gap: .85rem; align-items: center; }
+    .text-link { min-height: 48px; display: inline-flex; align-items: center; gap: .5rem; padding: .5rem .25rem; font-weight: 800; }
+    .text-link svg { width: 22px; transition: transform .2s ease; }
+    .text-link:hover svg { transform: translateX(-5px); }
+    .hero-art { position: relative; min-height: clamp(390px, 47vw, 650px); }
+    .poster {
+      position: absolute;
+      inset: 8% 6% 4% 8%;
+      overflow: hidden;
+      border: var(--line);
+      border-radius: 46% 46% 20px 20px;
+      background: var(--lilac);
+      box-shadow: var(--shadow);
+      transform: rotate(3deg);
+    }
+    .poster-grid { position: absolute; inset: 0; background: repeating-linear-gradient(90deg, transparent 0 18%, rgba(60, 23, 53, .16) 18% calc(18% + 2px)); }
+    .sun { position: absolute; width: 47%; aspect-ratio: 1; border: var(--line); border-radius: 50%; background: var(--coral); top: 8%; left: 10%; animation: drift 5s ease-in-out infinite; }
+    .arch { position: absolute; width: 45%; height: 68%; right: 8%; bottom: -20%; border: var(--line); border-radius: 999px 999px 0 0; background: var(--acid); transform: rotate(-8deg); }
+    .poster-type { position: absolute; inset-inline: 8%; bottom: 5%; z-index: 2; font-family: Arial, sans-serif; font-size: clamp(3rem, 8vw, 7.5rem); line-height: .75; letter-spacing: -.09em; font-weight: 900; direction: ltr; }
+    .orbit { position: absolute; width: 112%; height: 35%; right: -8%; top: 37%; border: 3px solid var(--ink); border-radius: 50%; transform: rotate(-18deg); }
+    .art-note { position: absolute; z-index: 4; top: 2%; right: -2%; width: 138px; aspect-ratio: 1; display: grid; place-items: center; border: var(--line); border-radius: 50%; background: var(--paper-2); font-size: .76rem; font-weight: 900; text-align: center; transform: rotate(-10deg); animation: bob 4s ease-in-out infinite; }
+    .art-sticker { position: absolute; z-index: 4; left: 0; bottom: 2%; padding: .65rem .85rem; border: var(--line); background: var(--coral); box-shadow: 4px 4px 0 var(--ink); font-weight: 900; transform: rotate(5deg); }
+    .marquee { overflow: hidden; border-block: var(--line); background: var(--ink); color: var(--paper); }
+    .marquee-track { display: flex; width: max-content; animation: marquee 24s linear infinite; }
+    .marquee-group { display: flex; align-items: center; gap: 2rem; padding: .9rem 1rem; font-size: clamp(1rem, 2vw, 1.4rem); font-weight: 900; white-space: nowrap; }
+    .marquee-group span::after { content: ""; display: inline-block; width: 10px; height: 10px; margin-inline-start: 2rem; border-radius: 50%; background: var(--coral); }
+
+    .services { background: var(--coral); border-bottom: var(--line); }
+    .services-head { display: grid; grid-template-columns: 1fr .55fr; gap: 2rem; align-items: end; margin-bottom: 4rem; }
+    .services-head .section-intro { margin: 0; color: var(--ink); }
+    .service-list { border-top: var(--line); }
+    .service-item { display: grid; grid-template-columns: 90px 1fr minmax(230px, .75fr) 52px; gap: 1.5rem; align-items: center; padding: 1.7rem .5rem; border-bottom: var(--line); transition: background .25s ease, padding-inline .25s ease; }
+    .service-item:hover, .service-item:focus-within { padding-inline: 1.25rem; background: var(--paper); }
+    .service-num { font-family: Arial, sans-serif; font-size: .85rem; font-weight: 900; }
+    .service-item h3 { margin: 0; font-size: clamp(1.5rem, 3vw, 3rem); line-height: 1.1; }
+    .service-item p { margin: 0; font-size: .9rem; }
+    .service-icon { width: 48px; height: 48px; display: grid; place-items: center; border: var(--line); border-radius: 50%; background: var(--paper-2); }
+    .service-icon svg { width: 24px; transition: transform .25s ease; }
+    .service-item:hover .service-icon svg { transform: rotate(-45deg); }
+
+    .projects { background: var(--paper); }
+    .project-head { display: flex; align-items: end; justify-content: space-between; gap: 2rem; margin-bottom: 2.5rem; }
+    .filters { display: flex; flex-wrap: wrap; gap: .55rem; margin: 0 0 2rem; }
+    .filter {
+      min-height: 44px;
+      padding: .45rem 1rem;
+      border: var(--line);
+      border-radius: 999px;
+      background: transparent;
+      font-weight: 800;
+      cursor: pointer;
+      transition: background .2s ease, color .2s ease, transform .2s ease;
+    }
+    .filter:hover { transform: translateY(-2px); }
+    .filter[aria-pressed="true"] { color: var(--paper-2); background: var(--ink); }
+    .project-grid { display: grid; grid-template-columns: repeat(12, 1fr); gap: clamp(1rem, 2.3vw, 2rem); }
+    .project-card { grid-column: span 6; min-width: 0; animation: reveal .45s ease both; }
+    .project-card:nth-child(3n + 1) { grid-column: span 7; }
+    .project-card:nth-child(3n + 2) { grid-column: span 5; }
+    .project-visual {
+      position: relative;
+      min-height: clamp(290px, 38vw, 530px);
+      overflow: hidden;
+      border: var(--line);
+      border-radius: var(--radius);
+      background: var(--card-bg, var(--lilac));
+      isolation: isolate;
+    }
+    .project-visual::after { content: ""; position: absolute; inset: 0; background: linear-gradient(180deg, transparent 48%, rgba(60, 23, 53, .22)); pointer-events: none; }
+    .project-art { position: absolute; inset: 0; transition: transform .55s cubic-bezier(.2,.8,.2,1); }
+    .project-card:hover .project-art, .project-card:focus-within .project-art { transform: scale(1.035); }
+    .project-index { position: absolute; z-index: 3; top: 1rem; right: 1rem; display: grid; place-items: center; width: 48px; height: 48px; border: var(--line); border-radius: 50%; background: var(--paper-2); font-family: Arial, sans-serif; font-weight: 900; }
+    .project-reveal { position: absolute; z-index: 4; left: 1rem; bottom: 1rem; min-height: 44px; display: flex; align-items: center; gap: .5rem; padding: .5rem .8rem; border: var(--line); border-radius: 999px; background: var(--paper-2); font-weight: 800; transform: translateY(calc(100% + 1.5rem)); transition: transform .3s ease; }
+    .project-reveal svg { width: 19px; }
+    .project-card:hover .project-reveal, .project-card:focus-within .project-reveal { transform: none; }
+    .project-info { display: flex; justify-content: space-between; gap: 1rem; padding: 1rem .2rem 2rem; }
+    .project-info h3 { margin: 0; font-size: clamp(1.35rem, 2.5vw, 2.25rem); line-height: 1.2; }
+    .project-info p { margin: .25rem 0 0; color: var(--ink-soft); }
+    .project-year { direction: ltr; font-family: Arial, sans-serif; font-weight: 900; }
+    .art-nava { background: radial-gradient(circle at 68% 34%, var(--acid) 0 15%, transparent 15.4%), linear-gradient(135deg, var(--lilac) 0 58%, var(--coral) 58%); }
+    .art-nava::before { content: "NAVA"; position: absolute; left: -2%; bottom: 4%; color: var(--ink); font-family: Arial, sans-serif; font-size: clamp(4rem, 12vw, 10rem); font-weight: 900; letter-spacing: -.11em; transform: rotate(-7deg); }
+    .art-rooyesh { background: var(--acid); }
+    .art-rooyesh::before { content: ""; position: absolute; width: 72%; aspect-ratio: 1; left: 14%; top: 10%; border: 4px solid var(--ink); border-radius: 50% 50% 8% 50%; background: repeating-radial-gradient(circle at 20% 80%, var(--coral) 0 12px, var(--paper) 13px 24px); transform: rotate(15deg); }
+    .art-rooyesh::after { content: "رویش"; position: absolute; right: 8%; bottom: 5%; font-size: clamp(3rem, 8vw, 7rem); font-weight: 900; }
+    .art-daal { background: var(--ink); }
+    .art-daal::before { content: "د"; position: absolute; inset: 7%; display: grid; place-items: center; color: var(--coral); border: 2px solid var(--lilac); font-size: clamp(10rem, 28vw, 24rem); font-weight: 900; line-height: 1; }
+    .art-daal::after { content: "DAAL / 08"; position: absolute; top: 4%; left: 4%; color: var(--paper); font-family: Arial, sans-serif; font-weight: 900; writing-mode: vertical-rl; }
+    .art-kaj { background: linear-gradient(30deg, var(--paper) 0 25%, var(--coral) 25% 50%, var(--lilac) 50% 75%, var(--acid) 75%); }
+    .art-kaj::before { content: ""; position: absolute; width: 52%; height: 68%; top: 12%; left: 23%; border: 8px solid var(--ink); border-radius: 50% 50% 5% 5%; transform: rotate(-11deg); }
+    .art-kaj::after { content: "کـــاج"; position: absolute; inset: auto 0 5%; text-align: center; font-size: clamp(3rem, 8vw, 7rem); font-weight: 900; }
+    .art-moj { background: var(--lilac); }
+    .art-moj::before { content: ""; position: absolute; inset: -20%; background: repeating-radial-gradient(ellipse at center, transparent 0 25px, var(--ink) 27px 30px, transparent 32px 55px); transform: skewX(-18deg); }
+    .art-moj::after { content: "موج"; position: absolute; inset: 0; display: grid; place-items: center; color: var(--paper-2); text-shadow: 4px 4px 0 var(--ink); font-size: clamp(5rem, 14vw, 13rem); font-weight: 900; transform: rotate(8deg); }
+    .art-haft { background: var(--coral); }
+    .art-haft::before { content: "۷"; position: absolute; inset: 0; display: grid; place-items: center; color: var(--paper); font-size: clamp(13rem, 35vw, 30rem); font-weight: 900; line-height: 1; transform: rotate(-8deg); }
+    .art-haft::after { content: "هفت روایت / یک مسیر"; position: absolute; right: 5%; bottom: 6%; padding: .35rem .6rem; border: var(--line); background: var(--acid); font-weight: 900; }
+
+    .process { overflow: hidden; color: var(--paper-2); background: var(--ink); }
+    .process .eyebrow, .process .section-intro { color: var(--lilac); }
+    .process-head { display: grid; grid-template-columns: 1fr .55fr; align-items: end; gap: 2rem; }
+    .steps { margin-top: 4rem; display: grid; grid-template-columns: repeat(4, 1fr); border: 2px solid var(--paper-2); }
+    .step { position: relative; min-height: 360px; padding: 1.5rem; border-left: 2px solid var(--paper-2); transition: color .25s ease, background .25s ease; }
+    .step:last-child { border-left: 0; }
+    .step:hover { color: var(--ink); background: var(--lilac); }
+    .step-num { display: block; font-family: Arial, sans-serif; font-size: .8rem; font-weight: 900; }
+    .step h3 { margin: 6rem 0 1rem; font-size: clamp(1.6rem, 3vw, 2.8rem); }
+    .step p { margin: 0; color: inherit; font-size: .9rem; opacity: .78; }
+    .step-shape { position: absolute; left: 1rem; top: 1rem; width: 55px; height: 55px; border: 2px solid currentColor; border-radius: 50% 50% 8px 50%; transition: transform .3s ease; }
+    .step:hover .step-shape { transform: rotate(45deg) scale(.9); }
+
+    .studio { background: var(--lilac); border-bottom: var(--line); }
+    .studio-grid { display: grid; grid-template-columns: .9fr 1.1fr; gap: clamp(2rem, 7vw, 8rem); align-items: center; }
+    .studio-collage { min-height: 560px; position: relative; }
+    .collage-main { position: absolute; inset: 5% 8% 7% 8%; display: grid; place-items: center; overflow: hidden; border: var(--line); border-radius: 45% 45% 18px 18px; background: var(--coral); box-shadow: var(--shadow); }
+    .collage-main svg { width: 76%; height: 76%; }
+    .collage-ticket { position: absolute; z-index: 2; top: 1%; left: 0; width: 45%; padding: 1.2rem; border: var(--line); background: var(--acid); transform: rotate(-7deg); font-size: .82rem; font-weight: 900; }
+    .collage-dot { position: absolute; right: 0; bottom: 0; width: 140px; aspect-ratio: 1; border: var(--line); border-radius: 50%; background: radial-gradient(var(--ink) 2px, transparent 3px); background-size: 16px 16px; background-color: var(--paper); }
+    .studio-copy .section-title { font-size: clamp(2.5rem, 5.6vw, 5.8rem); }
+    .stats { display: grid; grid-template-columns: repeat(3, 1fr); margin-top: 3rem; border-block: var(--line); }
+    .stat { padding: 1.4rem .5rem; border-left: var(--line); }
+    .stat:last-child { border-left: 0; }
+    .stat strong { display: block; font-family: Arial, sans-serif; font-size: clamp(2.2rem, 5vw, 4.6rem); line-height: 1; letter-spacing: -.06em; }
+    .stat span { display: block; margin-top: .7rem; font-size: .82rem; font-weight: 800; }
+
+    .quote-section { background: var(--paper-2); }
+    .quote-card { position: relative; padding: clamp(2rem, 6vw, 6rem); border: var(--line); border-radius: var(--radius); background: var(--acid); box-shadow: var(--shadow); }
+    .quote-mark { width: clamp(55px, 8vw, 96px); color: var(--coral-dark); }
+    blockquote { max-width: 1050px; margin: 1rem 0 2rem; font-size: clamp(1.6rem, 4vw, 4.2rem); font-weight: 900; line-height: 1.35; letter-spacing: -.04em; }
+    .quote-by { display: flex; align-items: center; gap: .85rem; font-size: .9rem; font-weight: 800; }
+    .quote-avatar { width: 48px; height: 48px; display: grid; place-items: center; border: var(--line); border-radius: 50%; background: var(--lilac); font-family: Arial, sans-serif; }
+
+    .contact { position: relative; overflow: hidden; background: var(--coral); }
+    .contact-inner { position: relative; z-index: 2; text-align: center; }
+    .contact .section-title { max-width: 1100px; margin-inline: auto; font-size: clamp(3.2rem, 10vw, 10rem); }
+    .contact p { max-width: 580px; margin: 1.8rem auto; font-size: clamp(1rem, 1.5vw, 1.25rem); }
+    .contact-orbit { position: absolute; width: 45vw; min-width: 420px; aspect-ratio: 1; border: 3px solid var(--ink); border-radius: 50%; opacity: .2; }
+    .contact-orbit--one { top: -70%; right: -9%; }
+    .contact-orbit--two { bottom: -80%; left: -8%; }
+
+    .footer { padding-block: 2rem; color: var(--paper); background: var(--ink); }
+    .footer-grid { display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; gap: 1.5rem; }
+    .footer-links { display: flex; flex-wrap: wrap; gap: .5rem 1.5rem; }
+    .footer a { min-height: 44px; display: inline-flex; align-items: center; }
+    .footer a:hover { color: var(--coral); }
+    .footer-mark { width: 44px; }
+    .copyright { justify-self: end; font-size: .82rem; color: #d8c9d3; }
+
+    dialog {
+      width: min(92vw, 620px);
+      max-height: 90vh;
+      padding: 0;
+      overflow: auto;
+      color: var(--ink);
+      border: var(--line);
+      border-radius: var(--radius);
+      background: var(--paper-2);
+      box-shadow: 10px 10px 0 var(--ink);
+    }
+    dialog::backdrop { background: rgba(60, 23, 53, .65); backdrop-filter: blur(4px); }
+    .dialog-head { display: flex; justify-content: space-between; align-items: center; gap: 1rem; padding: 1.3rem 1.5rem; border-bottom: var(--line); background: var(--lilac); }
+    .dialog-head h2 { margin: 0; font-size: clamp(1.5rem, 4vw, 2.5rem); }
+    .icon-button { width: 48px; height: 48px; display: grid; place-items: center; flex: 0 0 auto; padding: 0; border: var(--line); border-radius: 50%; background: var(--paper-2); cursor: pointer; }
+    .icon-button svg { width: 22px; }
+    .contact-form { padding: 1.5rem; }
+    .field { margin-bottom: 1.1rem; }
+    .field label { display: block; margin-bottom: .35rem; font-size: .88rem; font-weight: 900; }
+    .field input, .field textarea { width: 100%; min-height: 48px; padding: .75rem .9rem; color: var(--ink); border: var(--line); border-radius: 10px; background: var(--paper); }
+    .field textarea { min-height: 120px; resize: vertical; }
+    .field input:focus, .field textarea:focus { outline: 3px solid var(--coral); outline-offset: 1px; }
+    .form-note { margin: 0 0 1rem; color: var(--ink-soft); font-size: .8rem; }
+    .toast { position: fixed; z-index: 1000; right: 50%; bottom: 1.5rem; width: min(calc(100% - 2rem), 430px); padding: .9rem 1.1rem; color: var(--paper-2); border: 2px solid var(--paper-2); border-radius: 999px; background: var(--ink); text-align: center; font-weight: 800; transform: translate(50%, 180%); transition: transform .3s ease; }
+    .toast.is-visible { transform: translate(50%, 0); }
+
+    .reveal { opacity: 0; transform: translateY(28px); transition: opacity .65s ease, transform .65s cubic-bezier(.2,.8,.2,1); }
+    .reveal.is-visible { opacity: 1; transform: none; }
+
+    @keyframes pulse { 70% { box-shadow: 0 0 0 12px rgba(242, 111, 91, 0); } 100% { box-shadow: 0 0 0 0 rgba(242, 111, 91, 0); } }
+    @keyframes drift { 50% { transform: translate(8px, 14px) rotate(5deg); } }
+    @keyframes bob { 50% { transform: translateY(-10px) rotate(-5deg); } }
+    @keyframes marquee { to { transform: translateX(50%); } }
+    @keyframes reveal { from { opacity: 0; transform: translateY(14px); } }
+
+    @media (max-width: 1000px) {
+      .hero-grid, .studio-grid { grid-template-columns: 1fr; }
+      .hero { min-height: auto; }
+      .hero-content { position: relative; z-index: 3; }
+      .hero-art { min-height: 540px; width: min(100%, 620px); margin-inline: auto; }
+      .services-head, .process-head { grid-template-columns: 1fr; align-items: start; }
+      .steps { grid-template-columns: repeat(2, 1fr); }
+      .step:nth-child(2) { border-left: 0; }
+      .step:nth-child(-n + 2) { border-bottom: 2px solid var(--paper-2); }
+      .studio-collage { min-height: 520px; width: min(100%, 640px); margin-inline: auto; }
+    }
+
+    @media (max-width: 760px) {
+      :root { --shadow: 5px 5px 0 var(--ink); --radius: 16px; }
+      .section { padding-block: 4.5rem; }
+      .nav-wrap { min-height: 68px; }
+      .menu-toggle { display: grid; }
+      .nav-links {
+        position: fixed;
+        z-index: 99;
+        inset: 69px 0 auto;
+        min-height: calc(100svh - 69px);
+        display: flex;
+        flex-direction: column;
+        align-items: stretch;
+        gap: .45rem;
+        padding: 2rem var(--pad);
+        background: var(--lilac);
+        border-bottom: var(--line);
+        transform: translateX(105%);
+        visibility: hidden;
+        transition: transform .3s ease, visibility .3s;
+      }
+      .nav-links.is-open { transform: none; visibility: visible; }
+      .nav-link { justify-content: start; place-items: center start; padding-inline: 1rem; border-bottom: 1px solid rgba(60, 23, 53, .35); font-size: 1.25rem; }
+      .nav-cta { margin-top: 1rem; }
+      .logo-en { display: none; }
+      .hero h1 { font-size: clamp(4rem, 23vw, 7rem); }
+      .hero-art { min-height: 430px; }
+      .poster { inset: 8% 5% 5%; }
+      .art-note { right: 0; width: 110px; }
+      .services-head { margin-bottom: 2.5rem; }
+      .service-item { grid-template-columns: 48px 1fr 48px; gap: .9rem; padding-block: 1.25rem; }
+      .service-num { grid-column: 1; }
+      .service-item h3 { grid-column: 2; }
+      .service-item p { grid-column: 2 / 4; grid-row: 2; }
+      .service-icon { grid-column: 3; grid-row: 1; }
+      .project-head { align-items: start; flex-direction: column; }
+      .project-card, .project-card:nth-child(n) { grid-column: 1 / -1; }
+      .project-visual { min-height: 360px; }
+      .project-reveal { transform: none; }
+      .steps { grid-template-columns: 1fr; }
+      .step { min-height: 280px; border-left: 0; border-bottom: 2px solid var(--paper-2); }
+      .step:nth-child(n) { border-bottom: 2px solid var(--paper-2); }
+      .step:last-child { border-bottom: 0; }
+      .step h3 { margin-top: 4rem; }
+      .studio-collage { min-height: 430px; }
+      .collage-ticket { width: 58%; }
+      .collage-dot { width: 100px; }
+      .stats { grid-template-columns: 1fr; }
+      .stat { display: flex; align-items: center; justify-content: space-between; border-left: 0; border-bottom: var(--line); }
+      .stat:last-child { border-bottom: 0; }
+      .quote-card { box-shadow: 5px 5px 0 var(--ink); }
+      .footer-grid { grid-template-columns: 1fr auto; }
+      .footer-mark { justify-self: end; }
+      .copyright { grid-column: 1 / -1; justify-self: start; }
+    }
+
+    @media (max-width: 420px) {
+      .hero-art { min-height: 370px; }
+      .hero-actions { align-items: stretch; flex-direction: column; }
+      .hero-actions .button { width: 100%; }
+      .project-visual { min-height: 310px; }
+      .footer-grid { grid-template-columns: 1fr; }
+      .footer-mark, .copyright { justify-self: start; }
+    }
+
+    @media (hover: none) {
+      .project-reveal { transform: none; }
+      .service-item:hover { padding-inline: .5rem; background: transparent; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      html { scroll-behavior: auto; }
+      *, *::before, *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; scroll-behavior: auto !important; }
+      .reveal { opacity: 1; transform: none; }
+      .marquee-track { transform: none; }
+    }
+  </style>
+</head>
+<body>
+  <a class="skip-link" href="#main">پرش به محتوای اصلی</a>
+
+  <header class="site-header">
+    <div class="shell nav-wrap">
+      <a class="logo" href="#top" aria-label="موتیو استودیو، صفحه نخست">
+        <svg class="logo-mark" viewBox="0 0 40 40" aria-hidden="true">
+          <path d="M4 30V10l10 10 6-14 6 14 10-10v20L20 36 4 30Z" fill="#f26f5b" stroke="currentColor" stroke-width="2.5" stroke-linejoin="round"/>
+        </svg>
+        <span>موتیو</span>
+        <span class="logo-en">MOTIVE STUDIO</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="main-nav" aria-label="باز کردن فهرست">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true">
+          <path class="menu-line menu-line--top" d="M4 8h16"/><path class="menu-line menu-line--bottom" d="M4 16h16"/>
+        </svg>
+      </button>
+      <nav id="main-nav" class="nav-links" aria-label="ناوبری اصلی">
+        <a class="nav-link" href="#services">خدمات</a>
+        <a class="nav-link" href="#projects">پروژه‌ها</a>
+        <a class="nav-link" href="#process">مسیر همکاری</a>
+        <a class="nav-link" href="#studio">استودیو</a>
+        <button class="nav-cta js-contact" type="button">شروع یک گفتگو</button>
+      </nav>
+    </div>
+  </header>
+
+  <main id="main">
+    <section id="top" class="hero" aria-labelledby="hero-title">
+      <div class="shell hero-grid">
+        <div class="hero-content">
+          <p class="hero-kicker"><span class="pulse" aria-hidden="true"></span>استودیوی مستقل طراحی و روایت برند</p>
+          <h1 id="hero-title"><span>ایده را</span><span class="outline">به حرکت</span><span>درمی‌آوریم.</span></h1>
+          <p class="hero-copy">برای برندهایی که نمی‌خواهند فقط دیده شوند؛ می‌خواهند در ذهن بمانند، حس بسازند و مسیر تازه‌ای باز کنند.</p>
+          <div class="hero-actions">
+            <a class="button" href="#projects">
+              دیدن پروژه‌ها
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M19 12H5m6-6-6 6 6 6"/></svg>
+            </a>
+            <a class="text-link" href="#services">
+              ما چه کار می‌کنیم؟
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M19 12H5m6-6-6 6 6 6"/></svg>
+            </a>
+          </div>
+        </div>
+        <div class="hero-art" aria-label="ترکیب‌بندی انتزاعی از فرم‌های هندسی رنگی" role="img">
+          <div class="poster">
+            <div class="poster-grid"></div>
+            <div class="sun"></div>
+            <div class="arch"></div>
+            <div class="orbit"></div>
+            <div class="poster-type">MOVE<br>IDEAS</div>
+          </div>
+          <div class="art-note">طراحی با<br>دلیل و<br>شخصیت</div>
+          <div class="art-sticker">تهران / همه‌جا</div>
+        </div>
+      </div>
+    </section>
+
+    <div class="marquee" aria-hidden="true">
+      <div class="marquee-track">
+        <div class="marquee-group"><span>هویت بصری</span><span>استراتژی برند</span><span>تجربه دیجیتال</span><span>کمپین خلاق</span><span>طراحی بسته‌بندی</span></div>
+        <div class="marquee-group"><span>هویت بصری</span><span>استراتژی برند</span><span>تجربه دیجیتال</span><span>کمپین خلاق</span><span>طراحی بسته‌بندی</span></div>
+      </div>
+    </div>
+
+    <section id="services" class="section services" aria-labelledby="services-title">
+      <div class="shell">
+        <div class="services-head reveal">
+          <div>
+            <p class="eyebrow">آنچه می‌سازیم</p>
+            <h2 id="services-title" class="section-title">یک زبان روشن برای ایده‌های بزرگ.</h2>
+          </div>
+          <p class="section-intro">از نخستین پرسش تا آخرین پیکسل، تیم ما تصویر، کلمه و تجربه را در یک مسیر منسجم کنار هم می‌چیند.</p>
+        </div>
+        <div class="service-list">
+          <article class="service-item reveal">
+            <span class="service-num">01</span><h3>راهبرد و هویت برند</h3><p>جایگاه‌یابی، نام‌گذاری، لحن، سیستم نشانه و راهنمای هویت برای یک حضور متمایز.</p>
+            <span class="service-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 19 19 5M8 5h11v11"/></svg></span>
+          </article>
+          <article class="service-item reveal">
+            <span class="service-num">02</span><h3>تجربه و محصول دیجیتال</h3><p>وب‌سایت و محصولی که روایت برند را به یک تجربه روان، انسانی و قابل استفاده تبدیل می‌کند.</p>
+            <span class="service-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 19 19 5M8 5h11v11"/></svg></span>
+          </article>
+          <article class="service-item reveal">
+            <span class="service-num">03</span><h3>کمپین و محتوای خلاق</h3><p>ایده مرکزی، جهت هنری و محتوای چندرسانه‌ای برای کمپین‌هایی که حرف مشخصی دارند.</p>
+            <span class="service-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 19 19 5M8 5h11v11"/></svg></span>
+          </article>
+          <article class="service-item reveal">
+            <span class="service-num">04</span><h3>بسته‌بندی و فضای برند</h3><p>ساخت تجربه‌ای ملموس؛ از قفسه فروشگاه تا جزئیات محیط و نقاط تماس روزمره.</p>
+            <span class="service-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 19 19 5M8 5h11v11"/></svg></span>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <section id="projects" class="section projects" aria-labelledby="projects-title">
+      <div class="shell">
+        <div class="project-head reveal">
+          <div><p class="eyebrow">پروژه‌های منتخب</p><h2 id="projects-title" class="section-title">کارهایی که از قاب بیرون زدند.</h2></div>
+          <span>۱۴۰۱ تا امروز</span>
+        </div>
+        <div class="filters" role="group" aria-label="فیلتر پروژه‌ها">
+          <button class="filter" type="button" data-filter="all" aria-pressed="true">همه</button>
+          <button class="filter" type="button" data-filter="brand" aria-pressed="false">هویت برند</button>
+          <button class="filter" type="button" data-filter="digital" aria-pressed="false">دیجیتال</button>
+          <button class="filter" type="button" data-filter="campaign" aria-pressed="false">کمپین</button>
+          <button class="filter" type="button" data-filter="packaging" aria-pressed="false">بسته‌بندی</button>
+        </div>
+        <p id="filter-status" class="sr-status" aria-live="polite"></p>
+        <div class="project-grid">
+          <article class="project-card reveal" data-category="brand digital">
+            <div class="project-visual" style="--card-bg: var(--lilac)"><div class="project-art art-nava"></div><span class="project-index">01</span><span class="project-reveal">هویت و تجربه دیجیتال <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M19 12H5m6-6-6 6 6 6"/></svg></span></div>
+            <div class="project-info"><div><h3>نوا، صدای تازه شهر</h3><p>هویت برند / طراحی محصول</p></div><span class="project-year">2026</span></div>
+          </article>
+          <article class="project-card reveal" data-category="brand packaging">
+            <div class="project-visual" style="--card-bg: var(--acid)"><div class="project-art art-rooyesh"></div><span class="project-index">02</span><span class="project-reveal">هویت و بسته‌بندی <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M19 12H5m6-6-6 6 6 6"/></svg></span></div>
+            <div class="project-info"><div><h3>رویش، مزه فصل</h3><p>استراتژی / بسته‌بندی</p></div><span class="project-year">2025</span></div>
+          </article>
+          <article class="project-card reveal" data-category="digital">
+            <div class="project-visual" style="--card-bg: var(--ink)"><div class="project-art art-daal"></div><span class="project-index">03</span><span class="project-reveal">محصول دیجیتال <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M19 12H5m6-6-6 6 6 6"/></svg></span></div>
+            <div class="project-info"><div><h3>دال، یک نشانی ساده</h3><p>تجربه کاربر / رابط بصری</p></div><span class="project-year">2025</span></div>
+          </article>
+          <article class="project-card reveal" data-category="brand campaign">
+            <div class="project-visual"><div class="project-art art-kaj"></div><span class="project-index">04</span><span class="project-reveal">برند و کمپین <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M19 12H5m6-6-6 6 6 6"/></svg></span></div>
+            <div class="project-info"><div><h3>کاج، خانه‌ای رو به بیرون</h3><p>هویت / کمپین معرفی</p></div><span class="project-year">2024</span></div>
+          </article>
+          <article class="project-card reveal" data-category="campaign digital">
+            <div class="project-visual"><div class="project-art art-moj"></div><span class="project-index">05</span><span class="project-reveal">کمپین دیجیتال <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M19 12H5m6-6-6 6 6 6"/></svg></span></div>
+            <div class="project-info"><div><h3>موج، نزدیک‌تر از صدا</h3><p>جهت هنری / کمپین</p></div><span class="project-year">2023</span></div>
+          </article>
+          <article class="project-card reveal" data-category="packaging campaign">
+            <div class="project-visual"><div class="project-art art-haft"></div><span class="project-index">06</span><span class="project-reveal">بسته‌بندی و روایت <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M19 12H5m6-6-6 6 6 6"/></svg></span></div>
+            <div class="project-info"><div><h3>هفت، روایت چای ایرانی</h3><p>بسته‌بندی / محتوای برند</p></div><span class="project-year">2022</span></div>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <section id="process" class="section process" aria-labelledby="process-title">
+      <div class="shell">
+        <div class="process-head reveal">
+          <div><p class="eyebrow">مسیر همکاری</p><h2 id="process-title" class="section-title">پرسش درست، ساخت دقیق.</h2></div>
+          <p class="section-intro">فرآیند ما شفاف است، اما خشک نیست. در هر ایستگاه با شما می‌سازیم، می‌سنجیم و جلو می‌رویم.</p>
+        </div>
+        <div class="steps reveal">
+          <article class="step"><span class="step-num">01 / کشف</span><span class="step-shape" aria-hidden="true"></span><h3>گوش می‌دهیم</h3><p>مسئله، مخاطب و زمینه را بدون نسخه از پیش آماده می‌شناسیم.</p></article>
+          <article class="step"><span class="step-num">02 / جهت</span><span class="step-shape" aria-hidden="true"></span><h3>مسیر می‌چینیم</h3><p>بین داده و شهود، یک ایده مرکزی روشن و قابل دفاع پیدا می‌کنیم.</p></article>
+          <article class="step"><span class="step-num">03 / ساخت</span><span class="step-shape" aria-hidden="true"></span><h3>شکل می‌دهیم</h3><p>سیستم بصری و کلامی را در نقاط تماس واقعی امتحان و کامل می‌کنیم.</p></article>
+          <article class="step"><span class="step-num">04 / حرکت</span><span class="step-shape" aria-hidden="true"></span><h3>زنده‌اش می‌کنیم</h3><p>خروجی را تحویل نمی‌دهیم و دور شویم؛ برای اجرای درست همراه می‌مانیم.</p></article>
+        </div>
+      </div>
+    </section>
+
+    <section id="studio" class="section studio" aria-labelledby="studio-title">
+      <div class="shell studio-grid">
+        <div class="studio-collage reveal" aria-label="تصویرسازی انتزاعی از همکاری تیم خلاق" role="img">
+          <div class="collage-main">
+            <svg viewBox="0 0 400 400" aria-hidden="true">
+              <circle cx="200" cy="200" r="142" fill="#f3eadc" stroke="#3c1735" stroke-width="5"/>
+              <path d="M86 235c65-11 66-126 121-129 55-3 32 120 111 136" fill="none" stroke="#3c1735" stroke-width="20" stroke-linecap="round"/>
+              <circle cx="128" cy="153" r="26" fill="#c7b6f2" stroke="#3c1735" stroke-width="5"/>
+              <circle cx="278" cy="153" r="26" fill="#d6df72" stroke="#3c1735" stroke-width="5"/>
+              <path d="M135 282c42 31 93 31 132 0" fill="none" stroke="#3c1735" stroke-width="8" stroke-linecap="round"/>
+            </svg>
+          </div>
+          <div class="collage-ticket">تیم کوچک، کنجکاوی بزرگ، همکاری نزدیک</div>
+          <div class="collage-dot" aria-hidden="true"></div>
+        </div>
+        <div class="studio-copy reveal">
+          <p class="eyebrow">درباره موتیو</p>
+          <h2 id="studio-title" class="section-title">اندازه ما کوچک است؛ دامنه فکرمان نه.</h2>
+          <p class="section-intro">موتیو جمعی از طراحان، نویسندگان و استراتژیست‌هاست. برای هر پروژه، تیم درست را می‌چینیم و مستقیم با تصمیم‌گیرندگان کار می‌کنیم؛ بی‌واسطه، صریح و پرانرژی.</p>
+          <div class="stats" aria-label="آمار استودیو">
+            <div class="stat"><strong>42</strong><span>پروژه به مقصد رسیده</span></div>
+            <div class="stat"><strong>11</strong><span>همکار از رشته‌های مختلف</span></div>
+            <div class="stat"><strong>7</strong><span>سال تجربه جمعی</span></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section quote-section" aria-label="نظر مشتری">
+      <div class="shell">
+        <div class="quote-card reveal">
+          <svg class="quote-mark" viewBox="0 0 64 48" fill="currentColor" aria-hidden="true"><path d="M0 48V28C0 9 11 0 29 0v10c-9 1-13 5-14 12h13v26H0Zm36 0V28C36 9 47 0 64 0v10c-8 1-13 5-14 12h13v26H36Z"/></svg>
+          <blockquote>«موتیو فقط ظاهر برند ما را عوض نکرد؛ کمک کرد بفهمیم چه حرفی داریم و چطور باید آن را شفاف بگوییم.»</blockquote>
+          <div class="quote-by"><span class="quote-avatar">آ.ر</span><span>آرزو رادمنش، هم‌بنیان‌گذار نوا</span></div>
+        </div>
+      </div>
+    </section>
+
+    <section id="contact" class="section contact" aria-labelledby="contact-title">
+      <div class="contact-orbit contact-orbit--one" aria-hidden="true"></div><div class="contact-orbit contact-orbit--two" aria-hidden="true"></div>
+      <div class="shell contact-inner reveal">
+        <p class="eyebrow">یک شروع خوب</p>
+        <h2 id="contact-title" class="section-title">ایده‌ای دارید که آرام نمی‌گیرد؟</h2>
+        <p>از مسئله، زمان‌بندی یا حتی یک فکر نیمه‌کاره برایمان بگویید. گفت‌وگوی اول، کوتاه و بدون تعهد است.</p>
+        <button class="button button--paper js-contact" type="button">
+          شروع کنیم
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M19 12H5m6-6-6 6 6 6"/></svg>
+        </button>
+      </div>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <div class="shell footer-grid">
+      <div class="footer-links"><a href="mailto:hello@motivestudio.local">ایمیل</a><a href="#projects">پروژه‌ها</a><a href="#studio">درباره ما</a></div>
+      <svg class="footer-mark" viewBox="0 0 40 40" aria-label="نشان موتیو" role="img"><path d="M4 30V10l10 10 6-14 6 14 10-10v20L20 36 4 30Z" fill="#f26f5b" stroke="#fff8ef" stroke-width="2.5" stroke-linejoin="round"/></svg>
+      <span class="copyright">موتیو استودیو، ۱۴۰۵. ساخته‌شده با فکر و گفت‌وگو.</span>
+    </div>
+  </footer>
+
+  <dialog id="contact-dialog" aria-labelledby="dialog-title">
+    <div class="dialog-head">
+      <h2 id="dialog-title">از ایده‌تان بگویید</h2>
+      <button class="icon-button js-dialog-close" type="button" aria-label="بستن پنجره">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18"/></svg>
+      </button>
+    </div>
+    <form class="contact-form" id="contact-form">
+      <div class="field"><label for="name">نام شما</label><input id="name" name="name" autocomplete="name" required></div>
+      <div class="field"><label for="email">ایمیل</label><input id="email" name="email" type="email" inputmode="email" autocomplete="email" required></div>
+      <div class="field"><label for="brief">کمی درباره پروژه</label><textarea id="brief" name="brief" required></textarea></div>
+      <p class="form-note">این یک دموی محلی است؛ اطلاعات شما جایی ارسال یا ذخیره نمی‌شود.</p>
+      <button class="button" type="submit">ثبت درخواست گفتگو</button>
+    </form>
+  </dialog>
+
+  <div class="toast" id="toast" role="status" aria-live="polite">درخواست شما در این دمو ثبت شد.</div>
+
+  <script>
+    (() => {
+      const menuButton = document.querySelector('.menu-toggle');
+      const nav = document.querySelector('.nav-links');
+      const dialog = document.getElementById('contact-dialog');
+      const form = document.getElementById('contact-form');
+      const toast = document.getElementById('toast');
+      let toastTimer;
+
+      const closeMenu = () => {
+        nav.classList.remove('is-open');
+        menuButton.setAttribute('aria-expanded', 'false');
+        menuButton.setAttribute('aria-label', 'باز کردن فهرست');
+        document.body.classList.remove('menu-open');
+      };
+
+      menuButton.addEventListener('click', () => {
+        const isOpen = menuButton.getAttribute('aria-expanded') === 'true';
+        if (isOpen) {
+          closeMenu();
+        } else {
+          nav.classList.add('is-open');
+          menuButton.setAttribute('aria-expanded', 'true');
+          menuButton.setAttribute('aria-label', 'بستن فهرست');
+          document.body.classList.add('menu-open');
+        }
+      });
+
+      nav.querySelectorAll('a').forEach((link) => link.addEventListener('click', closeMenu));
+      window.addEventListener('resize', () => { if (window.innerWidth > 760) closeMenu(); });
+      document.addEventListener('keydown', (event) => {
+        if (event.key === 'Escape' && menuButton.getAttribute('aria-expanded') === 'true') {
+          closeMenu();
+          menuButton.focus();
+        }
+      });
+
+      const filters = document.querySelectorAll('.filter');
+      const cards = document.querySelectorAll('.project-card');
+      const filterStatus = document.getElementById('filter-status');
+      filters.forEach((button) => {
+        button.addEventListener('click', () => {
+          const category = button.dataset.filter;
+          let visibleCount = 0;
+          filters.forEach((item) => item.setAttribute('aria-pressed', String(item === button)));
+          cards.forEach((card) => {
+            const matches = category === 'all' || card.dataset.category.split(' ').includes(category);
+            card.hidden = !matches;
+            if (matches) visibleCount += 1;
+          });
+          filterStatus.textContent = `${visibleCount} پروژه نمایش داده می‌شود.`;
+        });
+      });
+
+      document.querySelectorAll('.js-contact').forEach((button) => {
+        button.addEventListener('click', () => {
+          closeMenu();
+          dialog.showModal();
+        });
+      });
+      document.querySelector('.js-dialog-close').addEventListener('click', () => dialog.close());
+      dialog.addEventListener('click', (event) => {
+        const bounds = dialog.getBoundingClientRect();
+        const outside = event.clientX < bounds.left || event.clientX > bounds.right || event.clientY < bounds.top || event.clientY > bounds.bottom;
+        if (outside) dialog.close();
+      });
+      form.addEventListener('submit', (event) => {
+        event.preventDefault();
+        dialog.close();
+        form.reset();
+        toast.classList.add('is-visible');
+        clearTimeout(toastTimer);
+        toastTimer = setTimeout(() => toast.classList.remove('is-visible'), 3600);
+      });
+
+      if ('IntersectionObserver' in window && !window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+        const observer = new IntersectionObserver((entries) => {
+          entries.forEach((entry) => {
+            if (entry.isIntersecting) {
+              entry.target.classList.add('is-visible');
+              observer.unobserve(entry.target);
+            }
+          });
+        }, { threshold: 0.12 });
+        document.querySelectorAll('.reveal').forEach((item) => observer.observe(item));
+      } else {
+        document.querySelectorAll('.reveal').forEach((item) => item.classList.add('is-visible'));
+      }
+    })();
+  </script>
+</body>
+</html>

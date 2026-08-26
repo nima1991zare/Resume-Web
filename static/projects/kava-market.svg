@@ -1,0 +1,38 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 900" role="img" aria-labelledby="title desc">
+  <title id="title">KAVA Market website preview</title>
+  <desc id="desc">A teal and lime hospitality marketplace interface.</desc>
+  <rect width="1440" height="900" fill="#eef4ef"/>
+  <rect x="38" y="30" width="1364" height="76" rx="24" fill="#123c35"/>
+  <text x="78" y="80" fill="#d8ff72" font-family="Arial, sans-serif" font-size="32" font-weight="800">KAVA</text>
+  <text x="214" y="78" fill="#b8cbc6" font-family="Arial, sans-serif" font-size="15">MARKET</text>
+  <text x="850" y="76" fill="#eef4ef" font-family="Arial, sans-serif" font-size="15">CATALOG</text>
+  <text x="968" y="76" fill="#eef4ef" font-family="Arial, sans-serif" font-size="15">SERVICES</text>
+  <text x="1086" y="76" fill="#eef4ef" font-family="Arial, sans-serif" font-size="15">ORDERS</text>
+  <rect x="1210" y="46" width="162" height="44" rx="22" fill="#56e39f"/>
+  <text x="1253" y="74" fill="#062319" font-family="Arial, sans-serif" font-size="14" font-weight="700">MY CART  04</text>
+  <rect x="38" y="132" width="910" height="442" rx="34" fill="#123c35"/>
+  <circle cx="824" cy="232" r="118" fill="#1c5148"/>
+  <circle cx="824" cy="232" r="76" fill="#56e39f" opacity=".22"/>
+  <path d="M764 370c34-88 103-88 137 0-28 26-109 26-137 0Z" fill="#d8ff72"/>
+  <text x="88" y="230" fill="#56e39f" font-family="Arial, sans-serif" font-size="16" font-weight="700" letter-spacing="3">SUPPLY, SIMPLIFIED</text>
+  <text x="88" y="305" fill="#ffffff" font-family="Arial, sans-serif" font-size="67" font-weight="800">EVERYTHING YOUR</text>
+  <text x="88" y="378" fill="#ffffff" font-family="Arial, sans-serif" font-size="67" font-weight="800">CAFE NEEDS.</text>
+  <text x="88" y="434" fill="#b8cbc6" font-family="Arial, sans-serif" font-size="18">Beans, equipment and essentials in one reliable place.</text>
+  <rect x="88" y="480" width="178" height="52" rx="26" fill="#d8ff72"/>
+  <text x="131" y="512" fill="#123c35" font-family="Arial, sans-serif" font-size="15" font-weight="700">SHOP SUPPLIES</text>
+  <rect x="972" y="132" width="430" height="205" rx="32" fill="#56e39f"/>
+  <text x="1012" y="186" fill="#123c35" font-family="Arial, sans-serif" font-size="15" font-weight="700">THIS WEEK</text>
+  <text x="1012" y="246" fill="#123c35" font-family="Arial, sans-serif" font-size="42" font-weight="800">FRESH ARRIVALS</text>
+  <text x="1012" y="286" fill="#1c5148" font-family="Arial, sans-serif" font-size="16">12 new single-origin lots</text>
+  <rect x="972" y="361" width="430" height="213" rx="32" fill="#d8ff72"/>
+  <text x="1012" y="416" fill="#123c35" font-family="Arial, sans-serif" font-size="15" font-weight="700">ROAST ON DEMAND</text>
+  <text x="1012" y="477" fill="#123c35" font-family="Arial, sans-serif" font-size="38" font-weight="800">YOUR PROFILE.</text>
+  <text x="1012" y="520" fill="#1c5148" font-family="Arial, sans-serif" font-size="16">Built for your menu and machine.</text>
+  <text x="38" y="648" fill="#123c35" font-family="Arial, sans-serif" font-size="30" font-weight="800">Browse the essentials</text>
+  <g font-family="Arial, sans-serif" font-size="18" font-weight="700" fill="#123c35">
+    <rect x="38" y="680" width="316" height="160" rx="28" fill="#ffffff"/><text x="78" y="780">COFFEE BEANS</text>
+    <rect x="378" y="680" width="316" height="160" rx="28" fill="#d8ff72"/><text x="418" y="780">EQUIPMENT</text>
+    <rect x="718" y="680" width="316" height="160" rx="28" fill="#ffffff"/><text x="758" y="780">PACKAGING</text>
+    <rect x="1058" y="680" width="344" height="160" rx="28" fill="#56e39f"/><text x="1098" y="780">INGREDIENTS</text>
+  </g>
+</svg>

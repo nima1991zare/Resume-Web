@@ -307,6 +307,63 @@ main { position: relative; z-index: 10; }
 .vcard-demo-only .vfoot-demo { justify-content: flex-start; margin-top: 0; }
 .vcard-demo-only .vfoot-demo .btn { min-width: 132px; }
 
+/* Website cards borrow a small accent from each project's own identity. */
+#websites-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 26px; }
+.website-card {
+  --site-accent: var(--acc-3);
+  --site-secondary: #A7D8F5;
+  --site-button-text: #04111C;
+  background:
+    radial-gradient(circle at 100% 100%, color-mix(in srgb, var(--site-accent) 12%, transparent), transparent 42%),
+    rgba(8, 13, 26, 0.72);
+  border-color: color-mix(in srgb, var(--site-accent) 24%, var(--line));
+}
+.website-card::before {
+  content: ""; position: absolute; z-index: 2; inset-inline: 22px; top: 0; height: 3px;
+  background: linear-gradient(90deg, var(--site-accent), var(--site-secondary));
+  border-radius: 0 0 999px 999px;
+  box-shadow: 0 0 22px color-mix(in srgb, var(--site-accent) 42%, transparent);
+}
+.website-card:hover {
+  border-color: color-mix(in srgb, var(--site-accent) 62%, transparent);
+  box-shadow: 0 26px 65px rgba(0, 0, 0, 0.48), 0 0 34px color-mix(in srgb, var(--site-accent) 10%, transparent);
+}
+.website-card .vcard-media { border-bottom: 1px solid color-mix(in srgb, var(--site-accent) 22%, transparent); }
+.website-card .vcard-media::after {
+  content: ""; position: absolute; inset: 0; pointer-events: none;
+  background: linear-gradient(to top, color-mix(in srgb, var(--site-accent) 16%, transparent), transparent 40%);
+  opacity: 0.38; transition: opacity 0.4s;
+}
+.website-card:hover .vcard-media::after { opacity: 0.12; }
+.website-card .vcard-index {
+  z-index: 1; color: var(--fg); background: rgba(5, 8, 16, 0.76);
+  border: 1px solid color-mix(in srgb, var(--site-accent) 48%, transparent);
+  border-radius: 999px; padding: 4px 9px; backdrop-filter: blur(8px);
+}
+.website-card .vcard-body h3 { display: flex; align-items: center; gap: 10px; }
+.website-card .vcard-body h3::before {
+  content: ""; width: 9px; height: 9px; flex: 0 0 9px; border-radius: 50%;
+  background: var(--site-accent); box-shadow: 0 0 14px color-mix(in srgb, var(--site-accent) 70%, transparent);
+}
+.website-card .vtech span {
+  color: var(--site-accent); border-color: color-mix(in srgb, var(--site-accent) 44%, transparent);
+  background: color-mix(in srgb, var(--site-accent) 7%, transparent);
+}
+.website-card .vfoot .btn { border-color: color-mix(in srgb, var(--site-accent) 45%, transparent); }
+.website-card .vfoot .btn:hover { color: var(--site-accent); border-color: var(--site-accent); }
+.website-card .vfoot .btn:first-of-type {
+  color: var(--site-button-text); background: var(--site-accent); border-color: var(--site-accent);
+}
+.website-card .vfoot .btn:first-of-type:hover {
+  color: var(--site-button-text);
+  box-shadow: 0 0 25px color-mix(in srgb, var(--site-accent) 32%, transparent);
+}
+
+.website-kava { --site-accent: #56E39F; --site-secondary: #D8FF72; --site-button-text: #062319; }
+.website-motive { --site-accent: #FF7A74; --site-secondary: #C8A7FF; --site-button-text: #291012; }
+.website-serein { --site-accent: #B6D56A; --site-secondary: #F5E7C6; --site-button-text: #17200B; }
+.website-rova { --site-accent: #FF8E72; --site-secondary: #FFC9A8; --site-button-text: #32120D; }
+
 /* ---------------- brands ---------------- */
 .orbit-brands { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 22px; }
 .orbit-brands .brand {
@@ -472,6 +529,7 @@ h3 a:hover { color: var(--acc-0); }
   .stage { padding-block: 12vh; }
   .mega-line.outline { -webkit-text-stroke: 1px rgba(244, 247, 251, 0.65); }
   .orbit-brands { grid-template-columns: 1fr; }
+  #websites-grid { grid-template-columns: 1fr; }
 }
 @media (max-width: 430px) {
   .hero-actions .btn { width: 100%; }

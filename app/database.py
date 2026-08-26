@@ -225,21 +225,33 @@ FEATURED_BOTS = [
 ]
 
 FEATURED_WEBSITES = [
-    ("Depoti", "دیپوتی", "", "", "/static/projects/depoti-site.png", "", "",
-     "https://depoti.ir/", 0, "IRT", 1, 10),
-    ("Weenk Creative Studio", "استودیو وینک", "", "", "/static/projects/weenk-site.png", "", "",
-     "https://weenk.ir/", 0, "IRT", 1, 11),
-    ("ORO Coffee", "قهوه ارو", "", "", "/static/projects/oro-site.png", "", "",
-     "https://orocoffee.ir/", 0, "IRT", 1, 12),
-    ("Coffeete", "کافیته", "", "", "/static/projects/coffete-site.png", "", "",
-     "/static/demos/coffete/index.html", 0, "IRT", 1, 13),
+    ("KAVA Market", "کاوا مارکت",
+     "A streamlined hospitality marketplace for sourcing beans, ingredients, packaging and cafe equipment. Fast category browsing, smart search, delivery planning and order tracking keep daily purchasing simple.",
+     "مارکت‌پلیس یکپارچه برای تأمین دانه قهوه، مواد اولیه، بسته‌بندی و تجهیزات کافه. دسته‌بندی سریع، جستجوی هوشمند، برنامه‌ریزی ارسال و پیگیری سفارش، خرید روزانه را ساده می‌کند.",
+     "/static/projects/kava-market.svg", "", "HTML · CSS · JavaScript · RTL",
+     "/static/demos/kava-market/index.html", 0, "IRT", 0, 10),
+    ("Motive Studio", "استودیو موتیو",
+     "An expressive portfolio for a multidisciplinary creative studio. A playful modular layout brings together brand strategy, campaigns, digital design, selected work and a clear collaboration process.",
+     "پورتفولیوی پویا برای یک استودیوی خلاق چندتخصصی. چیدمان ماژولار و بازیگوش، استراتژی برند، کمپین‌ها، طراحی دیجیتال، پروژه‌های منتخب و فرایند همکاری را کنار هم قرار می‌دهد.",
+     "/static/projects/motive-studio.svg", "", "HTML · CSS · JavaScript · RTL",
+     "/static/demos/motive-studio/index.html", 0, "IRT", 0, 11),
+    ("Serein Coffee", "قهوه سرین",
+     "An editorial storefront for a small-batch coffee roaster, pairing origin stories and tasting notes with a calm shopping flow. The warm, tactile interface stays focused from discovery to checkout.",
+     "فروشگاهی با حال‌وهوای ادیتوریال برای قهوه‌های رست محدود که داستان خاستگاه و نت‌های طعمی را با خریدی آرام و روان ترکیب می‌کند. رابط گرم و ملموس از کشف محصول تا پرداخت متمرکز باقی می‌ماند.",
+     "/static/projects/serein-coffee.svg", "", "HTML · CSS · JavaScript · RTL",
+     "/static/demos/serein-coffee/index.html", 0, "IRT", 0, 12),
+    ("ROVA Coffee", "قهوه رووا",
+     "A modern coffee shop with guided product discovery for beans, brewers and accessories. Useful filters, brew recommendations, account tools and a persistent offline-ready cart support confident purchases.",
+     "فروشگاه مدرن قهوه با مسیر انتخاب راهنما برای دانه‌ها، ابزارهای دم‌آوری و لوازم جانبی. فیلترهای کاربردی، پیشنهاد دم‌آوری، ابزارهای حساب کاربری و سبد خرید آفلاین، انتخاب مطمئن‌تری می‌سازند.",
+     "/static/projects/rova-coffee.svg", "", "HTML · CSS · JavaScript · PWA · RTL",
+     "/static/demos/rova-coffee/index.html", 0, "IRT", 0, 13),
 ]
 
 FEATURED_BRANDS = [
     ("Depoti", "/static/projects/depoti-site.png", "https://depoti.ir/", 1),
     ("Weenk.ir", "/static/projects/weenk-site.png", "https://weenk.ir/", 2),
     ("ORO Coffee", "/static/projects/oro-site.png", "https://orocoffee.ir/", 3),
-    ("Coffeete", "/static/projects/coffete-site.png", "/static/demos/coffete/index.html", 4),
+    ("Coffite", "/static/projects/coffete-site.png", "https://coffite.ir/", 4),
 ]
 
 SEED_BRANDS = []
@@ -260,6 +272,12 @@ def init_db() -> None:
         if "demo_only" not in website_cols_existing:
             conn.execute(
                 "ALTER TABLE websites ADD COLUMN demo_only INTEGER NOT NULL DEFAULT 0")
+        # Preserve existing row IDs when portfolio samples are renamed.
+        conn.execute("UPDATE websites SET title_en='KAVA Market' WHERE title_en='Depoti'")
+        conn.execute("UPDATE websites SET title_en='Motive Studio' WHERE title_en='Weenk Creative Studio'")
+        conn.execute("UPDATE websites SET title_en='Serein Coffee' WHERE title_en='ORO Coffee'")
+        conn.execute("UPDATE websites SET title_en='ROVA Coffee' WHERE title_en IN ('Coffeete','Coffite')")
+        conn.execute("UPDATE brands SET name='Coffite' WHERE name='Coffeete'")
         # settings seed (only insert missing keys)
         for k, v in DEFAULT_SETTINGS.items():
             conn.execute("INSERT OR IGNORE INTO settings(key, value) VALUES(?, ?)", (k, v))

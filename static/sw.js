@@ -1,15 +1,14 @@
 ﻿/* Service worker
    - fonts/icons/uploads (immutable): cache-first
-   - CSS/JS: stale-while-revalidate (instant load, silently refreshed â€”
-     code updates always arrive by the next visit, never stuck stale)
+   - CSS/JS: network-first so portfolio updates are visible immediately
    - pages: network-first with offline fallback
    - API and the entire admin panel: NEVER touched by this worker */
-var CACHE = "nima-v17";
+var CACHE = "nima-v20";
 var PRECACHE = [
   "/",
   "/static/css/fonts.css",
-  "/static/css/style.css",
-  "/static/js/app.js",
+  "/static/css/style.css?v=20",
+  "/static/js/app.js?v=20",
   "/static/js/i18n.js",
   "/static/js/morph.js",
   "/static/fonts/spacegrotesk_v22_V8mDoQDjQSkFtoMM3T6r8E7mPbF4Cw.woff2",
@@ -72,17 +71,14 @@ self.addEventListener("fetch", function (e) {
     return;
   }
 
-  // CSS/JS/manifest: stale-while-revalidate
+  // Versioned application assets: network-first with an offline fallback.
   if (url.pathname.startsWith("/static/") || url.pathname === "/manifest.json") {
     e.respondWith(
       caches.open(CACHE).then(function (c) {
-        return c.match(e.request).then(function (hit) {
-          var refresh = fetch(e.request).then(function (res) {
-            if (res.ok) c.put(e.request, res.clone());
-            return res;
-          }).catch(function () { return hit; });
-          return hit || refresh;
-        });
+        return fetch(e.request).then(function (res) {
+          if (res.ok) c.put(e.request, res.clone());
+          return res;
+        }).catch(function () { return c.match(e.request); });
       })
     );
     return;

@@ -142,6 +142,8 @@ async def security_middleware(request: Request, call_next):
             CSP_DEMOS if path.startswith("/static/demos/") else CSP)
     if path.startswith("/api/") or path == "/admin":
         response.headers["Cache-Control"] = "no-store"
+    elif path == "/sw.js" or "text/html" in ct:
+        response.headers["Cache-Control"] = "no-cache"
     elif path.startswith("/static/demos/"):
         response.headers["X-Robots-Tag"] = "noindex, nofollow"
     elif path in ("/static/js/admin.js", "/static/css/admin.css"):

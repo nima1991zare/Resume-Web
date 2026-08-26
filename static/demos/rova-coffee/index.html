@@ -1,0 +1,958 @@
+<!doctype html>
+<html lang="fa" dir="rtl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#f7eee6">
+  <meta name="description" content="فروشگاه قهوه رووا؛ قهوه تازه، ابزار دم‌آوری و انتخاب هوشمند بر اساس ذائقه شما.">
+  <title>رووا | قهوه برای ریتم هر روز</title>
+  <style>
+    :root {
+      --paper: #fffaf5;
+      --cream: #f7eee6;
+      --peach: #f5c9ad;
+      --peach-light: #fde4d4;
+      --terra: #bd5b40;
+      --terra-dark: #97432f;
+      --wine: #651f31;
+      --wine-dark: #45131f;
+      --ink: #301c18;
+      --muted: #725d56;
+      --line: #e8d5c9;
+      --white: #ffffff;
+      --green: #315d4c;
+      --shadow: 0 18px 50px rgba(83, 37, 29, .1);
+      --shadow-soft: 0 8px 28px rgba(83, 37, 29, .08);
+      --radius-sm: 14px;
+      --radius-md: 22px;
+      --radius-lg: 34px;
+      --container: 1200px;
+      --ease: 220ms ease;
+    }
+
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; scroll-padding-top: 130px; }
+    body {
+      margin: 0;
+      overflow-x: hidden;
+      color: var(--ink);
+      background: var(--paper);
+      font-family: Tahoma, Arial, sans-serif;
+      font-size: 16px;
+      line-height: 1.7;
+    }
+    body.menu-open { overflow: hidden; }
+    button, input { font: inherit; }
+    button, a { -webkit-tap-highlight-color: transparent; }
+    button { cursor: pointer; }
+    a { color: inherit; text-decoration: none; }
+    img, svg { display: block; max-width: 100%; }
+    h1, h2, h3, p { margin-top: 0; }
+    h1, h2, h3 { line-height: 1.35; }
+    [hidden] { display: none !important; }
+
+    :focus-visible {
+      outline: 3px solid #1b6f78;
+      outline-offset: 3px;
+    }
+
+    .skip-link {
+      position: fixed;
+      z-index: 1000;
+      top: 10px;
+      right: 10px;
+      padding: 10px 16px;
+      color: var(--white);
+      background: var(--wine);
+      border-radius: 10px;
+      transform: translateY(-160%);
+    }
+    .skip-link:focus { transform: translateY(0); }
+    .container { width: min(var(--container), calc(100% - 40px)); margin-inline: auto; }
+    .eyebrow {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 12px;
+      color: var(--terra-dark);
+      font-size: .84rem;
+      font-weight: 800;
+      letter-spacing: .02em;
+    }
+    .eyebrow::before { width: 22px; height: 2px; content: ""; background: currentColor; }
+    .section { padding-block: 88px; }
+    .section-head {
+      display: flex;
+      align-items: end;
+      justify-content: space-between;
+      gap: 24px;
+      margin-bottom: 30px;
+    }
+    .section-head h2 { max-width: 620px; margin-bottom: 0; font-size: clamp(1.75rem, 4vw, 2.7rem); }
+    .section-head p { max-width: 500px; margin: 0; color: var(--muted); }
+    .icon { width: 22px; height: 22px; flex: 0 0 auto; }
+
+    .announcement {
+      min-height: 38px;
+      display: grid;
+      place-items: center;
+      padding: 7px 20px;
+      color: var(--white);
+      background: var(--wine);
+      text-align: center;
+      font-size: .82rem;
+      font-weight: 700;
+    }
+    .site-header {
+      position: sticky;
+      z-index: 100;
+      top: 0;
+      border-bottom: 1px solid rgba(101, 31, 49, .1);
+      background: rgba(255, 250, 245, .94);
+      backdrop-filter: blur(15px);
+    }
+    .header-row {
+      min-height: 78px;
+      display: grid;
+      grid-template-columns: auto minmax(260px, 1fr) auto;
+      align-items: center;
+      gap: 24px;
+    }
+    .brand { min-height: 48px; display: inline-flex; align-items: center; gap: 10px; font-weight: 900; }
+    .brand-mark { width: 42px; height: 42px; color: var(--wine); }
+    .brand-name { display: flex; flex-direction: column; line-height: 1.05; }
+    .brand-name strong { font-size: 1.2rem; letter-spacing: .04em; }
+    .brand-name span { margin-top: 5px; color: var(--terra-dark); font-size: .65rem; font-weight: 700; }
+    .desktop-nav { display: flex; align-items: center; justify-content: center; gap: 4px; }
+    .desktop-nav a { min-height: 44px; display: inline-flex; align-items: center; padding: 8px 13px; border-radius: 12px; font-size: .9rem; font-weight: 700; }
+    .desktop-nav a:hover { color: var(--terra-dark); background: var(--peach-light); }
+    .header-actions { display: flex; align-items: center; gap: 8px; }
+    .search-wrap { position: relative; }
+    .search-box {
+      width: 230px;
+      height: 46px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding-inline: 13px;
+      border: 1px solid var(--line);
+      border-radius: 15px;
+      background: var(--white);
+      transition: border-color var(--ease), box-shadow var(--ease), width var(--ease);
+    }
+    .search-box:focus-within { width: 270px; border-color: var(--terra); box-shadow: 0 0 0 4px rgba(189, 91, 64, .12); }
+    .search-box input { min-width: 0; width: 100%; color: var(--ink); border: 0; outline: 0; background: transparent; }
+    .search-box input::placeholder { color: #8b756d; }
+    .icon-btn {
+      position: relative;
+      width: 46px;
+      height: 46px;
+      display: inline-grid;
+      place-items: center;
+      color: var(--ink);
+      border: 1px solid var(--line);
+      border-radius: 15px;
+      background: var(--white);
+      transition: color var(--ease), border-color var(--ease), background var(--ease);
+    }
+    .icon-btn:hover { color: var(--terra-dark); border-color: var(--terra); background: var(--peach-light); }
+    .cart-count {
+      position: absolute;
+      top: -7px;
+      left: -7px;
+      min-width: 22px;
+      height: 22px;
+      display: grid;
+      place-items: center;
+      padding-inline: 5px;
+      color: var(--white);
+      background: var(--terra-dark);
+      border: 2px solid var(--paper);
+      border-radius: 99px;
+      font: 700 .7rem Arial, sans-serif;
+    }
+    .menu-btn { display: none; }
+
+    .mobile-panel, .menu-backdrop { display: none; }
+
+    .hero { position: relative; padding-block: 56px 72px; overflow: hidden; }
+    .hero::before {
+      position: absolute;
+      z-index: -1;
+      top: -170px;
+      left: -120px;
+      width: 530px;
+      height: 530px;
+      content: "";
+      border-radius: 50%;
+      background: var(--peach-light);
+      opacity: .7;
+    }
+    .hero-grid { display: grid; grid-template-columns: minmax(0, 1.05fr) minmax(420px, .95fr); align-items: center; gap: 60px; }
+    .hero-copy h1 { max-width: 680px; margin-bottom: 22px; font-size: clamp(2.6rem, 6vw, 5.2rem); letter-spacing: -.045em; }
+    .hero-copy h1 span { position: relative; display: inline-block; color: var(--terra-dark); }
+    .hero-copy h1 span::after {
+      position: absolute;
+      z-index: -1;
+      right: -5px;
+      bottom: 6px;
+      width: calc(100% + 10px);
+      height: 18px;
+      content: "";
+      background: var(--peach);
+      border-radius: 99px 20px 99px 20px;
+      opacity: .7;
+    }
+    .hero-copy > p { max-width: 600px; margin-bottom: 28px; color: var(--muted); font-size: 1.08rem; }
+    .hero-actions { display: flex; flex-wrap: wrap; gap: 12px; }
+    .btn {
+      min-height: 48px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 9px;
+      padding: 11px 20px;
+      border: 1px solid transparent;
+      border-radius: 15px;
+      font-weight: 800;
+      transition: color var(--ease), background var(--ease), border-color var(--ease), box-shadow var(--ease), transform var(--ease);
+    }
+    .btn:hover { transform: translateY(-2px); }
+    .btn-primary { color: var(--white); background: var(--wine); box-shadow: 0 8px 20px rgba(101, 31, 49, .18); }
+    .btn-primary:hover { background: var(--wine-dark); box-shadow: 0 12px 24px rgba(101, 31, 49, .24); }
+    .btn-secondary { color: var(--wine); border-color: var(--line); background: var(--white); }
+    .btn-secondary:hover { border-color: var(--peach); background: var(--peach-light); }
+    .hero-note { display: flex; align-items: center; gap: 12px; margin-top: 30px; color: var(--muted); font-size: .84rem; }
+    .avatar-stack { display: flex; direction: ltr; }
+    .avatar-stack span { width: 34px; height: 34px; display: grid; place-items: center; margin-right: -9px; color: var(--white); border: 2px solid var(--paper); border-radius: 50%; background: var(--terra); font-size: .68rem; font-weight: 800; }
+    .avatar-stack span:nth-child(2) { background: var(--wine); }
+    .avatar-stack span:nth-child(3) { background: var(--green); }
+
+    .quiz-shell { position: relative; min-height: 540px; display: grid; place-items: center; }
+    .hero-orbit { position: absolute; inset: 3% 5%; color: var(--peach); opacity: .65; }
+    .quiz-card {
+      position: relative;
+      z-index: 2;
+      width: min(100%, 440px);
+      padding: 28px;
+      border: 1px solid rgba(101, 31, 49, .1);
+      border-radius: var(--radius-lg);
+      background: rgba(255, 255, 255, .94);
+      box-shadow: var(--shadow);
+    }
+    .quiz-card::before {
+      position: absolute;
+      top: -20px;
+      left: 34px;
+      width: 70px;
+      height: 70px;
+      content: "";
+      border-radius: 50% 50% 48% 52%;
+      background: var(--terra);
+      box-shadow: inset -12px -10px 0 rgba(101, 31, 49, .16);
+      transform: rotate(-15deg);
+    }
+    .quiz-card::after {
+      position: absolute;
+      top: -5px;
+      left: 67px;
+      width: 7px;
+      height: 44px;
+      content: "";
+      border-radius: 50%;
+      background: rgba(69, 19, 31, .45);
+      transform: rotate(34deg);
+    }
+    .quiz-kicker { color: var(--terra-dark); font-size: .78rem; font-weight: 900; }
+    .quiz-card h2 { max-width: 300px; margin: 4px 0 8px; font-size: 1.55rem; }
+    .quiz-intro { margin-bottom: 20px; color: var(--muted); font-size: .9rem; }
+    .quiz-group { margin: 0 0 18px; padding: 0; border: 0; }
+    .quiz-group legend { margin-bottom: 8px; font-size: .88rem; font-weight: 800; }
+    .choice-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+    .choice { position: relative; min-width: 0; }
+    .choice input { position: absolute; width: 1px; height: 1px; opacity: 0; }
+    .choice span {
+      min-height: 48px;
+      display: grid;
+      place-items: center;
+      padding: 7px 8px;
+      border: 1px solid var(--line);
+      border-radius: 13px;
+      background: var(--paper);
+      text-align: center;
+      font-size: .8rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: border-color var(--ease), background var(--ease), color var(--ease);
+    }
+    .choice input:checked + span { color: var(--wine); border-color: var(--terra); background: var(--peach-light); box-shadow: inset 0 0 0 1px var(--terra); }
+    .choice input:focus-visible + span { outline: 3px solid #1b6f78; outline-offset: 2px; }
+    .quiz-submit { width: 100%; margin-top: 2px; }
+    .quiz-result { margin-top: 15px; padding: 14px; color: var(--wine); border-radius: 13px; background: var(--peach-light); font-size: .86rem; font-weight: 700; }
+
+    .trust-strip { border-block: 1px solid var(--line); background: var(--cream); }
+    .trust-grid { min-height: 92px; display: grid; grid-template-columns: repeat(4, 1fr); align-items: center; }
+    .trust-item { min-height: 48px; display: flex; align-items: center; justify-content: center; gap: 10px; padding-inline: 18px; border-left: 1px solid var(--line); font-size: .84rem; font-weight: 800; }
+    .trust-item:last-child { border-left: 0; }
+    .trust-item .icon { color: var(--terra-dark); }
+
+    .category-bar { display: flex; gap: 10px; overflow-x: auto; padding: 4px 2px 12px; scrollbar-width: thin; }
+    .category-btn {
+      min-height: 46px;
+      flex: 0 0 auto;
+      padding: 9px 18px;
+      color: var(--muted);
+      border: 1px solid var(--line);
+      border-radius: 99px;
+      background: var(--white);
+      font-weight: 800;
+      transition: color var(--ease), border-color var(--ease), background var(--ease);
+    }
+    .category-btn:hover { color: var(--wine); border-color: var(--peach); background: var(--peach-light); }
+    .category-btn[aria-pressed="true"] { color: var(--white); border-color: var(--wine); background: var(--wine); }
+    .products-status { min-height: 28px; margin: 12px 0 18px; color: var(--muted); font-size: .86rem; }
+    .product-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
+    .product-card {
+      min-width: 0;
+      overflow: hidden;
+      border: 1px solid var(--line);
+      border-radius: var(--radius-md);
+      background: var(--white);
+      box-shadow: var(--shadow-soft);
+      transition: border-color var(--ease), box-shadow var(--ease), transform var(--ease);
+    }
+    .product-card:hover { border-color: var(--peach); box-shadow: var(--shadow); transform: translateY(-4px); }
+    .product-art { position: relative; height: 245px; display: grid; place-items: center; overflow: hidden; background: var(--cream); }
+    .product-art::before, .product-art::after { position: absolute; content: ""; border-radius: 50%; }
+    .product-art::before { top: -55px; right: -40px; width: 180px; height: 180px; background: var(--peach); opacity: .42; }
+    .product-art::after { bottom: -70px; left: -35px; width: 165px; height: 165px; border: 35px solid rgba(101, 31, 49, .08); }
+    .product-art svg { z-index: 1; width: 170px; height: 190px; filter: drop-shadow(0 18px 16px rgba(69, 19, 31, .16)); transition: transform var(--ease); }
+    .product-card:hover .product-art svg { transform: rotate(1deg) scale(1.03); }
+    .product-art.tool { background: #f5ddd0; }
+    .product-art.cold { background: #e2ece8; }
+    .product-badge { position: absolute; z-index: 2; top: 14px; right: 14px; padding: 5px 10px; color: var(--wine); border-radius: 99px; background: rgba(255, 250, 245, .9); font-size: .7rem; font-weight: 900; }
+    .product-body { padding: 20px; }
+    .product-meta { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 7px; color: var(--terra-dark); font-size: .72rem; font-weight: 800; }
+    .roast-dots { display: flex; gap: 3px; direction: ltr; }
+    .roast-dots i { width: 7px; height: 7px; border: 1px solid var(--terra); border-radius: 50%; background: transparent; }
+    .roast-dots i.on { background: var(--terra); }
+    .product-card h3 { margin-bottom: 6px; font-size: 1.15rem; }
+    .product-desc { min-height: 52px; margin-bottom: 16px; color: var(--muted); font-size: .83rem; }
+    .product-bottom { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+    .price { display: flex; flex-direction: column; line-height: 1.3; }
+    .price strong { font-size: 1.08rem; }
+    .price span { color: var(--muted); font-size: .68rem; }
+    .add-btn { min-width: 112px; padding-inline: 14px; }
+    .empty-state { grid-column: 1 / -1; padding: 55px 20px; border: 1px dashed var(--line); border-radius: var(--radius-md); background: var(--cream); text-align: center; }
+    .empty-state h3 { margin-bottom: 6px; }
+    .empty-state p { margin: 0; color: var(--muted); }
+
+    .guide-section { position: relative; background: var(--wine); color: var(--white); overflow: hidden; }
+    .guide-section::before { position: absolute; top: -200px; right: -180px; width: 460px; height: 460px; content: ""; border: 75px solid rgba(245, 201, 173, .09); border-radius: 50%; }
+    .guide-section .eyebrow { color: var(--peach); }
+    .guide-section .section-head p { color: #e8cec5; }
+    .guide-grid { position: relative; display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; counter-reset: steps; }
+    .guide-card { position: relative; min-height: 250px; padding: 25px; border: 1px solid rgba(255, 255, 255, .16); border-radius: var(--radius-md); background: rgba(255, 255, 255, .07); counter-increment: steps; }
+    .guide-card::before { content: "۰" counter(steps); display: block; margin-bottom: 30px; color: var(--peach); font: 900 2.4rem Arial, sans-serif; opacity: .55; }
+    .guide-card .icon { width: 30px; height: 30px; margin-bottom: 15px; color: var(--peach); }
+    .guide-card h3 { margin-bottom: 8px; font-size: 1rem; }
+    .guide-card p { margin-bottom: 0; color: #e8cec5; font-size: .82rem; }
+
+    .benefits-grid { display: grid; grid-template-columns: .9fr 1.1fr; align-items: center; gap: 70px; }
+    .benefit-visual { position: relative; min-height: 520px; display: grid; place-items: center; border-radius: var(--radius-lg); background: var(--peach-light); overflow: hidden; }
+    .benefit-visual::before { position: absolute; width: 370px; height: 370px; content: ""; border: 55px solid rgba(189, 91, 64, .15); border-radius: 50%; }
+    .benefit-visual svg { position: relative; z-index: 1; width: min(78%, 340px); filter: drop-shadow(0 25px 22px rgba(83, 37, 29, .16)); }
+    .origin-label { position: absolute; z-index: 2; right: 24px; bottom: 24px; max-width: 230px; padding: 15px 18px; color: var(--white); border-radius: 16px; background: var(--wine); box-shadow: var(--shadow); font-size: .78rem; font-weight: 800; }
+    .benefits-copy h2 { margin-bottom: 16px; font-size: clamp(1.8rem, 4vw, 2.8rem); }
+    .benefits-copy > p { margin-bottom: 28px; color: var(--muted); }
+    .benefit-list { display: grid; gap: 12px; margin: 0; padding: 0; list-style: none; }
+    .benefit-item { display: grid; grid-template-columns: 48px 1fr; gap: 13px; padding: 15px; border: 1px solid var(--line); border-radius: 17px; background: var(--white); }
+    .benefit-icon { width: 48px; height: 48px; display: grid; place-items: center; color: var(--terra-dark); border-radius: 14px; background: var(--peach-light); }
+    .benefit-item h3 { margin-bottom: 3px; font-size: .95rem; }
+    .benefit-item p { margin: 0; color: var(--muted); font-size: .8rem; }
+
+    .subscription { padding-bottom: 88px; }
+    .subscription-card { position: relative; display: grid; grid-template-columns: 1.1fr .9fr; align-items: center; gap: 45px; min-height: 390px; padding: clamp(30px, 6vw, 70px); color: var(--white); border-radius: var(--radius-lg); background: var(--terra-dark); overflow: hidden; }
+    .subscription-card::before { position: absolute; top: -100px; left: -70px; width: 330px; height: 330px; content: ""; border: 55px solid rgba(253, 228, 212, .14); border-radius: 50%; }
+    .subscription-copy { position: relative; z-index: 2; }
+    .subscription-copy .eyebrow { color: var(--peach-light); }
+    .subscription-copy h2 { max-width: 650px; margin-bottom: 14px; font-size: clamp(2rem, 4.5vw, 3.4rem); }
+    .subscription-copy p { max-width: 590px; margin-bottom: 25px; color: #ffe5d7; }
+    .subscription-perks { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 26px; }
+    .subscription-perks span { padding: 6px 11px; border: 1px solid rgba(255,255,255,.25); border-radius: 99px; font-size: .76rem; font-weight: 700; }
+    .subscription-card .btn { color: var(--wine); background: var(--white); }
+    .subscription-art { position: relative; z-index: 1; min-height: 250px; display: grid; place-items: center; }
+    .subscription-art svg { width: min(100%, 340px); filter: drop-shadow(0 25px 24px rgba(69, 19, 31, .3)); transform: rotate(-7deg); }
+
+    .site-footer { color: #f9e8df; background: var(--wine-dark); }
+    .footer-grid { display: grid; grid-template-columns: 1.5fr repeat(3, 1fr); gap: 40px; padding-block: 58px 45px; }
+    .footer-brand .brand { color: var(--white); margin-bottom: 18px; }
+    .footer-brand .brand-mark { color: var(--peach); }
+    .footer-brand .brand-name span { color: var(--peach); }
+    .footer-brand > p { max-width: 360px; color: #dcbdb4; font-size: .86rem; }
+    .newsletter { display: flex; gap: 8px; margin-top: 20px; }
+    .newsletter input { min-width: 0; width: 100%; height: 48px; padding-inline: 14px; color: var(--white); border: 1px solid rgba(255,255,255,.22); border-radius: 13px; outline: 0; background: rgba(255,255,255,.08); }
+    .newsletter input::placeholder { color: #dcbdb4; }
+    .newsletter input:focus { border-color: var(--peach); box-shadow: 0 0 0 3px rgba(245,201,173,.18); }
+    .newsletter button { width: 48px; height: 48px; display: grid; flex: 0 0 auto; place-items: center; color: var(--wine); border: 0; border-radius: 13px; background: var(--peach); }
+    .footer-col h2 { margin-bottom: 16px; color: var(--white); font-size: .95rem; }
+    .footer-col ul { display: grid; gap: 8px; margin: 0; padding: 0; list-style: none; }
+    .footer-col a { min-height: 38px; display: inline-flex; align-items: center; color: #dcbdb4; font-size: .84rem; }
+    .footer-col a:hover { color: var(--peach); }
+    .footer-bottom { min-height: 76px; display: flex; align-items: center; justify-content: space-between; gap: 20px; color: #c9a89f; border-top: 1px solid rgba(255,255,255,.12); font-size: .76rem; }
+    .socials { display: flex; gap: 8px; }
+    .socials a { width: 44px; height: 44px; display: grid; place-items: center; border: 1px solid rgba(255,255,255,.18); border-radius: 13px; }
+    .socials a:hover { color: var(--wine); background: var(--peach); }
+
+    .toast {
+      position: fixed;
+      z-index: 500;
+      right: 24px;
+      bottom: 24px;
+      max-width: min(380px, calc(100% - 32px));
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 14px 17px;
+      color: var(--white);
+      border-radius: 15px;
+      background: var(--green);
+      box-shadow: 0 16px 40px rgba(26, 57, 45, .25);
+      opacity: 0;
+      pointer-events: none;
+      transform: translateY(18px);
+      transition: opacity var(--ease), transform var(--ease);
+    }
+    .toast.show { opacity: 1; transform: translateY(0); }
+
+    @media (max-width: 1080px) {
+      .header-row { grid-template-columns: auto 1fr auto; }
+      .desktop-nav { display: none; }
+      .menu-btn { display: inline-grid; }
+      .hero-grid { grid-template-columns: 1fr 420px; gap: 30px; }
+      .product-grid { grid-template-columns: repeat(2, 1fr); }
+      .guide-grid { grid-template-columns: repeat(2, 1fr); }
+      .footer-grid { grid-template-columns: 1.5fr repeat(2, 1fr); }
+      .footer-col:last-child { display: none; }
+      .mobile-panel {
+        position: fixed;
+        z-index: 300;
+        top: 0;
+        right: 0;
+        width: min(360px, 88vw);
+        height: 100dvh;
+        display: flex;
+        flex-direction: column;
+        padding: 22px;
+        background: var(--paper);
+        box-shadow: -20px 0 50px rgba(69, 19, 31, .18);
+        visibility: hidden;
+        transform: translateX(105%);
+        transition: visibility var(--ease), transform var(--ease);
+      }
+      .mobile-panel.open { visibility: visible; transform: translateX(0); }
+      .mobile-panel-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 28px; }
+      .mobile-nav { display: grid; gap: 8px; }
+      .mobile-nav a { min-height: 48px; display: flex; align-items: center; justify-content: space-between; padding: 8px 13px; border-radius: 13px; font-weight: 800; }
+      .mobile-nav a:hover { color: var(--wine); background: var(--peach-light); }
+      .mobile-panel-note { margin-top: auto; padding: 16px; color: var(--wine); border-radius: 16px; background: var(--peach-light); font-size: .82rem; font-weight: 700; }
+      .menu-backdrop { position: fixed; z-index: 250; inset: 0; display: block; border: 0; background: rgba(48, 28, 24, .52); opacity: 0; visibility: hidden; transition: opacity var(--ease), visibility var(--ease); }
+      .menu-backdrop.show { opacity: 1; visibility: visible; }
+    }
+
+    @media (max-width: 820px) {
+      .container { width: min(100% - 28px, var(--container)); }
+      .section { padding-block: 68px; }
+      .search-box { width: 46px; padding-inline: 11px; }
+      .search-box input { width: 0; opacity: 0; }
+      .search-box:focus-within { position: absolute; top: 0; left: 0; width: min(300px, calc(100vw - 145px)); }
+      .search-box:focus-within input { width: 100%; opacity: 1; }
+      .hero { padding-top: 38px; }
+      .hero-grid { grid-template-columns: 1fr; }
+      .hero-copy { text-align: center; }
+      .hero-copy h1, .hero-copy > p { margin-inline: auto; }
+      .hero-actions, .hero-note { justify-content: center; }
+      .quiz-shell { min-height: auto; margin-top: 28px; }
+      .hero-orbit { inset: -50px 0; }
+      .trust-grid { grid-template-columns: repeat(2, 1fr); padding-block: 12px; }
+      .trust-item { border-bottom: 1px solid var(--line); }
+      .trust-item:nth-child(2) { border-left: 0; }
+      .trust-item:nth-child(n+3) { border-bottom: 0; }
+      .benefits-grid { grid-template-columns: 1fr; gap: 38px; }
+      .benefit-visual { min-height: 420px; }
+      .subscription-card { grid-template-columns: 1fr; text-align: center; }
+      .subscription-copy p { margin-inline: auto; }
+      .subscription-perks { justify-content: center; }
+      .subscription-art { min-height: 180px; }
+      .subscription-art svg { width: 260px; }
+    }
+
+    @media (max-width: 620px) {
+      .announcement { font-size: .72rem; }
+      .header-row { min-height: 68px; gap: 8px; }
+      .brand-name span { display: none; }
+      .brand-mark { width: 38px; height: 38px; }
+      .header-actions { gap: 6px; }
+      .icon-btn { width: 44px; height: 44px; }
+      .search-box { height: 44px; }
+      .hero-copy h1 { font-size: clamp(2.35rem, 13vw, 3.5rem); }
+      .hero-copy > p { font-size: .96rem; }
+      .hero-actions .btn { width: 100%; }
+      .quiz-card { padding: 24px 18px 20px; border-radius: 26px; }
+      .quiz-card::before, .quiz-card::after { display: none; }
+      .quiz-card h2 { max-width: none; }
+      .choice span { padding-inline: 4px; font-size: .73rem; }
+      .trust-item { flex-direction: column; gap: 2px; padding: 10px 4px; text-align: center; font-size: .7rem; }
+      .trust-item .icon { width: 20px; }
+      .section-head { align-items: start; flex-direction: column; gap: 10px; }
+      .product-grid { grid-template-columns: 1fr; }
+      .product-art { height: 230px; }
+      .guide-grid { grid-template-columns: 1fr; }
+      .guide-card { min-height: 210px; }
+      .benefit-visual { min-height: 340px; }
+      .benefit-visual::before { width: 290px; height: 290px; }
+      .origin-label { right: 14px; bottom: 14px; }
+      .subscription { padding-bottom: 68px; }
+      .subscription-card { gap: 20px; padding: 35px 20px; border-radius: 25px; }
+      .footer-grid { grid-template-columns: 1fr 1fr; gap: 35px 20px; }
+      .footer-brand { grid-column: 1 / -1; }
+      .footer-col:last-child { display: block; }
+      .footer-bottom { align-items: flex-start; flex-direction: column; padding-block: 22px; }
+      .toast { right: 16px; bottom: 16px; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after { scroll-behavior: auto !important; transition-duration: .01ms !important; animation-duration: .01ms !important; animation-iteration-count: 1 !important; }
+    }
+  </style>
+</head>
+<body>
+  <a class="skip-link" href="#main">رفتن به محتوای اصلی</a>
+
+  <div class="announcement">ارسال رایگان برای سفارش‌های بالای ۸۵۰ هزار تومان، به سراسر ایران</div>
+
+  <header class="site-header" aria-label="سربرگ اصلی">
+    <div class="container header-row">
+      <a class="brand" href="#top" aria-label="رووا، صفحه اصلی">
+        <svg class="brand-mark" viewBox="0 0 48 48" aria-hidden="true">
+          <path fill="currentColor" d="M24 3C12.4 3 5 11.6 5 23.1 5 35.2 13.3 44 24 45c10.7-1 19-9.8 19-21.9C43 11.6 35.6 3 24 3Z"/>
+          <path fill="#fffaf5" d="M16.1 13.2c7.2 2 8.1 8.8 7.1 14.5-.8 4.4-3.4 7.1-6.6 8.4 6.6 1.3 13.9-3.5 14.9-11.4.6-5-1.1-9.6-4.4-12.9-3.7-1-7.7-.5-11 1.4Z"/>
+          <path fill="#f5c9ad" d="M29.6 8.7c4.3 4.8 4.9 11.2 3.4 16.9-1.2 4.8-4.4 9.1-9 12.1 7.6-.8 13.2-7 13.2-15.3 0-6.4-2.8-11.2-7.6-13.7Z"/>
+        </svg>
+        <span class="brand-name"><strong>ROVA</strong><span>قهوه برای ریتم زندگی</span></span>
+      </a>
+
+      <nav class="desktop-nav" aria-label="پیمایش اصلی">
+        <a href="#products">فروشگاه</a>
+        <a href="#quiz">انتخاب قهوه</a>
+        <a href="#guide">راهنمای دم‌آوری</a>
+        <a href="#benefits">داستان رووا</a>
+        <a href="#subscription">اشتراک ماهانه</a>
+      </nav>
+
+      <div class="header-actions">
+        <div class="search-wrap">
+          <label class="search-box" for="site-search">
+            <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-4-4"/></svg>
+            <input id="site-search" type="search" autocomplete="off" placeholder="جست‌وجوی قهوه و ابزار" aria-controls="product-grid">
+          </label>
+        </div>
+        <button class="icon-btn" type="button" id="cart-button" aria-label="سبد خرید، بدون کالا">
+          <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M6 7h12l-1 13H7L6 7Z"/><path d="M9 9V5a3 3 0 0 1 6 0v4"/></svg>
+          <span class="cart-count" id="cart-count" aria-hidden="true">۰</span>
+        </button>
+        <button class="icon-btn menu-btn" type="button" id="menu-button" aria-label="باز کردن فهرست" aria-expanded="false" aria-controls="mobile-panel">
+          <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <button class="menu-backdrop" id="menu-backdrop" type="button" aria-label="بستن فهرست" tabindex="-1"></button>
+  <aside class="mobile-panel" id="mobile-panel" aria-label="فهرست موبایل" aria-hidden="true" inert>
+    <div class="mobile-panel-head">
+      <a class="brand" href="#top" aria-label="رووا، صفحه اصلی">
+        <svg class="brand-mark" viewBox="0 0 48 48" aria-hidden="true"><path fill="currentColor" d="M24 3C12.4 3 5 11.6 5 23.1 5 35.2 13.3 44 24 45c10.7-1 19-9.8 19-21.9C43 11.6 35.6 3 24 3Z"/><path fill="#fffaf5" d="M16.1 13.2c7.2 2 8.1 8.8 7.1 14.5-.8 4.4-3.4 7.1-6.6 8.4 6.6 1.3 13.9-3.5 14.9-11.4.6-5-1.1-9.6-4.4-12.9-3.7-1-7.7-.5-11 1.4Z"/></svg>
+        <span class="brand-name"><strong>ROVA</strong><span>قهوه برای ریتم زندگی</span></span>
+      </a>
+      <button class="icon-btn" type="button" id="menu-close" aria-label="بستن فهرست">
+        <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18"/></svg>
+      </button>
+    </div>
+    <nav class="mobile-nav" aria-label="پیمایش موبایل">
+      <a href="#products">فروشگاه <span aria-hidden="true">←</span></a>
+      <a href="#quiz">انتخاب قهوه <span aria-hidden="true">←</span></a>
+      <a href="#guide">راهنمای دم‌آوری <span aria-hidden="true">←</span></a>
+      <a href="#benefits">داستان رووا <span aria-hidden="true">←</span></a>
+      <a href="#subscription">اشتراک ماهانه <span aria-hidden="true">←</span></a>
+    </nav>
+    <p class="mobile-panel-note">برای راهنمایی انتخاب دانه، هر روز از ساعت ۹ تا ۱۸ کنار شماییم.</p>
+  </aside>
+
+  <main id="main">
+    <section class="hero" id="top">
+      <div class="container hero-grid">
+        <div class="hero-copy">
+          <span class="eyebrow">هر فنجان، تازه و دقیق</span>
+          <h1>قهوه‌ای که با <span>ریتم تو</span> هماهنگ است.</h1>
+          <p>از مزرعه تا آسیاب، هر دانه را برای لحظه‌ای انتخاب می‌کنیم که می‌خواهی آرام‌تر، روشن‌تر یا پرانرژی‌تر باشی.</p>
+          <div class="hero-actions">
+            <a class="btn btn-primary" href="#products">دیدن قهوه‌ها
+              <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M19 12H5m6-6-6 6 6 6"/></svg>
+            </a>
+            <a class="btn btn-secondary" href="#quiz">پیدا کردن طعم من</a>
+          </div>
+          <div class="hero-note">
+            <div class="avatar-stack" aria-hidden="true"><span>R</span><span>V</span><span>A</span></div>
+            <span>انتخاب بیش از ۲۴۰۰ قهوه‌دوست در ماه گذشته</span>
+          </div>
+        </div>
+
+        <div class="quiz-shell" id="quiz">
+          <svg class="hero-orbit" viewBox="0 0 500 560" fill="none" aria-hidden="true"><path d="M449 267C484 409 383 527 242 528 101 528 18 411 45 276 72 141 170 35 294 43c124 8 121 82 155 224Z" stroke="currentColor" stroke-width="2" stroke-dasharray="7 12"/><circle cx="49" cy="304" r="9" fill="currentColor"/><circle cx="421" cy="167" r="6" fill="currentColor"/></svg>
+          <form class="quiz-card" id="brew-quiz">
+            <span class="quiz-kicker">آزمون یک دقیقه‌ای رووا</span>
+            <h2>فنجان مناسب امروزت چیست؟</h2>
+            <p class="quiz-intro">دو انتخاب ساده؛ یک پیشنهاد دقیق برای شروع.</p>
+            <fieldset class="quiz-group">
+              <legend>قهوه‌ات را چطور می‌نوشی؟</legend>
+              <div class="choice-row">
+                <label class="choice"><input type="radio" name="method" value="espresso" required><span>اسپرسو</span></label>
+                <label class="choice"><input type="radio" name="method" value="filter"><span>دمی</span></label>
+                <label class="choice"><input type="radio" name="method" value="milk"><span>با شیر</span></label>
+              </div>
+            </fieldset>
+            <fieldset class="quiz-group">
+              <legend>دنبال چه حال‌وهوایی هستی؟</legend>
+              <div class="choice-row">
+                <label class="choice"><input type="radio" name="mood" value="bright" required><span>شفاف و میوه‌ای</span></label>
+                <label class="choice"><input type="radio" name="mood" value="balanced"><span>متعادل</span></label>
+                <label class="choice"><input type="radio" name="mood" value="bold"><span>قوی و شکلاتی</span></label>
+              </div>
+            </fieldset>
+            <button class="btn btn-primary quiz-submit" type="submit">پیشنهاد رووا را ببین</button>
+            <div class="quiz-result" id="quiz-result" role="status" aria-live="polite" hidden></div>
+          </form>
+        </div>
+      </div>
+    </section>
+
+    <section class="trust-strip" aria-label="ویژگی‌های خدمات رووا">
+      <div class="container trust-grid">
+        <div class="trust-item"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M4 7h11v10H4zM15 10h3l2 3v4h-5z"/><circle cx="8" cy="18" r="2"/><circle cx="17" cy="18" r="2"/></svg><span>ارسال سریع و امن</span></div>
+        <div class="trust-item"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M12 3v18M5 8c3 0 5-2 7-5 2 3 4 5 7 5-2 7-4 10-7 13-3-3-5-6-7-13Z"/></svg><span>رُست تازه هفتگی</span></div>
+        <div class="trust-item"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18Z"/><path d="m8 12 2.5 2.5L16 9"/></svg><span>ضمانت رضایت از طعم</span></div>
+        <div class="trust-item"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M4 5h16v11H8l-4 4V5Z"/><path d="M8 9h8M8 12h5"/></svg><span>مشاوره تخصصی رایگان</span></div>
+      </div>
+    </section>
+
+    <section class="section" id="products" aria-labelledby="products-title">
+      <div class="container">
+        <div class="section-head">
+          <div><span class="eyebrow">قفسه محبوب‌ها</span><h2 id="products-title">برای هر روش، یک انتخاب خوش‌عطر</h2></div>
+          <p>قهوه‌ها در بسته‌های سوپاپ‌دار و با درجه آسیاب دلخواه آماده می‌شوند تا عطر واقعی تا فنجان تو بماند.</p>
+        </div>
+
+        <div class="category-bar" role="group" aria-label="فیلتر دسته‌بندی محصولات">
+          <button class="category-btn" type="button" data-category="all" aria-pressed="true">همه محصولات</button>
+          <button class="category-btn" type="button" data-category="single" aria-pressed="false">تک‌خاستگاه</button>
+          <button class="category-btn" type="button" data-category="blend" aria-pressed="false">ترکیبی</button>
+          <button class="category-btn" type="button" data-category="cold" aria-pressed="false">کولدبرو</button>
+          <button class="category-btn" type="button" data-category="tools" aria-pressed="false">ابزار دم‌آوری</button>
+        </div>
+        <p class="products-status" id="products-status" aria-live="polite">۶ محصول برای شما</p>
+
+        <div class="product-grid" id="product-grid">
+          <article class="product-card" data-category="single" data-search="آفتاب سیدامو اتیوپی قهوه تک خاستگاه میوه ای دمی روشن">
+            <div class="product-art">
+              <span class="product-badge">رُست تازه</span>
+              <svg viewBox="0 0 180 200" aria-hidden="true"><path fill="#651f31" d="M42 17h96l11 159c1 10-7 18-17 18H48c-10 0-18-8-17-18L42 17Z"/><path fill="#f5c9ad" d="M39 30h102l-3 24H42l-3-24Z"/><path fill="#fffaf5" d="M57 75h66v72H57z"/><path fill="#bd5b40" d="M90 89c-15 0-24 11-24 24 0 14 10 25 24 25s24-11 24-25c0-13-9-24-24-24Z"/><path fill="#fffaf5" d="M84 95c8 4 9 13 5 21-3 7-7 11-13 13 10 3 23-4 25-17 1-7-2-13-7-17-3-1-7-1-10 0Z"/><path fill="#45131f" d="M49 9h82a8 8 0 0 1 8 8v8H41v-8a8 8 0 0 1 8-8Z"/></svg>
+            </div>
+            <div class="product-body">
+              <div class="product-meta"><span>اتیوپی · ۲۵۰ گرم</span><span class="roast-dots" aria-label="رست روشن، یک از سه"><i class="on"></i><i></i><i></i></span></div>
+              <h3>آفتاب سیدامو</h3>
+              <p class="product-desc">یاس سفید، هلو و پایان شیرین چای سیاه؛ شفاف و مناسب دم‌آوری فیلتری.</p>
+              <div class="product-bottom"><span class="price"><strong>۵۹۰٬۰۰۰ تومان</strong><span>با امکان انتخاب آسیاب</span></span><button class="btn btn-primary add-btn" type="button" data-product="آفتاب سیدامو">افزودن</button></div>
+            </div>
+          </article>
+
+          <article class="product-card" data-category="blend" data-search="نیمروز رووا ترکیبی اسپرسو شکلاتی متعادل برزیل کلمبیا">
+            <div class="product-art">
+              <span class="product-badge">پرفروش</span>
+              <svg viewBox="0 0 180 200" aria-hidden="true"><path fill="#bd5b40" d="M42 17h96l11 159c1 10-7 18-17 18H48c-10 0-18-8-17-18L42 17Z"/><path fill="#f8dfcf" d="M39 30h102l-3 24H42l-3-24Z"/><path fill="#fffaf5" d="M57 75h66v72H57z"/><circle cx="90" cy="112" r="25" fill="#651f31"/><path fill="#f5c9ad" d="M82 95c8 4 9 13 6 20-3 8-8 12-14 14 11 3 24-4 26-17 1-7-2-14-8-18-3 0-7 0-10 1Z"/><path fill="#713321" d="M49 9h82a8 8 0 0 1 8 8v8H41v-8a8 8 0 0 1 8-8Z"/></svg>
+            </div>
+            <div class="product-body">
+              <div class="product-meta"><span>ترکیب رووا · ۲۵۰ گرم</span><span class="roast-dots" aria-label="رست متوسط، دو از سه"><i class="on"></i><i class="on"></i><i></i></span></div>
+              <h3>نیمروز رووا</h3>
+              <p class="product-desc">شکلات تلخ، فندق و کارامل؛ عصاره‌گیری آسان برای اسپرسوی هر روز.</p>
+              <div class="product-bottom"><span class="price"><strong>۴۸۰٬۰۰۰ تومان</strong><span>با امکان انتخاب آسیاب</span></span><button class="btn btn-primary add-btn" type="button" data-product="نیمروز رووا">افزودن</button></div>
+            </div>
+          </article>
+
+          <article class="product-card" data-category="single" data-search="کوهستان هویلا کلمبیا تک خاستگاه کارامل سیب قرمز اسپرسو دمی">
+            <div class="product-art">
+              <span class="product-badge">محدود</span>
+              <svg viewBox="0 0 180 200" aria-hidden="true"><path fill="#315d4c" d="M42 17h96l11 159c1 10-7 18-17 18H48c-10 0-18-8-17-18L42 17Z"/><path fill="#f5c9ad" d="M39 30h102l-3 24H42l-3-24Z"/><path fill="#fffaf5" d="M57 75h66v72H57z"/><path fill="#bd5b40" d="m66 132 22-39 14 22 9-13 10 30H66Z"/><circle cx="108" cy="92" r="7" fill="#f5c9ad"/><path fill="#193c30" d="M49 9h82a8 8 0 0 1 8 8v8H41v-8a8 8 0 0 1 8-8Z"/></svg>
+            </div>
+            <div class="product-body">
+              <div class="product-meta"><span>کلمبیا · ۲۵۰ گرم</span><span class="roast-dots" aria-label="رست متوسط، دو از سه"><i class="on"></i><i class="on"></i><i></i></span></div>
+              <h3>کوهستان هویلا</h3>
+              <p class="product-desc">سیب قرمز، کارامل و مغز گردو؛ شیرینی ماندگار برای اسپرسو و دمی.</p>
+              <div class="product-bottom"><span class="price"><strong>۶۲۰٬۰۰۰ تومان</strong><span>با امکان انتخاب آسیاب</span></span><button class="btn btn-primary add-btn" type="button" data-product="کوهستان هویلا">افزودن</button></div>
+            </div>
+          </article>
+
+          <article class="product-card" data-category="cold" data-search="کولدبرو آرام بطری آماده قهوه سرد وانیل کاکائو کم اسید">
+            <div class="product-art cold">
+              <span class="product-badge">آماده نوشیدن</span>
+              <svg viewBox="0 0 180 200" aria-hidden="true"><path fill="#315d4c" d="M70 10h40v31c0 8 18 16 18 35v101c0 10-8 18-18 18H70c-10 0-18-8-18-18V76c0-19 18-27 18-35V10Z"/><path fill="#16382c" d="M68 9h44v18H68z"/><rect width="60" height="75" x="60" y="85" fill="#fffaf5" rx="5"/><circle cx="90" cy="120" r="22" fill="#bd5b40"/><path fill="#fffaf5" d="M84 103c8 4 8 12 5 19-3 7-7 10-12 12 10 2 21-4 23-16 1-6-2-12-7-15-3-1-6-1-9 0Z"/></svg>
+            </div>
+            <div class="product-body">
+              <div class="product-meta"><span>بطری ۳۰۰ میلی‌لیتر</span><span>کم‌اسید</span></div>
+              <h3>کولدبرو آرام</h3>
+              <p class="product-desc">دم‌آوری سرد ۱۸ ساعته با طعم کاکائو و وانیل؛ بدون شکر افزوده.</p>
+              <div class="product-bottom"><span class="price"><strong>۱۹۰٬۰۰۰ تومان</strong><span>نگهداری در یخچال</span></span><button class="btn btn-primary add-btn" type="button" data-product="کولدبرو آرام">افزودن</button></div>
+            </div>
+          </article>
+
+          <article class="product-card" data-category="tools" data-search="دریپر سرامیکی رووا ابزار دم آوری وی شصت فیلتر دستی">
+            <div class="product-art tool">
+              <span class="product-badge">ساخت دست</span>
+              <svg viewBox="0 0 180 200" aria-hidden="true"><path fill="#fffaf5" stroke="#bd5b40" stroke-width="5" d="M44 42h92l-16 89c-2 11-11 19-22 19H82c-11 0-20-8-22-19L44 42Z"/><path fill="none" stroke="#f5c9ad" stroke-width="5" d="M53 65h74M57 84h66M61 103h58"/><path fill="#651f31" d="M29 147h122v18c0 8-6 14-14 14H43c-8 0-14-6-14-14v-18Z"/><path fill="#bd5b40" d="M80 150h20v18H80z"/></svg>
+            </div>
+            <div class="product-body">
+              <div class="product-meta"><span>سرامیک دست‌ساز</span><span>سایز ۰۲</span></div>
+              <h3>دریپر کمان</h3>
+              <p class="product-desc">شیارهای عمیق برای جریان یکنواخت و فنجانی شفاف؛ مناسب یک تا چهار نفر.</p>
+              <div class="product-bottom"><span class="price"><strong>۸۹۰٬۰۰۰ تومان</strong><span>همراه ۲۰ عدد فیلتر</span></span><button class="btn btn-primary add-btn" type="button" data-product="دریپر کمان">افزودن</button></div>
+            </div>
+          </article>
+
+          <article class="product-card" data-category="blend" data-search="شب بلند ترکیبی قهوه تیره اسپرسو شیر شکلات تلخ ادویه">
+            <div class="product-art">
+              <span class="product-badge">برای شیر</span>
+              <svg viewBox="0 0 180 200" aria-hidden="true"><path fill="#45131f" d="M42 17h96l11 159c1 10-7 18-17 18H48c-10 0-18-8-17-18L42 17Z"/><path fill="#bd5b40" d="M39 30h102l-3 24H42l-3-24Z"/><path fill="#f5c9ad" d="M57 75h66v72H57z"/><circle cx="90" cy="111" r="25" fill="#fffaf5"/><path fill="#651f31" d="M82 94c8 4 9 13 6 20-3 8-8 12-14 14 11 3 24-4 26-17 1-7-2-14-8-18-3 0-7 0-10 1Z"/><path fill="#301c18" d="M49 9h82a8 8 0 0 1 8 8v8H41v-8a8 8 0 0 1 8-8Z"/></svg>
+            </div>
+            <div class="product-body">
+              <div class="product-meta"><span>ترکیب رووا · ۲۵۰ گرم</span><span class="roast-dots" aria-label="رست تیره، سه از سه"><i class="on"></i><i class="on"></i><i class="on"></i></span></div>
+              <h3>شب بلند</h3>
+              <p class="product-desc">شکلات تلخ، ادویه گرم و بافت سنگین؛ طعمی که در ترکیب با شیر می‌ماند.</p>
+              <div class="product-bottom"><span class="price"><strong>۴۵۰٬۰۰۰ تومان</strong><span>با امکان انتخاب آسیاب</span></span><button class="btn btn-primary add-btn" type="button" data-product="شب بلند">افزودن</button></div>
+            </div>
+          </article>
+
+          <div class="empty-state" id="empty-state" hidden>
+            <h3>محصولی با این جست‌وجو پیدا نشد</h3>
+            <p>عبارت دیگری امتحان کنید یا دسته «همه محصولات» را انتخاب کنید.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section guide-section" id="guide" aria-labelledby="guide-title">
+      <div class="container">
+        <div class="section-head">
+          <div><span class="eyebrow">چهار قدم تا فنجان بهتر</span><h2 id="guide-title">راهنمای ساده دم‌آوری رووا</h2></div>
+          <p>برای یک فنجان دمی متعادل، لازم نیست باریستا باشی؛ فقط جزئیات کوچک را دقیق انجام بده.</p>
+        </div>
+        <div class="guide-grid">
+          <article class="guide-card"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M6 4h12l-2 16H8L6 4Z"/><path d="M8 8h8M9 12h6M10 16h4"/></svg><h3>قهوه را تازه آسیاب کن</h3><p>برای دریپر، بافتی شبیه نمک دریا انتخاب کن؛ نه خیلی ریز و نه درشت.</p></article>
+          <article class="guide-card"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M12 3S6 10 6 15a6 6 0 0 0 12 0c0-5-6-12-6-12Z"/><path d="M9 16c.5 1.5 1.5 2 3 2"/></svg><h3>آب درست را آماده کن</h3><p>آب تصفیه‌شده با دمای ۹۲ تا ۹۴ درجه، شیرینی قهوه را بهتر نشان می‌دهد.</p></article>
+          <article class="guide-card"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M4 7h12v10H4zM16 10h2a3 3 0 0 1 0 6h-2M7 21h8"/><path d="M8 3c0 2 2 2 2 4M12 3c0 2 2 2 2 4"/></svg><h3>نسبت را نگه دار</h3><p>برای هر ۱۵ گرم قهوه، ۲۵۰ گرم آب بریز؛ نقطه شروعی مطمئن و متعادل.</p></article>
+          <article class="guide-card"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><circle cx="12" cy="13" r="8"/><path d="M12 9v5l3 2M9 2h6"/></svg><h3>به زمان گوش بده</h3><p>کل دم‌آوری را بین ۲:۴۵ تا ۳:۱۵ دقیقه تمام کن و سپس طعم را بسنج.</p></article>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" id="benefits" aria-labelledby="benefits-title">
+      <div class="container benefits-grid">
+        <div class="benefit-visual">
+          <svg viewBox="0 0 360 430" aria-hidden="true"><path fill="#651f31" d="M62 34h236l25 347c1 14-10 25-24 25H61c-14 0-25-11-24-25L62 34Z"/><path fill="#f5c9ad" d="M57 63h246l-7 57H64l-7-57Z"/><path fill="#fffaf5" d="M98 155h164v155H98z"/><path fill="#bd5b40" d="M180 180c-40 0-67 31-67 66 0 40 28 69 67 69s67-29 67-69c0-35-27-66-67-66Z"/><path fill="#fffaf5" d="M161 195c23 11 25 35 15 56-8 20-21 31-38 38 30 8 66-11 71-47 3-19-5-37-21-49-9-2-19-2-27 2Z"/><path fill="#45131f" d="M75 13h210c11 0 20 9 20 20v17H55V33c0-11 9-20 20-20Z"/></svg>
+          <span class="origin-label">تاریخ رُست و مسیر خاستگاه روی هر بسته شفاف نوشته شده است.</span>
+        </div>
+        <div class="benefits-copy">
+          <span class="eyebrow">از دانه تا در خانه تو</span>
+          <h2 id="benefits-title">قهوه خوب، اتفاقی نیست</h2>
+          <p>ما هر قهوه را بارها می‌چشیم، پروفایل رُستش را دقیق می‌کنیم و فقط زمانی بسته‌بندی می‌کنیم که آماده درخشیدن در فنجان باشد.</p>
+          <ul class="benefit-list">
+            <li class="benefit-item"><span class="benefit-icon"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18Z"/><path d="M12 7v5l3 2"/></svg></span><div><h3>رُست در بازه سفارش</h3><p>هر بسته حداکثر هفت روز پس از رُست به دستت می‌رسد.</p></div></li>
+            <li class="benefit-item"><span class="benefit-icon"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M4 19c6 0 11-5 11-11 3 3 4 7 2 10M4 19c0-6 5-11 11-11M4 19h16"/></svg></span><div><h3>خرید مسئولانه</h3><p>همکاری پایدار با تأمین‌کنندگان و پرداخت منصفانه برای کیفیت بهتر.</p></div></li>
+            <li class="benefit-item"><span class="benefit-icon"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M8 8h8v8H8z"/><path d="M4 4h4M16 4h4v4M20 16v4h-4M8 20H4v-4"/></svg></span><div><h3>آسیاب متناسب با ابزار</h3><p>درجه آسیاب برای اسپرسوساز، موکاپات، فرنچ‌پرس یا دریپر تنظیم می‌شود.</p></div></li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <section class="subscription" id="subscription" aria-labelledby="subscription-title">
+      <div class="container">
+        <div class="subscription-card">
+          <div class="subscription-copy">
+            <span class="eyebrow">باشگاه فنجان رووا</span>
+            <h2 id="subscription-title">هر ماه یک خاستگاه تازه، بدون تکرار</h2>
+            <p>مقدار و روش دم‌آوری را انتخاب کن؛ ما هر ماه قهوه‌ای متناسب با سلیقه‌ات، همراه کارت داستان مزرعه می‌فرستیم.</p>
+            <div class="subscription-perks"><span>ارسال رایگان</span><span>۱۰٪ به‌صرفه‌تر</span><span>توقف در هر زمان</span></div>
+            <button class="btn" type="button" id="subscription-button">ساخت اشتراک من
+              <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M19 12H5m6-6-6 6 6 6"/></svg>
+            </button>
+          </div>
+          <div class="subscription-art">
+            <svg viewBox="0 0 360 310" aria-hidden="true"><path fill="#f5c9ad" d="M40 100 180 24l140 76-140 78L40 100Z"/><path fill="#fffaf5" d="m40 100 140 78v118L40 217V100Z"/><path fill="#f7d9c5" d="m320 100-140 78v118l140-79V100Z"/><path fill="#651f31" d="m143 158 37 20 39-22v78l-39 21-37-21v-76Z"/><path fill="#bd5b40" d="M74 74 214 0l40 22-140 75-40-23Z"/><path fill="#fffaf5" d="M165 188c12 5 14 18 8 29-4 9-11 15-19 18 16 4 34-6 37-25 1-10-4-19-12-24-4 0-10 0-14 2Z"/></svg>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="container footer-grid">
+      <div class="footer-brand">
+        <a class="brand" href="#top" aria-label="رووا، بازگشت به بالا">
+          <svg class="brand-mark" viewBox="0 0 48 48" aria-hidden="true"><path fill="currentColor" d="M24 3C12.4 3 5 11.6 5 23.1 5 35.2 13.3 44 24 45c10.7-1 19-9.8 19-21.9C43 11.6 35.6 3 24 3Z"/><path fill="#45131f" d="M16.1 13.2c7.2 2 8.1 8.8 7.1 14.5-.8 4.4-3.4 7.1-6.6 8.4 6.6 1.3 13.9-3.5 14.9-11.4.6-5-1.1-9.6-4.4-12.9-3.7-1-7.7-.5-11 1.4Z"/></svg>
+          <span class="brand-name"><strong>ROVA</strong><span>قهوه برای ریتم زندگی</span></span>
+        </a>
+        <p>نامه کوتاه رووا؛ هفته‌ای یک نکته دم‌آوری، یک داستان خاستگاه و خبر قهوه‌های تازه.</p>
+        <form class="newsletter" id="newsletter-form">
+          <label for="newsletter-email" hidden>رایانامه</label>
+          <input id="newsletter-email" type="email" required autocomplete="email" placeholder="رایانامه شما" aria-label="رایانامه برای عضویت در خبرنامه">
+          <button type="submit" aria-label="عضویت در خبرنامه"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="m4 12 16-8-6 16-3-7-7-1Z"/><path d="m11 13 4-4"/></svg></button>
+        </form>
+      </div>
+      <nav class="footer-col" aria-label="فروشگاه"><h2>فروشگاه</h2><ul><li><a href="#products">قهوه تک‌خاستگاه</a></li><li><a href="#products">ترکیب‌های رووا</a></li><li><a href="#products">ابزار دم‌آوری</a></li><li><a href="#subscription">اشتراک قهوه</a></li></ul></nav>
+      <nav class="footer-col" aria-label="راهنما"><h2>راهنما</h2><ul><li><a href="#quiz">انتخاب قهوه</a></li><li><a href="#guide">روش‌های دم‌آوری</a></li><li><a href="#benefits">تازگی و نگهداری</a></li><li><a href="#top">پرسش‌های متداول</a></li></ul></nav>
+      <nav class="footer-col" aria-label="رووا"><h2>رووا</h2><ul><li><a href="#benefits">داستان ما</a></li><li><a href="#benefits">خاستگاه‌ها</a></li><li><a href="#top">فرصت‌های همکاری</a></li><li><a href="#top">تماس با ما</a></li></ul></nav>
+    </div>
+    <div class="container footer-bottom">
+      <span>© ۱۴۰۵ رووا. این صفحه یک نمونه نمایشی مستقل است.</span>
+      <div class="socials" aria-label="شبکه‌های اجتماعی">
+        <a href="#top" aria-label="اینستاگرام رووا"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="1" fill="currentColor" stroke="none"/></svg></a>
+        <a href="#top" aria-label="کانال ویدیویی رووا"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><rect x="3" y="6" width="18" height="13" rx="4"/><path d="m10 10 5 3-5 3v-6Z"/></svg></a>
+      </div>
+    </div>
+  </footer>
+
+  <div class="toast" id="toast" role="status" aria-live="polite">
+    <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="m8 12 2.5 2.5L16 9"/></svg>
+    <span id="toast-text"></span>
+  </div>
+
+  <script>
+    (() => {
+      const menuButton = document.getElementById('menu-button');
+      const menuPanel = document.getElementById('mobile-panel');
+      const menuClose = document.getElementById('menu-close');
+      const menuBackdrop = document.getElementById('menu-backdrop');
+      const searchInput = document.getElementById('site-search');
+      const categoryButtons = [...document.querySelectorAll('.category-btn')];
+      const productCards = [...document.querySelectorAll('.product-card')];
+      const productsStatus = document.getElementById('products-status');
+      const emptyState = document.getElementById('empty-state');
+      const cartCount = document.getElementById('cart-count');
+      const cartButton = document.getElementById('cart-button');
+      const toast = document.getElementById('toast');
+      const toastText = document.getElementById('toast-text');
+      const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
+      let activeCategory = 'all';
+      let cartTotal = 0;
+      let toastTimer;
+
+      const persianNumber = value => new Intl.NumberFormat('fa-IR').format(value);
+
+      function setMenu(open) {
+        menuPanel.classList.toggle('open', open);
+        menuBackdrop.classList.toggle('show', open);
+        menuPanel.setAttribute('aria-hidden', String(!open));
+        menuPanel.toggleAttribute('inert', !open);
+        menuButton.setAttribute('aria-expanded', String(open));
+        menuButton.setAttribute('aria-label', open ? 'بستن فهرست' : 'باز کردن فهرست');
+        document.body.classList.toggle('menu-open', open);
+        if (open) menuClose.focus();
+        else if (document.activeElement === menuClose) menuButton.focus();
+      }
+
+      menuButton.addEventListener('click', () => setMenu(menuButton.getAttribute('aria-expanded') !== 'true'));
+      menuClose.addEventListener('click', () => setMenu(false));
+      menuBackdrop.addEventListener('click', () => setMenu(false));
+      menuPanel.querySelectorAll('a').forEach(link => link.addEventListener('click', () => setMenu(false)));
+      document.addEventListener('keydown', event => {
+        if (event.key === 'Escape' && menuPanel.classList.contains('open')) setMenu(false);
+      });
+
+      function filterProducts() {
+        const query = searchInput.value.trim().toLocaleLowerCase('fa');
+        let visibleCount = 0;
+        productCards.forEach(card => {
+          const categoryMatch = activeCategory === 'all' || card.dataset.category === activeCategory;
+          const searchMatch = !query || card.dataset.search.toLocaleLowerCase('fa').includes(query);
+          const visible = categoryMatch && searchMatch;
+          card.hidden = !visible;
+          if (visible) visibleCount += 1;
+        });
+        emptyState.hidden = visibleCount !== 0;
+        productsStatus.textContent = visibleCount ? `${persianNumber(visibleCount)} محصول برای شما` : 'نتیجه‌ای پیدا نشد';
+      }
+
+      categoryButtons.forEach(button => {
+        button.addEventListener('click', () => {
+          activeCategory = button.dataset.category;
+          categoryButtons.forEach(item => item.setAttribute('aria-pressed', String(item === button)));
+          filterProducts();
+        });
+      });
+
+      searchInput.addEventListener('input', () => {
+        filterProducts();
+        if (searchInput.value.trim()) document.getElementById('products').scrollIntoView({ behavior: reduceMotion.matches ? 'auto' : 'smooth', block: 'start' });
+      });
+
+      function showToast(message) {
+        window.clearTimeout(toastTimer);
+        toastText.textContent = message;
+        toast.classList.add('show');
+        toastTimer = window.setTimeout(() => toast.classList.remove('show'), 2800);
+      }
+
+      document.querySelectorAll('.add-btn').forEach(button => {
+        button.addEventListener('click', () => {
+          cartTotal += 1;
+          cartCount.textContent = persianNumber(cartTotal);
+          cartButton.setAttribute('aria-label', `سبد خرید، ${persianNumber(cartTotal)} کالا`);
+          showToast(`${button.dataset.product} به سبد خرید اضافه شد.`);
+        });
+      });
+
+      cartButton.addEventListener('click', () => {
+        showToast(cartTotal ? `در سبد شما ${persianNumber(cartTotal)} کالا قرار دارد.` : 'سبد خرید شما هنوز خالی است.');
+      });
+
+      document.getElementById('brew-quiz').addEventListener('submit', event => {
+        event.preventDefault();
+        const data = new FormData(event.currentTarget);
+        const method = data.get('method');
+        const mood = data.get('mood');
+        const result = document.getElementById('quiz-result');
+        const suggestions = {
+          bright: ['آفتاب سیدامو', 'عطر هلو و یاس با رُست روشن'],
+          balanced: ['کوهستان هویلا', 'شیرینی کاراملی و بافت متعادل'],
+          bold: ['شب بلند', 'شکلات تلخ و بافت سنگین']
+        };
+        if (method === 'milk' && mood !== 'bright') suggestions[mood] = ['شب بلند', 'قدرت طعمی مناسب ترکیب با شیر'];
+        if (method === 'espresso' && mood === 'balanced') suggestions[mood] = ['نیمروز رووا', 'اسپرسویی شیرین، متعادل و خوش‌عصاره'];
+        const suggestion = suggestions[mood];
+        result.innerHTML = `پیشنهاد ما: <strong>${suggestion[0]}</strong><br>${suggestion[1]}`;
+        result.hidden = false;
+      });
+
+      document.getElementById('subscription-button').addEventListener('click', () => {
+        document.getElementById('newsletter-email').focus();
+        showToast('رایانامه‌ات را وارد کن تا ساخت اشتراک را با هم شروع کنیم.');
+      });
+
+      document.getElementById('newsletter-form').addEventListener('submit', event => {
+        event.preventDefault();
+        showToast('عضویت شما ثبت شد؛ نخستین نامه رووا به‌زودی می‌رسد.');
+        event.currentTarget.reset();
+      });
+    })();
+  </script>
+</body>
+</html>

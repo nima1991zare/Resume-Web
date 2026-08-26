@@ -1,0 +1,32 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 900" role="img" aria-labelledby="title desc">
+  <title id="title">Serein Coffee website preview</title>
+  <desc id="desc">A forest green and cream specialty coffee storefront.</desc>
+  <rect width="1440" height="900" fill="#f5e7c6"/>
+  <rect x="38" y="28" width="1364" height="82" rx="41" fill="#173c32"/>
+  <text x="82" y="80" fill="#b6d56a" font-family="Georgia, serif" font-size="38" font-style="italic" font-weight="700">serein</text>
+  <text x="742" y="76" fill="#f5e7c6" font-family="Arial, sans-serif" font-size="14">SHOP COFFEE</text>
+  <text x="887" y="76" fill="#f5e7c6" font-family="Arial, sans-serif" font-size="14">OUR ROASTERY</text>
+  <text x="1048" y="76" fill="#f5e7c6" font-family="Arial, sans-serif" font-size="14">JOURNAL</text>
+  <circle cx="1328" cy="69" r="23" fill="#b6d56a"/>
+  <path d="M1318 68h20M1328 58v20" stroke="#173c32" stroke-width="3" stroke-linecap="round"/>
+  <rect x="38" y="136" width="820" height="470" rx="36" fill="#173c32"/>
+  <text x="86" y="208" fill="#b6d56a" font-family="Arial, sans-serif" font-size="15" font-weight="700" letter-spacing="4">ROASTED IN SMALL BATCHES</text>
+  <text x="86" y="318" fill="#f5e7c6" font-family="Georgia, serif" font-size="78" font-style="italic">Quiet mornings.</text>
+  <text x="86" y="404" fill="#f5e7c6" font-family="Georgia, serif" font-size="78" font-style="italic">Remarkable coffee.</text>
+  <text x="86" y="470" fill="#b9cbc5" font-family="Arial, sans-serif" font-size="18">Traceable lots selected for sweetness, clarity and character.</text>
+  <rect x="86" y="514" width="170" height="52" rx="26" fill="#b6d56a"/>
+  <text x="130" y="546" fill="#173c32" font-family="Arial, sans-serif" font-size="14" font-weight="700">FIND YOUR ROAST</text>
+  <rect x="884" y="136" width="518" height="470" rx="36" fill="#d9c397"/>
+  <ellipse cx="1143" cy="540" rx="160" ry="28" fill="#927b55" opacity=".35"/>
+  <path d="M1034 236h218l-20 286h-178Z" fill="#f8f1df"/>
+  <path d="M1034 236h218l-10 58h-198Z" fill="#b6d56a"/>
+  <circle cx="1143" cy="390" r="64" fill="#173c32"/>
+  <path d="M1113 394c22-54 66-54 60 5-25 36-50 31-60-5Z" fill="#b6d56a"/>
+  <text x="1099" y="473" fill="#173c32" font-family="Georgia, serif" font-size="21" font-style="italic">SEREIN</text>
+  <text x="38" y="680" fill="#173c32" font-family="Georgia, serif" font-size="38" font-style="italic" font-weight="700">This week's favourites</text>
+  <g font-family="Arial, sans-serif" fill="#173c32">
+    <rect x="38" y="720" width="424" height="144" rx="30" fill="#fffaf0"/><text x="74" y="776" font-size="14" font-weight="700">ETHIOPIA · NATURAL</text><text x="74" y="824" font-size="24" font-weight="800">BERRY / CACAO</text>
+    <rect x="486" y="720" width="424" height="144" rx="30" fill="#b6d56a"/><text x="522" y="776" font-size="14" font-weight="700">COLOMBIA · WASHED</text><text x="522" y="824" font-size="24" font-weight="800">CITRUS / HONEY</text>
+    <rect x="934" y="720" width="468" height="144" rx="30" fill="#fffaf0"/><text x="970" y="776" font-size="14" font-weight="700">HOUSE ESPRESSO</text><text x="970" y="824" font-size="24" font-weight="800">CARAMEL / PLUM</text>
+  </g>
+</svg>
