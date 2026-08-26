@@ -47,16 +47,15 @@ APPS = [
     {
         "title_en": "Crypto Trade Panel",
         "title_fa": "پنل معاملات کریپتو",
-        "desc_en": ("Full-stack crypto trading terminal: live market data and charts, "
-                    "automation chart-image analysis, wallet & portfolio analytics, money "
-                    "management, trading journal, backtesting and price alerts — with a "
-                    "built-in automation trading assistant. React frontend, Node.js + SQLite backend."),
-        "desc_fa": ("ترمینال معاملاتی فول‌استک کریپتو: دیتای زنده بازار و نمودار، تحلیل تصویر چارت با "
-                    "هوش مصنوعی، تحلیل کیف پول و پرتفوی، مدیریت سرمایه، ژورنال معاملات، بک‌تست و "
-                    "هشدار قیمت — همراه دستیار معاملاتی هوشمند. فرانت React و بک‌اند Node.js + SQLite."),
+        "desc_en": ("Full-stack crypto trading terminal with live market data and charts, "
+                    "wallet and portfolio analytics, money management, a trading journal, "
+                    "backtesting and price alerts. React frontend, Node.js + SQLite backend."),
+        "desc_fa": ("ترمینال معاملاتی فول‌استک کریپتو با دیتای زنده بازار و نمودار، تحلیل کیف پول و "
+                    "پرتفوی، مدیریت سرمایه، ژورنال معاملات، بک‌تست و هشدار قیمت. "
+                    "فرانت React و بک‌اند Node.js + SQLite."),
         "image": "/static/projects/trade-panel.png",
         "demo_url": "/static/demos/trade-panel/index.html",
-        "tech": "React · Node.js · SQLite · automation",
+        "tech": "React · Node.js · SQLite",
         "price": 9000000, "currency": "IRT", "buyable": 1, "sort": 3,
     },
     {
@@ -131,18 +130,18 @@ GAMES = [
 
 BOTS = [
     {
-        "title_en": "automation Channel Autopilot",
-        "title_fa": "اتوپایلوت هوشمند کانال",
+        "title_en": "Channel Autopilot",
+        "title_fa": "اتوپایلوت کانال",
         "desc_en": ("Runs Telegram channels automatically: ingests RSS, YouTube and public "
-                    "Telegram sources, deduplicates stories, rewrites and translates them with "
-                    "automation, then publishes on a schedule or sends drafts for admin approval."),
+                    "Telegram sources, deduplicates stories, prepares rewritten and translated "
+                    "drafts, then publishes on a schedule or sends them for admin approval."),
         "desc_fa": ("مدیریت خودکار کانال تلگرام: دریافت محتوا از RSS، یوتیوب و کانال‌های عمومی، "
-                    "حذف مطالب تکراری، بازنویسی و ترجمه با هوش مصنوعی و انتشار زمان‌بندی‌شده یا "
+                    "حذف مطالب تکراری، آماده‌سازی پیش‌نویس بازنویسی و ترجمه‌شده و انتشار زمان‌بندی‌شده یا "
                     "ارسال پیش‌نویس برای تأیید مدیر."),
-        "image": "/static/projects/Channel-Autopilot.svg",
-        "demo_url": "/static/demos/Channel-Autopilot/index.html",
+        "image": "/static/projects/channel-autopilot.svg",
+        "demo_url": "/static/demos/channel-autopilot/index.html",
         "url": "https://github.com/nima1991zare/Channel-Autopilot",
-        "tech": "Python · aiogram · Telethon · SQLAlchemy · automation",
+        "tech": "Python · aiogram · Telethon · SQLAlchemy",
         "price": 0, "currency": "IRT", "buyable": 0, "sort": 1,
     },
     {
@@ -163,10 +162,10 @@ BOTS = [
     {
         "title_en": "Instagram DM Order Automation",
         "title_fa": "اتوماسیون سفارش دایرکت اینستاگرام",
-        "desc_en": ("Persian-first sales assistant that answers product questions, captures "
+        "desc_en": ("Persian-first sales workflow that answers product questions, captures "
                     "orders from Instagram DMs and sends each order to a Telegram admin bot for "
                     "approval, payment and fulfilment, with strict safety controls."),
-        "desc_fa": ("دستیار فروش فارسی که به سؤال‌های محصول پاسخ می‌دهد، سفارش را از دایرکت "
+        "desc_fa": ("فرایند فروش فارسی که به سؤال‌های محصول پاسخ می‌دهد، سفارش را از دایرکت "
                     "اینستاگرام ثبت می‌کند و برای تأیید، پرداخت و ارسال به ربات مدیریت تلگرام می‌فرستد؛ "
                     "همراه با کنترل‌های سخت‌گیرانه ایمنی."),
         "image": "/static/projects/instagram-dm-automation.svg",
@@ -247,6 +246,9 @@ def seed():
         conn.execute(
             f"UPDATE websites SET active=0 WHERE title_en IN ({','.join('?' * len(PLACEHOLDER_WEBSITES))})",
             PLACEHOLDER_WEBSITES)
+        conn.execute(
+            "UPDATE telegram_bots SET title_en=? WHERE title_en LIKE ?",
+            ("Channel Autopilot", "% Channel Autopilot"))
 
         app_cols = ["title_en", "title_fa", "desc_en", "desc_fa", "image", "tech",
                     "demo_url", "price", "currency", "buyable", "sort"]

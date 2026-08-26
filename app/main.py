@@ -178,7 +178,7 @@ def require_admin(authorization: Optional[str]) -> None:
         conn.close()
 
 
-# ---------------------------------------------------------------------- models
+# ------------------------------------------------------------- request schemas
 class ContactIn(BaseModel):
     name: str = Field(min_length=1, max_length=120)
     email: str = Field(default="", max_length=200)

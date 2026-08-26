@@ -1,0 +1,34 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Channel Autopilot Demo</title>
+  <style>
+    :root{--bg:#06121f;--panel:#0b1d2d;--line:#19384c;--ink:#e6f7fb;--muted:#7f9dad;--teal:#2dd4bf;--blue:#38bdf8}*{box-sizing:border-box}body{margin:0;background:radial-gradient(circle at 70% 0,#10304a 0,transparent 38%),var(--bg);color:var(--ink);font:15px/1.5 system-ui,sans-serif;min-height:100vh}button{font:inherit}.shell{max-width:1180px;margin:auto;padding:28px}.top{display:flex;align-items:center;justify-content:space-between;margin-bottom:24px}.brand{font-size:20px;font-weight:800}.brand i{color:var(--teal);font-style:normal}.live{color:var(--teal);font-size:12px;letter-spacing:2px}.live:before{content:"";display:inline-block;width:7px;height:7px;border-radius:50%;background:var(--teal);box-shadow:0 0 12px var(--teal);margin-right:8px}.grid{display:grid;grid-template-columns:1fr 1.3fr;gap:18px}.panel{background:#0b1d2de8;border:1px solid var(--line);border-radius:20px;padding:22px;box-shadow:0 20px 55px #0005}.panel h2{font-size:13px;letter-spacing:2px;color:var(--muted);margin:0 0 18px}.source{display:flex;align-items:center;gap:14px;padding:14px;border:1px solid var(--line);border-radius:14px;margin:10px 0}.ico{display:grid;place-items:center;width:42px;height:42px;border-radius:12px;background:#12344a;color:var(--blue);font-weight:800}.source strong{display:block}.source small{color:var(--muted)}.on{margin-left:auto;color:var(--teal);font-size:12px}.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:16px}.stat{padding:14px;background:#081724;border-radius:12px}.stat b{display:block;font-size:24px;color:var(--teal)}.pipeline{display:flex;align-items:center;gap:8px;margin-bottom:18px}.step{flex:1;padding:10px 5px;border-radius:10px;background:#0d2637;text-align:center;color:var(--muted);font-size:12px}.step.active{color:#05211d;background:var(--teal);font-weight:800}.preview{min-height:284px;background:#071622;border-radius:16px;padding:18px;border:1px solid #142f41}.tag{display:inline-block;color:var(--blue);font-size:12px;margin-bottom:12px}.preview h3{font-size:22px;margin:0 0 8px}.preview p{color:#b7ccd6}.meta{color:var(--muted);font-size:12px}.actions{display:flex;gap:10px;margin-top:18px}.btn{border:1px solid var(--line);background:#102a3d;color:var(--ink);padding:12px 18px;border-radius:12px;cursor:pointer;min-height:44px}.btn.primary{background:var(--teal);color:#04231f;border:0;font-weight:800}.notice{height:24px;color:var(--teal);margin-top:12px}@media(max-width:760px){.shell{padding:16px}.grid{grid-template-columns:1fr}.pipeline{overflow:auto}.step{min-width:90px}.stats{grid-template-columns:1fr 1fr}}
+  </style>
+</head>
+<body>
+  <main class="shell">
+    <header class="top"><div class="brand"><i>Channel</i> Autopilot</div><span class="live">SCHEDULER ONLINE</span></header>
+    <div class="grid">
+      <section class="panel"><h2>CONNECTED SOURCES</h2>
+        <div class="source"><span class="ico">R</span><div><strong>TechCrunch RSS</strong><small>Fetched 2 min ago</small></div><span class="on">ACTIVE</span></div>
+        <div class="source"><span class="ico">YT</span><div><strong>Engineering Weekly</strong><small>YouTube channel</small></div><span class="on">ACTIVE</span></div>
+        <div class="source"><span class="ico">TG</span><div><strong>@future_digest</strong><small>Public Telegram</small></div><span class="on">ACTIVE</span></div>
+        <div class="stats"><div class="stat"><b id="queued">12</b>Queued</div><div class="stat"><b>34</b>Published</div><div class="stat"><b>7</b>Deduped</div></div>
+      </section>
+      <section class="panel"><h2>CONTENT PROCESSING PIPELINE</h2>
+        <div class="pipeline"><span class="step active">INGEST</span><span class="step">DEDUP</span><span class="step">REWRITE</span><span class="step">TRANSLATE</span><span class="step">READY</span></div>
+        <article class="preview"><span class="tag">DRAFT PREVIEW • TECHNOLOGY</span><h3 id="headline">Local processing is getting smaller and faster</h3><p id="copy">Compact software workflows can now run directly on everyday devices. The shift brings lower latency, better privacy and reduced infrastructure cost.</p><div class="meta">Source credited • 184 words → 42 words • EN → FA ready</div><div class="actions"><button class="btn primary" id="process">Process next story</button><button class="btn" id="approve">Approve draft</button></div><div class="notice" id="notice" role="status"></div></article>
+      </section>
+    </div>
+  </main>
+  <script>
+    const stories=[['Battery breakthrough doubles cycle life','Researchers report a new electrode structure that retains capacity for longer, reducing waste and making grid storage more practical.'],['Private processing moves onto everyday devices','Efficient local workflows now handle summarisation without sending personal data to remote servers.'],['Robotics teams adopt simulation-first testing','New simulation workflows let warehouse teams test complex routes before deployment.']];let i=0;
+    const steps=[...document.querySelectorAll('.step')],notice=document.getElementById('notice');
+    document.getElementById('process').onclick=()=>{i=(i+1)%stories.length;steps.forEach((s,n)=>s.classList.toggle('active',n===i%steps.length));document.getElementById('headline').textContent=stories[i][0];document.getElementById('copy').textContent=stories[i][1];notice.textContent='New source item processed and deduplicated.'};
+    document.getElementById('approve').onclick=()=>{document.getElementById('queued').textContent=Math.max(0,+document.getElementById('queued').textContent-1);notice.textContent='Draft approved and scheduled for 19:00.'};
+  </script>
+</body>
+</html>

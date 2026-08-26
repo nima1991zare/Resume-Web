@@ -201,13 +201,13 @@ FEATURED_GAMES = [
 ]
 
 FEATURED_BOTS = [
-    ("automation Channel Autopilot", "اتوپایلوت هوشمند کانال",
-     "Automates Telegram channel ingestion, automation rewriting, deduplication, approval and scheduled publishing.",
-     "دریافت محتوا، بازنویسی هوشمند، حذف موارد تکراری، تأیید و انتشار زمان‌بندی‌شده کانال تلگرام.",
-     "/static/projects/Channel-Autopilot.svg",
+    ("Channel Autopilot", "اتوپایلوت کانال",
+     "Automates Telegram content ingestion, deduplication, draft preparation, approval and scheduled publishing.",
+     "دریافت محتوا، حذف موارد تکراری، آماده‌سازی پیش‌نویس، تأیید و انتشار زمان‌بندی‌شده کانال تلگرام.",
+     "/static/projects/channel-autopilot.svg",
      "https://github.com/nima1991zare/Channel-Autopilot",
-     "Python · aiogram · Telethon · SQLAlchemy · automation",
-     "/static/demos/Channel-Autopilot/index.html", 0, "IRT", 0, 1),
+     "Python · aiogram · Telethon · SQLAlchemy",
+     "/static/demos/channel-autopilot/index.html", 0, "IRT", 0, 1),
     ("SubGate", "ساب‌گیت",
      "Paid-channel subscriptions with watch-only USDT verification on TRON and TON, renewals and automatic expiry handling.",
      "اشتراک کانال خصوصی با تأیید بدون کلید پرداخت USDT روی TRON و TON، تمدید و مدیریت خودکار انقضا.",
@@ -282,16 +282,26 @@ def init_db() -> None:
             "title_en,title_fa,desc_en,desc_fa,image,url,tech,demo_url,"
             "price,currency,buyable,sort"
         )
+        conn.execute(
+            "UPDATE telegram_bots SET title_en=? WHERE title_en LIKE ?",
+            ("Channel Autopilot", "% Channel Autopilot"),
+        )
         for row in FEATURED_GAMES:
             if conn.execute(
                     "SELECT 1 FROM games WHERE title_en=?", (row[0],)).fetchone() is None:
                 conn.execute(
                     f"INSERT INTO games({featured_cols}) VALUES({','.join('?' * 12)})", row)
         for row in FEATURED_BOTS:
-            if conn.execute(
-                    "SELECT 1 FROM telegram_bots WHERE title_en=?", (row[0],)).fetchone() is None:
+            existing = conn.execute(
+                "SELECT id FROM telegram_bots WHERE title_en=?", (row[0],)).fetchone()
+            if existing is None:
                 conn.execute(
                     f"INSERT INTO telegram_bots({featured_cols}) VALUES({','.join('?' * 12)})", row)
+            else:
+                conn.execute(
+                    "UPDATE telegram_bots SET title_fa=?,desc_en=?,desc_fa=?,image=?,url=?,tech=?,"
+                    "demo_url=?,price=?,currency=?,buyable=?,sort=?,active=1 WHERE id=?",
+                    row[1:] + (existing["id"],))
         website_cols = (
             "title_en,title_fa,desc_en,desc_fa,image,url,tech,demo_url,"
             "price,currency,demo_only,sort"

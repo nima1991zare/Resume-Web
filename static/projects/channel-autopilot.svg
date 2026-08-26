@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 675" role="img" aria-labelledby="title desc">
+  <title id="title">Channel Autopilot</title>
+  <desc id="desc">Connected content sources flowing through a processing pipeline into Telegram.</desc>
+  <defs>
+    <linearGradient id="bg" x2="1" y2="1"><stop stop-color="#071a2b"/><stop offset="1" stop-color="#08111f"/></linearGradient>
+    <linearGradient id="beam"><stop stop-color="#2dd4bf"/><stop offset="1" stop-color="#38bdf8"/></linearGradient>
+    <filter id="glow"><feGaussianBlur stdDeviation="10" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+  </defs>
+  <rect width="1200" height="675" fill="url(#bg)"/>
+  <g opacity=".15" stroke="#67e8f9"><path d="M0 100h1200M0 200h1200M0 300h1200M0 400h1200M0 500h1200M0 600h1200"/><path d="M100 0v675M300 0v675M500 0v675M700 0v675M900 0v675M1100 0v675"/></g>
+  <g fill="#0b2237" stroke="#1e7490" stroke-width="3"><rect x="90" y="165" width="210" height="78" rx="20"/><rect x="90" y="298" width="210" height="78" rx="20"/><rect x="90" y="431" width="210" height="78" rx="20"/></g>
+  <g fill="#b6e9f2" font-family="Arial,sans-serif" font-size="26" font-weight="700"><text x="155" y="214">RSS / ATOM</text><text x="140" y="347">YOUTUBE</text><text x="126" y="480">TELEGRAM</text></g>
+  <g stroke="url(#beam)" stroke-width="5" fill="none" filter="url(#glow)"><path d="M300 204C410 204 405 337 500 337"/><path d="M300 337h200"/><path d="M300 470C410 470 405 337 500 337"/><path d="M700 337h170"/></g>
+  <rect x="500" y="220" width="200" height="234" rx="36" fill="#10283c" stroke="#2dd4bf" stroke-width="4"/>
+  <circle cx="600" cy="314" r="48" fill="none" stroke="#5eead4" stroke-width="5"/><path d="M600 274v80M560 314h80" stroke="#5eead4" stroke-width="5"/>
+  <text x="532" y="397" fill="#f0fdfa" font-family="Arial,sans-serif" font-size="30" font-weight="800">CONTENT</text>
+  <circle cx="974" cy="337" r="104" fill="#229ed9" filter="url(#glow)"/><path d="m919 334 111-43-26 112-34-31-22 21 4-36z" fill="white"/>
+  <text x="88" y="98" fill="#f8fafc" font-family="Arial,sans-serif" font-size="52" font-weight="800">CHANNEL AUTOPILOT</text>
+  <text x="91" y="557" fill="#5eead4" font-family="Arial,sans-serif" font-size="24" letter-spacing="5">INGEST  •  DEDUP  •  REWRITE  •  PUBLISH</text>
+</svg>

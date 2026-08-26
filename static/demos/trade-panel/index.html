@@ -176,25 +176,11 @@
   .alert-meta{font-size:11px;color:var(--muted);margin-top:2px}
   .alert-dir{width:30px;height:30px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:14px;flex:none}
   .alert-dir.up{background:rgba(22,199,132,.12)} .alert-dir.down{background:rgba(234,57,67,.12)}
-  /* Chat */
-  .chat-box{display:flex;flex-direction:column;height:calc(100vh - 210px);min-height:340px}
-  .chat-log{flex:1;overflow-y:auto;display:flex;flex-direction:column;gap:12px;padding:4px 2px 12px}
-  .msg{max-width:72%;padding:10px 13px;border-radius:12px;font-size:12.5px;line-height:1.55;white-space:pre-wrap}
-  .msg.user{align-self:flex-end;background:rgba(59,130,246,.18);border:1px solid rgba(59,130,246,.3);border-bottom-right-radius:4px}
-  .msg.automation{align-self:flex-start;background:var(--panel2);border:1px solid var(--border);border-bottom-left-radius:4px}
-  .msg .who{font-size:10px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:var(--muted);margin-bottom:4px}
-  .chat-input{display:flex;gap:8px;padding-top:10px;border-top:1px solid var(--border)}
-  .chat-input input{
-    flex:1;background:var(--panel2);border:1px solid var(--border);border-radius:8px;color:var(--text);
-    padding:10px 12px;font-size:12.5px;font-family:inherit;outline:none;
-  }
-  .chat-input input:focus{border-color:rgba(59,130,246,.5)}
   .btn{
     background:var(--accent);color:#fff;border:0;border-radius:8px;padding:10px 18px;
     font-weight:600;font-size:12.5px;cursor:pointer;font-family:inherit;
   }
   .btn:hover{filter:brightness(1.1)}
-  .typing{font-size:11px;color:var(--muted);font-style:italic;align-self:flex-start;padding:2px 6px}
   /* Backtest */
   #equityCanvas{width:100%;height:220px;display:block}
   .bt-grid{grid-template-columns:minmax(0,2fr) minmax(240px,1fr)}
@@ -226,9 +212,6 @@
     .sidebar-foot{display:none}
     .content{padding:12px}
     .dash-top{grid-template-columns:1fr 1fr}
-    .msg{max-width:90%}
-    .chat-box{height:auto}
-    .chat-log{max-height:50vh}
   }
 </style>
 </head>
@@ -273,10 +256,6 @@
       <div class="nav-item" data-view="alerts">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8a6 6 0 10-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 01-3.4 0"/></svg>
         <span>Alerts</span>
-      </div>
-      <div class="nav-item" data-view="assistant">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12a8 8 0 01-8 8H5l-2 2V12a8 8 0 018-8h2a8 8 0 018 8z"/><circle cx="9.5" cy="12" r=".8" fill="currentColor"/><circle cx="13" cy="12" r=".8" fill="currentColor"/><circle cx="16.5" cy="12" r=".8" fill="currentColor"/></svg>
-        <span>automation Assistant</span>
       </div>
     </nav>
     <div class="sidebar-foot"><span class="live-dot"></span>Simulated feed &middot; v2.4.1</div>
@@ -459,19 +438,6 @@
         <h2 class="view-title">Price Alerts</h2>
         <div class="view-sub">Toggles are visual only in this demo</div>
         <div class="card" id="alertsList" style="max-width:720px"></div>
-      </section>
-
-      <!-- ================= automation ASSISTANT ================= -->
-      <section class="view" id="view-assistant">
-        <h2 class="view-title">automation Assistant</h2>
-        <div class="view-sub">Chart analysis &amp; trade coaching &middot; scripted demo</div>
-        <div class="card chat-box">
-          <div class="chat-log" id="chatLog"></div>
-          <div class="chat-input">
-            <input id="chatInput" placeholder="Ask about a chart, setup, or risk plan..." autocomplete="off">
-            <button class="btn" id="chatSend">Send</button>
-          </div>
-        </div>
       </section>
 
     </div>
@@ -806,44 +772,6 @@ document.getElementById("alertsList").innerHTML = ALERTS.map(function(a,i){
 document.getElementById("alertsList").addEventListener("click", function(e){
   var t = e.target.closest(".toggle");
   if(t) t.classList.toggle("on");
-});
-
-/* ---------------- automation Assistant (scripted) ---------------- */
-var chatLog = document.getElementById("chatLog");
-function addMsg(who, text){
-  var div = document.createElement("div");
-  div.className = "msg " + (who === "user" ? "user" : "automation");
-  div.innerHTML = '<div class="who">'+(who==="user"?"You":"automation Analyst")+'</div>' + text;
-  chatLog.appendChild(div);
-  chatLog.scrollTop = chatLog.scrollHeight;
-}
-addMsg("user", "Analyze the BTC/USDT 4H chart — is this a good long entry?");
-addMsg("automation", "Looking at the 4H structure: price is holding above the 21 EMA with rising volume, and the recent pullback swept liquidity at $65,100 before reclaiming the range.\n\n• Bias: bullish continuation while $64,800 holds\n• Entry zone: $66,200–66,600\n• Invalidation: 4H close below $64,800\n• Targets: $69,400 then $71,200\n\nRisk no more than 1% of equity on this setup.");
-addMsg("user", "What position size should I use with a $128k account?");
-addMsg("automation", "With 1% risk ($1,285) and a stop ~2.4% away from entry, position size ≈ $53,500 notional, or about 0.79 BTC at current prices. Consider scaling in with 2 tranches to improve average entry.");
-
-function cannedReply(){
-  var typing = document.createElement("div");
-  typing.className = "typing";
-  typing.textContent = "automation Analyst is typing…";
-  chatLog.appendChild(typing);
-  chatLog.scrollTop = chatLog.scrollHeight;
-  setTimeout(function(){
-    typing.remove();
-    addMsg("automation", "Demo mode — automation analysis available in the full version.");
-  }, 1100);
-}
-function sendChat(){
-  var inp = document.getElementById("chatInput");
-  var v = inp.value.trim();
-  if(!v) return;
-  addMsg("user", v.replace(/[<>&]/g, function(c){ return {"<":"&lt;",">":"&gt;","&":"&amp;"}[c]; }));
-  inp.value = "";
-  cannedReply();
-}
-document.getElementById("chatSend").addEventListener("click", sendChat);
-document.getElementById("chatInput").addEventListener("keydown", function(e){
-  if(e.key === "Enter") sendChat();
 });
 
 /* ---------------- Fake live ticker jitter ---------------- */
