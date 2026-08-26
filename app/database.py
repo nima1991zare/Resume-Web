@@ -70,6 +70,23 @@ CREATE TABLE IF NOT EXISTS games (
     active    INTEGER NOT NULL DEFAULT 1
 );
 
+CREATE TABLE IF NOT EXISTS telegram_bots (
+    id        INTEGER PRIMARY KEY AUTOINCREMENT,
+    title_en  TEXT NOT NULL,
+    title_fa  TEXT NOT NULL DEFAULT '',
+    desc_en   TEXT NOT NULL DEFAULT '',
+    desc_fa   TEXT NOT NULL DEFAULT '',
+    image     TEXT NOT NULL DEFAULT '',
+    url       TEXT NOT NULL DEFAULT '',
+    tech      TEXT NOT NULL DEFAULT '',
+    demo_url  TEXT NOT NULL DEFAULT '',
+    price     REAL NOT NULL DEFAULT 0,
+    currency  TEXT NOT NULL DEFAULT 'USD',
+    buyable   INTEGER NOT NULL DEFAULT 1,
+    sort      INTEGER NOT NULL DEFAULT 0,
+    active    INTEGER NOT NULL DEFAULT 1
+);
+
 CREATE TABLE IF NOT EXISTS websites (
     id        INTEGER PRIMARY KEY AUTOINCREMENT,
     title_en  TEXT NOT NULL,
@@ -173,6 +190,39 @@ SEED_WEBSITES = [
      "", "", "HTML · CSS · JS", 200, "USD"),
 ]
 
+FEATURED_GAMES = [
+    ("Shadow Runner", "شدو رانر",
+     "A cross-platform 3D stealth runner with six characters, two camera views and 1,000 deterministic levels across 50 districts.",
+     "یک رانر مخفی‌کاری سه‌بعدی چندسکویی با شش شخصیت، دو نمای دوربین و ۱۰۰۰ مرحله قطعی در ۵۰ منطقه.",
+     "/static/projects/shadow-runner.svg", "",
+     "Three.js · JavaScript · Vite · Capacitor · PWA",
+     "/static/demos/shadow-runner/index.html", 0, "IRT", 0, 3),
+]
+
+FEATURED_BOTS = [
+    ("automation Channel Autopilot", "اتوپایلوت هوشمند کانال",
+     "Automates Telegram channel ingestion, automation rewriting, deduplication, approval and scheduled publishing.",
+     "دریافت محتوا، بازنویسی هوشمند، حذف موارد تکراری، تأیید و انتشار زمان‌بندی‌شده کانال تلگرام.",
+     "/static/projects/Channel-Autopilot.svg",
+     "https://github.com/nima1991zare/Channel-Autopilot",
+     "Python · aiogram · Telethon · SQLAlchemy · automation",
+     "/static/demos/Channel-Autopilot/index.html", 0, "IRT", 0, 1),
+    ("SubGate", "ساب‌گیت",
+     "Paid-channel subscriptions with watch-only USDT verification on TRON and TON, renewals and automatic expiry handling.",
+     "اشتراک کانال خصوصی با تأیید بدون کلید پرداخت USDT روی TRON و TON، تمدید و مدیریت خودکار انقضا.",
+     "/static/projects/subgate.svg",
+     "https://github.com/nima1991zare/Telegram-Paid-Channel-Subscription-Bot-with-USDT-Auto-Payment",
+     "Python · aiogram · USDT · TRON · TON · SQLAlchemy",
+     "/static/demos/subgate/index.html", 0, "IRT", 0, 2),
+    ("Instagram DM Order Automation", "اتوماسیون سفارش دایرکت اینستاگرام",
+     "Persian-first product replies and order capture from Instagram DMs, managed through a Telegram admin bot.",
+     "پاسخ‌گویی فارسی و ثبت سفارش از دایرکت اینستاگرام با مدیریت کامل از طریق ربات تلگرام.",
+     "/static/projects/instagram-dm-automation.svg",
+     "https://github.com/nima1991zare/Instagram-DM-Order-Automation",
+     "Python · aiogram · instagrapi · SQLAlchemy · Zarinpal",
+     "/static/demos/instagram-dm-automation/index.html", 0, "IRT", 0, 3),
+]
+
 SEED_BRANDS = [
     ("Brand One", "", ""),
     ("Brand Two", "", ""),
@@ -185,7 +235,7 @@ def init_db() -> None:
     try:
         conn.executescript(SCHEMA)
         # migration: add demo_url to content tables created before the column existed
-        for table in ("apps", "games", "websites"):
+        for table in ("apps", "games", "telegram_bots", "websites"):
             cols = [r["name"] for r in conn.execute(f"PRAGMA table_info({table})")]
             if "demo_url" not in cols:
                 conn.execute(
@@ -208,6 +258,20 @@ def init_db() -> None:
             conn.executemany(
                 "INSERT INTO websites(title_en,title_fa,desc_en,desc_fa,image,url,tech,price,currency) "
                 "VALUES(?,?,?,?,?,?,?,?,?)", SEED_WEBSITES)
+        featured_cols = (
+            "title_en,title_fa,desc_en,desc_fa,image,url,tech,demo_url,"
+            "price,currency,buyable,sort"
+        )
+        for row in FEATURED_GAMES:
+            if conn.execute(
+                    "SELECT 1 FROM games WHERE title_en=?", (row[0],)).fetchone() is None:
+                conn.execute(
+                    f"INSERT INTO games({featured_cols}) VALUES({','.join('?' * 12)})", row)
+        for row in FEATURED_BOTS:
+            if conn.execute(
+                    "SELECT 1 FROM telegram_bots WHERE title_en=?", (row[0],)).fetchone() is None:
+                conn.execute(
+                    f"INSERT INTO telegram_bots({featured_cols}) VALUES({','.join('?' * 12)})", row)
         if conn.execute("SELECT COUNT(*) c FROM brands").fetchone()["c"] == 0:
             conn.executemany("INSERT INTO brands(name,logo,url) VALUES(?,?,?)", SEED_BRANDS)
         conn.commit()

@@ -13,9 +13,11 @@
       "pd.buy": "Buy Source Code",
       "pd.order": "Order a Similar One",
       "pd.visit": "Open Live",
+      "pd.source": "View Source",
       "pd.demo": "View Demo",
       "pd.note": "Purchase includes the complete source code — and I customize the design for you before delivery.",
       "pd.type.apps": "APPLICATION",
+      "pd.type.bots": "TELEGRAM BOT",
       "pd.type.games": "GAME",
       "pd.type.websites": "WEBSITE"
     },
@@ -24,9 +26,11 @@
       "pd.buy": "خرید سورس‌کد",
       "pd.order": "سفارش نمونه مشابه",
       "pd.visit": "مشاهده زنده",
+      "pd.source": "مشاهده سورس",
       "pd.demo": "مشاهده دمو",
       "pd.note": "خرید شامل سورس‌کد کامل است — و طراحی را پیش از تحویل مطابق سلیقه شما شخصی‌سازی می‌کنم.",
       "pd.type.apps": "اپلیکیشن",
+      "pd.type.bots": "ربات تلگرام",
       "pd.type.games": "بازی",
       "pd.type.websites": "وب‌سایت"
     }
@@ -93,7 +97,8 @@
       actions.push('<a class="btn btn-ghost" href="' + esc(P.demo_url) + '" target="_blank" rel="noopener">' + t("pd.demo") + "</a>");
     }
     if (P.url && /^https?:\/\//i.test(P.url)) {
-      actions.push('<a class="btn btn-ghost" href="' + esc(P.url) + '" target="_blank" rel="noopener">' + t("pd.visit") + "</a>");
+      actions.push('<a class="btn btn-ghost" href="' + esc(P.url) + '" target="_blank" rel="noopener">' +
+        t(P.type === "bots" ? "pd.source" : "pd.visit") + "</a>");
     }
     if (P.buyable) {
       actions.push('<a class="btn btn-primary" href="/?subject=' + subject + '#contact">' + t("pd.buy") + "</a>");
@@ -113,7 +118,7 @@
   render();
 
   // set the morphing background to this product type's formation
-  var PHASES = { apps: 2, games: 3, websites: 4 };
+  var PHASES = { apps: 2, bots: 3, games: 4, websites: 5 };
   var tries = 0;
   (function setPhase() {
     if (window.MORPH && window.MORPH.setPhase) {

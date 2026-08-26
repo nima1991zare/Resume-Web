@@ -4,7 +4,7 @@
      code updates always arrive by the next visit, never stuck stale)
    - pages: network-first with offline fallback
    - API and the entire admin panel: NEVER touched by this worker */
-var CACHE = "nima-v15";
+var CACHE = "nima-v16";
 var PRECACHE = [
   "/",
   "/static/css/fonts.css",
@@ -29,7 +29,9 @@ self.addEventListener("install", function (e) {
 self.addEventListener("activate", function (e) {
   e.waitUntil(
     caches.keys().then(function (keys) {
-      return Promise.all(keys.filter(function (k) { return k !== CACHE; })
+      return Promise.all(keys.filter(function (k) {
+        return k.indexOf("nima-") === 0 && k !== CACHE;
+      })
         .map(function (k) { return caches.delete(k); }));
     }).then(function () { return self.clients.claim(); })
   );

@@ -2,10 +2,10 @@
    One canvas, two layers:
    · a full-screen living starfield (drifting + twinkling, edge to edge)
    · a 3D formation that morphs as you scroll:
-     0 nebula → 1 DNA helix → 2 data grid → 3 wireframe globe
-     → 4 orbit rings → 5 vortex.
+      0 nebula → 1 DNA helix → 2 data grid → 3 connected network
+      → 4 space invader → 5 wireframe globe → 6 orbit rings → 7 vortex.
    Always animated. Reduced-motion users get a slower, gentler version.
-   Exposes window.MORPH.setPhase(float 0..5). */
+   Exposes window.MORPH.setPhase(float 0..7). */
 (function () {
   "use strict";
 
@@ -58,10 +58,11 @@
     [74, 222, 128],   // 0 hero      — green
     [56, 189, 248],   // 1 about     — cyan
     [167, 139, 250],  // 2 apps      — violet
-    [251, 113, 133],  // 3 games     — rose
-    [96, 165, 250],   // 4 websites  — blue
-    [251, 191, 36],   // 5 brands    — amber
-    [74, 222, 128]    // 6 contact   — green
+    [45, 212, 191],   // 3 bots      — teal
+    [251, 113, 133],  // 4 games     — rose
+    [96, 165, 250],   // 5 websites  — blue
+    [251, 191, 36],   // 6 brands    — amber
+    [74, 222, 128]    // 7 contact   — green
   ];
 
   /* ---------------- formations ----------------
@@ -128,7 +129,26 @@
     return (i % gCols) < gCols - 1 ? i + 1 : -1;
   }
 
-  // 3 · INVADER — classic space-invader bitmap doing its shuffle
+  // 3 · NETWORK — seven linked service hubs with orbiting worker nodes
+  function fNetwork(i, t, o) {
+    var hub = i % 7;
+    var a = hub / 7 * Math.PI * 2 + t * 0.12;
+    var hr = hub === 0 ? 0 : R * 0.72;
+    var hx = Math.cos(a) * hr;
+    var hy = Math.sin(a) * hr * 0.65;
+    if (i < 7) {
+      o[0] = hx; o[1] = hy; o[2] = Math.sin(a * 2) * R * 0.2;
+      return;
+    }
+    var local = rnd1[i] * Math.PI * 2 + t * (0.25 + rnd3[i] * 0.2);
+    var lr = (0.08 + rnd2[i] * 0.17) * R;
+    o[0] = hx + Math.cos(local) * lr;
+    o[1] = hy + Math.sin(local) * lr;
+    o[2] = (rnd3[i] - 0.5) * R * 0.55;
+  }
+  function lNetwork(i) { return i < 7 ? (i === 0 ? -1 : 0) : i % 7; }
+
+  // 4 · INVADER — classic space-invader bitmap doing its shuffle
   var INV = [
     "00100000100",
     "00010001000",
@@ -160,7 +180,7 @@
   }
   function lInvader() { return -1; }
 
-  // 4 · GLOBE — fibonacci sphere, rotating
+  // 5 · GLOBE — fibonacci sphere, rotating
   var GA = Math.PI * (3 - Math.sqrt(5));
   function fGlobe(i, t, o) {
     var k = (i + 0.5) / N;
@@ -174,7 +194,7 @@
   }
   function lGlobe(i) { return i < N - 1 ? i + 1 : -1; }
 
-  // 4 · ORBITS — three tilted rings + core
+  // 6 · ORBITS — three tilted rings + core
   function fOrbits(i, t, o) {
     var core = Math.floor(N * 0.12);
     if (i < core) {                       // core cluster
@@ -202,7 +222,7 @@
     return (i + 3 < N) && (j % 3 === (j + 3) % 3) ? i + 3 : -1;
   }
 
-  // 5 · VORTEX — converging spiral, breathing
+  // 7 · VORTEX — converging spiral, breathing
   function fVortex(i, t, o) {
     var k = i / N;
     var pulse = 1 + Math.sin(t * 1.6) * 0.08;
@@ -218,6 +238,7 @@
     { f: fNebula,  l: lNebula  },
     { f: fHelix,   l: lHelix   },
     { f: fGrid,    l: lGrid    },
+    { f: fNetwork, l: lNetwork },
     { f: fInvader, l: lInvader },
     { f: fGlobe,   l: lGlobe   },
     { f: fOrbits,  l: lOrbits  },

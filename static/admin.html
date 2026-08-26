@@ -44,6 +44,10 @@
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M6 12h4M8 10v4M15 11h.01M18 13h.01"/><path d="M17.3 5H6.7a4.7 4.7 0 00-4.6 5.6l1 5.3a2.8 2.8 0 005 1.1l1.2-1.6a3 3 0 012.4-1.2h.6a3 3 0 012.4 1.2l1.2 1.6a2.8 2.8 0 005-1.1l1-5.3A4.7 4.7 0 0017.3 5z"/></svg>
           Games
         </button>
+        <button data-tab="bots">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="4" y="6" width="16" height="13" rx="4"/><path d="M9 11h.01M15 11h.01M9 15h6M12 6V3M9 3h6"/></svg>
+          Telegram Bots
+        </button>
         <button data-tab="websites">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3a15 15 0 010 18M12 3a15 15 0 000 18"/></svg>
           Websites
@@ -103,6 +107,15 @@
           <button class="btn btn-primary" data-add="games">+ Add Game</button>
         </div>
         <div class="table-wrap"><table id="table-games"></table></div>
+      </section>
+
+      <!-- ===== telegram bots ===== -->
+      <section class="tab" id="tab-bots" hidden>
+        <div class="tab-head">
+          <h2>Telegram Bots</h2>
+          <button class="btn btn-primary" data-add="bots">+ Add Telegram Bot</button>
+        </div>
+        <div class="table-wrap"><table id="table-bots"></table></div>
       </section>
 
       <!-- ===== websites ===== -->

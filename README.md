@@ -27,6 +27,7 @@ python -m uvicorn app.main:app --host 0.0.0.0 --port 8000
 | Hero | Mega editorial typography (gradient + outline), skill marquee, scroll progress bar, film-grain + vignette |
 | About (1) | Bilingual description, editable from admin |
 | Applications (2) | Buyable apps with price, currency, tech tags, images — full CRUD + price editing in admin |
+| Telegram bots (3) | Bot projects with interactive demos, source links and full CRUD in admin |
 | Brands (3) | Logos/names of brands worked with — CRUD in admin |
 | Websites (4) | Sample sites with live URL or "order similar" CTA — CRUD in admin |
 | Contact | Form saved to DB + phone/email/Telegram/GitHub/LinkedIn channels |

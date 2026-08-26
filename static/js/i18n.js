@@ -3,6 +3,7 @@ window.I18N = {
   en: {
     "nav.about": "About",
     "nav.apps": "Applications",
+    "nav.bots": "Telegram Bots",
     "nav.games": "Games",
     "nav.websites": "Websites",
     "nav.brands": "Brands",
@@ -33,6 +34,10 @@ window.I18N = {
     "apps.buy": "Buy Source",
     "apps.buyable": "For Sale",
     "apps.demo": "View Demo",
+
+    "bots.title": "Telegram Bots I've Built",
+    "bots.sub": "Production-ready automation for channels, subscriptions, payments and commerce.",
+    "bots.source": "Source Code",
 
     "web.title": "Websites I've Built",
     "web.sub": "Sample projects — every one built from scratch with clean architecture.",
@@ -71,6 +76,7 @@ window.I18N = {
   fa: {
     "nav.about": "درباره من",
     "nav.apps": "اپلیکیشن‌ها",
+    "nav.bots": "ربات‌های تلگرام",
     "nav.games": "بازی‌ها",
     "nav.websites": "وب‌سایت‌ها",
     "nav.brands": "برندها",
@@ -101,6 +107,10 @@ window.I18N = {
     "apps.buy": "خرید سورس",
     "apps.buyable": "قابل خرید",
     "apps.demo": "مشاهده دمو",
+
+    "bots.title": "ربات‌های تلگرامی که ساخته‌ام",
+    "bots.sub": "اتوماسیون آماده اجرا برای کانال‌ها، اشتراک‌ها، پرداخت و فروش آنلاین.",
+    "bots.source": "سورس‌کد",
 
     "web.title": "وب‌سایت‌هایی که ساخته‌ام",
     "web.sub": "نمونه پروژه‌ها — همگی از صفر و با معماری تمیز ساخته شده‌اند.",

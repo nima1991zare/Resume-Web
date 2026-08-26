@@ -13,6 +13,7 @@
   --acc-0: #4ADE80;  /* hero    */
   --acc-1: #38BDF8;  /* about   */
   --acc-2: #A78BFA;  /* apps    */
+  --acc-bots: #2DD4BF;
   --acc-3: #60A5FA;  /* web     */
   --acc-4: #FBBF24;  /* brands  */
   --acc: var(--acc-0);
@@ -145,6 +146,7 @@ main { position: relative; z-index: 10; }
 /* section accent tinting */
 #about    { --acc: var(--acc-1); }
 #apps     { --acc: var(--acc-2); }
+#bots     { --acc: var(--acc-bots); }
 #websites { --acc: var(--acc-3); }
 #brands   { --acc: var(--acc-4); }
 #contact  { --acc: var(--acc-0); }

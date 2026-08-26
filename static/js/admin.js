@@ -173,8 +173,8 @@
   function loadItems(table) {
     api("/api/admin/items/" + table).then(function (rows) {
       var el = document.getElementById("table-" + table);
-      var hasBuyable = table === "apps" || table === "games";
-      var hasUrl = table === "websites" || table === "games";
+      var hasBuyable = table === "apps" || table === "bots" || table === "games";
+      var hasUrl = table === "websites" || table === "bots" || table === "games";
       var head = "<tr><th>Image</th><th>Title</th><th>Price</th>" +
         (hasBuyable ? "<th>Buyable</th>" : "") + (hasUrl ? "<th>URL</th>" : "") +
         "<th>Status</th><th>Sort</th><th>Actions</th></tr>";
@@ -198,7 +198,7 @@
     }).catch(function () {});
   }
 
-  ["apps", "games", "websites"].forEach(function (table) {
+  ["apps", "bots", "games", "websites"].forEach(function (table) {
     document.getElementById("table-" + table).addEventListener("click", function (e) {
       var btn = e.target.closest("button[data-act]");
       if (!btn) return;
@@ -247,11 +247,11 @@
     editCtx = { table: table, id: row ? row.id : null };
     document.getElementById("modal-title").textContent =
       (row ? "Edit " : "Add ") +
-      (table === "apps" ? "Application" : (table === "games" ? "Game" : "Website"));
+      (table === "apps" ? "Application" : (table === "bots" ? "Telegram Bot" : (table === "games" ? "Game" : "Website")));
     document.getElementById("url-field").style.display =
-      (table === "websites" || table === "games") ? "" : "none";
+      (table === "websites" || table === "bots" || table === "games") ? "" : "none";
     document.getElementById("buyable-field").style.display =
-      (table === "apps" || table === "games") ? "" : "none";
+      (table === "apps" || table === "bots" || table === "games") ? "" : "none";
 
     itemForm.reset();
     itemErr.textContent = "";
@@ -499,6 +499,7 @@
   var loaders = {
     stats: loadStats,
     apps: function () { loadItems("apps"); },
+    bots: function () { loadItems("bots"); },
     games: function () { loadItems("games"); },
     websites: function () { loadItems("websites"); },
     brands: loadBrands,

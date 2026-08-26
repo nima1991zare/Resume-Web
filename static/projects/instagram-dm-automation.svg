@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 675" role="img" aria-labelledby="title desc">
+  <title id="title">Instagram DM Order Automation</title>
+  <desc id="desc">Instagram messages transformed into managed Telegram orders.</desc>
+  <defs><linearGradient id="bg" x2="1" y2="1"><stop stop-color="#251039"/><stop offset=".52" stop-color="#151326"/><stop offset="1" stop-color="#071827"/></linearGradient><linearGradient id="ig" x1="0" y1="1" x2="1"><stop stop-color="#ff7a00"/><stop offset=".5" stop-color="#d300c5"/><stop offset="1" stop-color="#7638fa"/></linearGradient><filter id="glow"><feGaussianBlur stdDeviation="9" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter></defs>
+  <rect width="1200" height="675" fill="url(#bg)"/>
+  <g opacity=".08" fill="white"><circle cx="84" cy="590" r="180"/><circle cx="1120" cy="90" r="210"/></g>
+  <rect x="72" y="188" width="342" height="340" rx="38" fill="#21162e" stroke="#e04ccc" stroke-width="3"/>
+  <rect x="786" y="188" width="342" height="340" rx="38" fill="#0c2638" stroke="#38bdf8" stroke-width="3"/>
+  <g fill="#fff" font-family="Arial,sans-serif"><text x="106" y="245" font-size="25" font-weight="800">INSTAGRAM DM</text><text x="820" y="245" font-size="25" font-weight="800">TELEGRAM ADMIN</text></g>
+  <g font-family="Arial,sans-serif" font-size="19"><rect x="105" y="285" width="240" height="62" rx="20" fill="#40274f"/><text x="126" y="322" fill="#fce7f3">Is this jacket in stock?</text><rect x="142" y="369" width="238" height="86" rx="20" fill="url(#ig)"/><text x="166" y="404" fill="white">Yes. Size M is ready.</text><text x="166" y="433" fill="white">Would you like to order?</text></g>
+  <path d="M430 355h328" stroke="url(#ig)" stroke-width="6" stroke-dasharray="14 12" filter="url(#glow)"/><path d="m734 333 30 22-30 22" fill="none" stroke="#38bdf8" stroke-width="6"/>
+  <g font-family="Arial,sans-serif"><rect x="820" y="283" width="274" height="168" rx="24" fill="#12384c"/><text x="846" y="322" fill="#7dd3fc" font-size="18" font-weight="700">NEW ORDER #1042</text><text x="846" y="357" fill="white" font-size="22">Jacket • Size M</text><text x="846" y="390" fill="#b6d9e8" font-size="18">Customer: Sara</text><rect x="846" y="410" width="103" height="28" rx="14" fill="#22c55e"/><text x="867" y="430" fill="#052e16" font-size="15" font-weight="800">APPROVE</text><rect x="960" y="410" width="103" height="28" rx="14" fill="#334155"/><text x="980" y="430" fill="white" font-size="15" font-weight="800">REVIEW</text></g>
+  <text x="72" y="101" fill="#fff" font-family="Arial,sans-serif" font-size="52" font-weight="800">DM → ORDER AUTOMATION</text>
+  <text x="74" y="145" fill="#f0abfc" font-family="Arial,sans-serif" font-size="22" letter-spacing="4">REPLY  •  CAPTURE  •  APPROVE  •  FULFIL</text>
+  <text x="72" y="600" fill="#bca9c9" font-family="Arial,sans-serif" font-size="22">PERSIAN-FIRST COMMERCE PIPELINE WITH SAFETY CONTROLS</text>
+</svg>

@@ -111,6 +111,70 @@ GAMES = [
         "tech": "Godot 4 · GDScript · Audio DSP",
         "price": 3000000, "currency": "IRT", "buyable": 1, "sort": 2,
     },
+    {
+        "title_en": "Shadow Runner",
+        "title_fa": "شدو رانر",
+        "desc_en": ("A cross-platform 3D stealth runner set in a city where safety moves "
+                    "with the sun. Survive exposure, dash between shadows, collect relics "
+                    "and master 1,000 deterministic levels across 50 districts. Includes "
+                    "six characters, two camera views, touch controls and offline PWA support."),
+        "desc_fa": ("یک رانر مخفی‌کاری سه‌بعدی چندسکویی در شهری که منطقه امن آن با خورشید جابه‌جا "
+                    "می‌شود. بین سایه‌ها حرکت کنید، از نور جان سالم به در ببرید و در ۱۰۰۰ مرحله قطعی "
+                    "در ۵۰ منطقه پیش بروید. دارای شش شخصیت، دو نمای دوربین، کنترل لمسی و اجرای آفلاین."),
+        "image": "/static/projects/shadow-runner.svg",
+        "demo_url": "/static/demos/shadow-runner/index.html",
+        "url": "",
+        "tech": "Three.js · JavaScript · Vite · Capacitor · PWA",
+        "price": 0, "currency": "IRT", "buyable": 0, "sort": 3,
+    },
+]
+
+BOTS = [
+    {
+        "title_en": "automation Channel Autopilot",
+        "title_fa": "اتوپایلوت هوشمند کانال",
+        "desc_en": ("Runs Telegram channels automatically: ingests RSS, YouTube and public "
+                    "Telegram sources, deduplicates stories, rewrites and translates them with "
+                    "automation, then publishes on a schedule or sends drafts for admin approval."),
+        "desc_fa": ("مدیریت خودکار کانال تلگرام: دریافت محتوا از RSS، یوتیوب و کانال‌های عمومی، "
+                    "حذف مطالب تکراری، بازنویسی و ترجمه با هوش مصنوعی و انتشار زمان‌بندی‌شده یا "
+                    "ارسال پیش‌نویس برای تأیید مدیر."),
+        "image": "/static/projects/Channel-Autopilot.svg",
+        "demo_url": "/static/demos/Channel-Autopilot/index.html",
+        "url": "https://github.com/nima1991zare/Channel-Autopilot",
+        "tech": "Python · aiogram · Telethon · SQLAlchemy · automation",
+        "price": 0, "currency": "IRT", "buyable": 0, "sort": 1,
+    },
+    {
+        "title_en": "SubGate",
+        "title_fa": "ساب‌گیت",
+        "desc_en": ("Paid-channel subscription bot with automated watch-only USDT payments on "
+                    "TRON and TON. It verifies transfers on-chain, issues single-use invites, "
+                    "tracks renewals and removes expired members without handling private keys."),
+        "desc_fa": ("ربات اشتراک کانال خصوصی با پرداخت خودکار USDT روی شبکه‌های TRON و TON. "
+                    "تراکنش را روی زنجیره تأیید می‌کند، لینک دعوت یک‌بارمصرف می‌سازد، تمدیدها را "
+                    "پیگیری می‌کند و بدون دسترسی به کلید خصوصی اعضای منقضی را حذف می‌کند."),
+        "image": "/static/projects/subgate.svg",
+        "demo_url": "/static/demos/subgate/index.html",
+        "url": "https://github.com/nima1991zare/Telegram-Paid-Channel-Subscription-Bot-with-USDT-Auto-Payment",
+        "tech": "Python · aiogram · USDT · TRON · TON · SQLAlchemy",
+        "price": 0, "currency": "IRT", "buyable": 0, "sort": 2,
+    },
+    {
+        "title_en": "Instagram DM Order Automation",
+        "title_fa": "اتوماسیون سفارش دایرکت اینستاگرام",
+        "desc_en": ("Persian-first sales assistant that answers product questions, captures "
+                    "orders from Instagram DMs and sends each order to a Telegram admin bot for "
+                    "approval, payment and fulfilment, with strict safety controls."),
+        "desc_fa": ("دستیار فروش فارسی که به سؤال‌های محصول پاسخ می‌دهد، سفارش را از دایرکت "
+                    "اینستاگرام ثبت می‌کند و برای تأیید، پرداخت و ارسال به ربات مدیریت تلگرام می‌فرستد؛ "
+                    "همراه با کنترل‌های سخت‌گیرانه ایمنی."),
+        "image": "/static/projects/instagram-dm-automation.svg",
+        "demo_url": "/static/demos/instagram-dm-automation/index.html",
+        "url": "https://github.com/nima1991zare/Instagram-DM-Order-Automation",
+        "tech": "Python · aiogram · instagrapi · SQLAlchemy · Zarinpal",
+        "price": 0, "currency": "IRT", "buyable": 0, "sort": 3,
+    },
 ]
 
 WEBSITES = [
@@ -164,6 +228,7 @@ def seed():
                     "demo_url", "price", "currency", "buyable", "sort"]
         game_cols = app_cols[:5] + ["url", "tech", "demo_url", "price", "currency",
                                     "buyable", "sort"]
+        bot_cols = game_cols
         web_cols = ["title_en", "title_fa", "desc_en", "desc_fa", "image", "url", "tech",
                     "demo_url", "price", "currency", "sort"]
 
@@ -171,6 +236,8 @@ def seed():
             print("apps:", item["title_en"], "->", upsert(conn, "apps", item, app_cols))
         for item in GAMES:
             print("games:", item["title_en"], "->", upsert(conn, "games", item, game_cols))
+        for item in BOTS:
+            print("bots:", item["title_en"], "->", upsert(conn, "telegram_bots", item, bot_cols))
         for item in WEBSITES:
             print("websites:", item["title_en"], "->", upsert(conn, "websites", item, web_cols))
         conn.commit()

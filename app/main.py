@@ -256,12 +256,15 @@ def _load_public_content() -> dict:
         games = [dict(r) for r in conn.execute(
             "SELECT id,title_en,title_fa,desc_en,desc_fa,image,url,tech,demo_url,price,currency,buyable "
             "FROM games WHERE active=1 ORDER BY sort, id")]
+        bots = [dict(r) for r in conn.execute(
+            "SELECT id,title_en,title_fa,desc_en,desc_fa,image,url,tech,demo_url,price,currency,buyable "
+            "FROM telegram_bots WHERE active=1 ORDER BY sort, id")]
         websites = [dict(r) for r in conn.execute(
             "SELECT id,title_en,title_fa,desc_en,desc_fa,image,url,tech,demo_url,price,currency "
             "FROM websites WHERE active=1 ORDER BY sort, id")]
         brands = [dict(r) for r in conn.execute(
             "SELECT id,name,logo,url FROM brands WHERE active=1 ORDER BY sort, id")]
-        return {"settings": settings, "apps": apps, "games": games,
+        return {"settings": settings, "apps": apps, "bots": bots, "games": games,
                 "websites": websites, "brands": brands}
     finally:
         conn.close()
@@ -367,14 +370,19 @@ def admin_stats(authorization: Optional[str] = Header(None)):
         conn.close()
 
 
-TABLES = {"apps": "apps", "games": "games", "websites": "websites"}
+TABLES = {
+    "apps": "apps", "bots": "telegram_bots",
+    "games": "games", "websites": "websites",
+}
 
 # writable columns per table (games have both a demo URL and a buyable flag)
 TABLE_COLS = {
     "apps": ["title_en", "title_fa", "desc_en", "desc_fa", "image", "tech", "demo_url",
              "price", "currency", "buyable", "sort", "active"],
     "games": ["title_en", "title_fa", "desc_en", "desc_fa", "image", "url", "tech",
-              "demo_url", "price", "currency", "buyable", "sort", "active"],
+               "demo_url", "price", "currency", "buyable", "sort", "active"],
+    "bots": ["title_en", "title_fa", "desc_en", "desc_fa", "image", "url", "tech",
+             "demo_url", "price", "currency", "buyable", "sort", "active"],
     "websites": ["title_en", "title_fa", "desc_en", "desc_fa", "image", "url", "tech",
                  "demo_url", "price", "currency", "sort", "active"],
 }
@@ -688,7 +696,8 @@ def _build_jsonld(content: dict, base: str) -> str:
     }
 
     products = []
-    for kind, items in (("apps", content["apps"]), ("games", content["games"])):
+    for kind, items in (("apps", content["apps"]), ("bots", content["bots"]),
+                        ("games", content["games"])):
         for a in items:
             if not a.get("buyable"):
                 continue
@@ -715,7 +724,7 @@ def _build_jsonld(content: dict, base: str) -> str:
     if products:
         graph.append({
             "@type": "ItemList",
-            "name": "Applications for sale",
+            "name": "Digital products for sale",
             "itemListElement": [
                 {"@type": "ListItem", "position": i + 1, "item": p}
                 for i, p in enumerate(products)
@@ -744,6 +753,12 @@ def _build_noscript(content: dict) -> str:
             price = f' — {_human_price(g["price"], g["currency"])}' if g.get("price") else ""
             parts.append("<li><strong>" + _esc(g["title_en"]) + "</strong>: "
                          + _esc(g["desc_en"]) + _esc(price) + "</li>")
+        parts.append("</ul>")
+    if content["bots"]:
+        parts.append("<h2>Telegram bots</h2><ul>")
+        for bot in content["bots"]:
+            parts.append("<li><strong>" + _esc(bot["title_en"]) + "</strong>: "
+                         + _esc(bot["desc_en"]) + "</li>")
         parts.append("</ul>")
     if content["websites"]:
         parts.append("<h2>Websites built</h2><ul>")
@@ -785,7 +800,10 @@ def _render_index(request: Request) -> str:
     return html
 
 
-TYPE_LABEL = {"apps": "APPLICATION", "games": "GAME", "websites": "WEBSITE"}
+TYPE_LABEL = {
+    "apps": "APPLICATION", "bots": "TELEGRAM BOT",
+    "games": "GAME", "websites": "WEBSITE",
+}
 
 
 def _render_product(request: Request, table: str, item_id: int) -> Optional[str]:
@@ -894,8 +912,9 @@ def sitemap(request: Request):
     try:
         settings = {"site_url": get_setting(conn, "site_url")}
         product_urls = []
-        for table in ("apps", "games", "websites"):
-            for r in conn.execute(f"SELECT id FROM {table} WHERE active=1 ORDER BY id"):
+        for table in ("apps", "bots", "games", "websites"):
+            for r in conn.execute(
+                    f"SELECT id FROM {TABLES[table]} WHERE active=1 ORDER BY id"):
                 product_urls.append(f"/p/{table}/{r['id']}")
     finally:
         conn.close()

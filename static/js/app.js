@@ -161,6 +161,7 @@
 
   function updateSectionVisibility(c) {
     setSectionVisible("apps", c.apps.length > 0);
+    setSectionVisible("bots", (c.bots || []).length > 0);
     setSectionVisible("games", (c.games || []).length > 0);
     setSectionVisible("websites", c.websites.length > 0);
     setSectionVisible("brands", c.brands.length > 0);
@@ -369,6 +370,23 @@
             (isLink(g.url)
               ? '<a class="btn btn-ghost" href="' + esc(g.url) + '" target="_blank" rel="noopener">' + t("web.visit") + "</a>"
               : (g.buyable ? '<a class="btn btn-primary" href="#contact" data-subject="' + esc(pick(g, "title")) + '">' + t("apps.buy") + "</a>" : "")) +
+          "</div></div></article>";
+    }).join("");
+
+    document.getElementById("bots-grid").innerHTML = (c.bots || []).map(function (bot, i) {
+      var link = "/p/bots/" + bot.id;
+      return '<article class="vcard reveal in">' +
+        '<a class="vcard-media" href="' + link + '">' + media(bot) +
+          '<span class="vcard-index">BOT/' + pad(i + 1) + "</span>" +
+          (bot.buyable ? '<span class="vbadge">' + t("apps.buyable") + "</span>" : "") +
+        "</a>" +
+        '<div class="vcard-body"><h3><a href="' + link + '">' + esc(pick(bot, "title")) + "</a></h3>" +
+          '<p class="desc">' + esc(pick(bot, "desc")) + "</p>" + tech(bot.tech) +
+          '<div class="vfoot"><span class="vprice">' + fmtPrice(bot.price, bot.currency) + "</span>" +
+            demoBtn(bot) +
+            (isLink(bot.url)
+              ? '<a class="btn btn-ghost" href="' + esc(bot.url) + '" target="_blank" rel="noopener">' + t("bots.source") + "</a>"
+              : (bot.buyable ? '<a class="btn btn-primary" href="#contact" data-subject="' + esc(pick(bot, "title")) + '">' + t("apps.buy") + "</a>" : "")) +
           "</div></div></article>";
     }).join("");
 

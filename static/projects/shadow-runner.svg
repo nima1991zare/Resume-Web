@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 675" role="img" aria-labelledby="title desc">
+  <title id="title">Shadow Runner</title>
+  <desc id="desc">A runner crossing a geometric city from sunlight into shadow.</desc>
+  <defs><linearGradient id="sky" x2="0" y2="1"><stop stop-color="#d49753"/><stop offset=".58" stop-color="#4e5350"/><stop offset="1" stop-color="#10161b"/></linearGradient><linearGradient id="shade"><stop stop-color="#10161b"/><stop offset="1" stop-color="#1e2b32"/></linearGradient><filter id="sun"><feGaussianBlur stdDeviation="16" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter></defs>
+  <rect width="1200" height="675" fill="url(#sky)"/>
+  <circle cx="920" cy="139" r="71" fill="#ffe4a3" filter="url(#sun)"/>
+  <g fill="#253037"><path d="M0 287h174v388H0zM185 214h169v461H185zM365 320h136v355H365zM811 268h167v407H811zM989 194h211v481H989z"/><g fill="#4c5b5f"><path d="M35 330h22v40H35zM85 330h22v40H85zM235 260h25v43h-25zM287 260h25v43h-25zM1040 244h27v45h-27zM1093 244h27v45h-27z"/></g></g>
+  <path d="M0 675V471l334-124 378 328z" fill="url(#shade)"/><path d="M1200 675V407L920 210 617 675z" fill="#0b1115" opacity=".88"/>
+  <g transform="translate(567 315)" fill="#090d10"><circle cx="0" cy="0" r="28"/><path d="M-19 29 7 27l33 107-37 8-18-54-32 52-31-20 50-89z"/><path d="m5 48 72 35-16 29-70-27z"/><path d="m3 138 54 84-34 20-65-88z"/></g>
+  <path d="M557 472 387 618h334z" fill="#070a0c" opacity=".85"/>
+  <text x="64" y="102" fill="#f8e8d0" font-family="Arial,sans-serif" font-size="67" font-weight="900" letter-spacing="3">SHADOW RUNNER</text>
+  <text x="68" y="148" fill="#fff0d1" font-family="Arial,sans-serif" font-size="22" letter-spacing="6">THE SUN REMEMBERS EVERY STEP</text>
+  <text x="68" y="608" fill="#d9c5aa" font-family="Arial,sans-serif" font-size="23">3D STEALTH RUNNER • 1,000 LEVELS • PLAY OFFLINE</text>
+</svg>
