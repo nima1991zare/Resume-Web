@@ -32,6 +32,7 @@ import asyncio
 import ipaddress
 import json
 import logging
+import os
 import re
 import socket
 import threading
@@ -47,6 +48,38 @@ logger = logging.getLogger("finder")
 
 UA = "NimaPortfolio-ProjectFinder/1.0 (+https://github.com/nima1991zare; local business research)"
 TIMEOUT = httpx.Timeout(connect=10.0, read=30.0, write=10.0, pool=10.0)
+
+
+# ── outbound network ──────────────────────────────────────────────────
+# PythonAnywhere (where the live site runs) allows no direct outbound
+# connections: everything goes through a proxy. Consoles get `http_proxy` and
+# `https_proxy` in their environment, so a hand-run test there succeeds — but
+# the web app process does not get them, so the same code inside the running
+# site fails with "All connection attempts failed". Trusting the environment
+# alone therefore works exactly where you test it and nowhere that matters.
+#
+# The proxy hostname only resolves on hosts that actually have one, which makes
+# resolution a cheap and precise test for "am I somewhere that requires it"
+# — no environment sniffing, no wasted HTTP request, and a no-op on a laptop.
+PROXY_HOST = "proxy.server"
+PROXY_URL = f"http://{PROXY_HOST}:3128"
+
+
+def proxy_url() -> str | None:
+    """The proxy this machine needs, or None to connect directly."""
+    if any(os.environ.get(k) for k in
+           ("https_proxy", "HTTPS_PROXY", "http_proxy", "HTTP_PROXY")):
+        return None          # httpx reads these itself (trust_env)
+    try:
+        socket.gethostbyname(PROXY_HOST)
+    except OSError:
+        return None          # no such proxy here — direct is correct
+    logger.info("routing outbound traffic through %s", PROXY_URL)
+    return PROXY_URL
+
+
+def new_client() -> httpx.AsyncClient:
+    return httpx.AsyncClient(timeout=TIMEOUT, proxy=proxy_url())
 
 
 # ─────────────────────────────────────────────────────── categories
@@ -441,7 +474,16 @@ async def discover(client: httpx.AsyncClient, city: str, cat_keys: list[str],
     request too big. Per-category queries are small enough to get served, and a
     category that still fails costs only itself.
     """
-    coords = await geocode_city(client, city)
+    try:
+        coords = await geocode_city(client, city)
+    except httpx.HTTPError as e:
+        # The first outbound call of a run, so it is where a blocked network
+        # shows up — and a bare "All connection attempts failed" tells nobody
+        # what to do about it.
+        raise RuntimeError(
+            "اتصال به اینترنت برقرار نشد (جست‌وجوی مختصات شهر شکست خورد). "
+            "اگر سایت روی هاست اشتراکی اجرا می‌شود، ترافیک خروجی باید از پراکسی "
+            f"عبور کند. ({type(e).__name__})") from e
     if not coords:
         raise RuntimeError(f"شهر «{city}» روی نقشه پیدا نشد.")
     lat, lon, city_local = coords
@@ -904,7 +946,7 @@ def active_run() -> dict | None:
 
 async def _discover_job(run_id: int, city: str, cat_keys: list[str],
                         radius_km: int, limit: int, do_profile: bool) -> None:
-    async with httpx.AsyncClient(timeout=TIMEOUT) as client:
+    async with new_client() as client:
         _run_set(run_id, message="در حال جست‌وجوی نقشه…")
         businesses, failed = await discover(
             client, city, cat_keys, radius_km, limit,
@@ -1050,7 +1092,7 @@ def launch(kind: str, **kwargs) -> dict:
         run_id = start_run("profile")
 
         async def _job():
-            async with httpx.AsyncClient(timeout=TIMEOUT) as client:
+            async with new_client() as client:
                 n = await _profile_pending(client, run_id, int(kwargs.get("limit") or 200))
                 _run_set(run_id, profiled=n, message=f"{n} سایت بررسی شد.")
         coro_factory = _job
