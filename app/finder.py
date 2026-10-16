@@ -267,13 +267,28 @@ def _is_public_host(host: str) -> bool:
 
 # ─────────────────────────────────────────────────────── discover
 NOMINATIM = "https://nominatim.openstreetmap.org/search"
+# Two things had to be true of every mirror here, and they are not the same
+# thing:
+#
+# 1. It is on PythonAnywhere's outbound allowlist, because that is what the live
+#    site runs on and an un-allowlisted host is simply unreachable from there,
+#    however healthy it is. (https://www.pythonanywhere.com/whitelist/)
+# 2. It actually carries the whole planet. Several public Overpass instances are
+#    regional — overpass.osm.ch is allowlisted, healthy, and answers a query
+#    about Shiraz with HTTP 200 and zero results, because it only holds
+#    Switzerland. That is the worst possible failure: it is indistinguishable
+#    from "there are no pharmacies in Shiraz" unless you go looking.
+#
+# Each of these three was probed with a known-good Shiraz query and returned
+# real results. The empty-result cross-check in overpass() below is the backstop
+# in case that ever stops being true.
 OVERPASS_ENDPOINTS = (
     "https://overpass-api.de/api/interpreter",
     "https://overpass.kumi.systems/api/interpreter",
-    "https://overpass.private.coffee/api/interpreter",
+    "https://overpass.openstreetmap.fr/api/interpreter",
 )
 OVERPASS_BACKOFF = 8.0
-OVERPASS_ROUNDS = 4          # ~4 passes over the mirrors, backing off between
+OVERPASS_ROUNDS = 3          # 3 passes over 5 mirrors, backing off between
 OVERPASS_INTERVAL = 2.0      # between per-category queries: modest volume, no parallelism
 
 
@@ -357,6 +372,7 @@ async def overpass(client: httpx.AsyncClient, body: str,
     # "busy" and "blocked" need different advice, so count which is happening.
     blocked = 0
     attempts = 0
+    empty = None        # an unconfirmed "no results here", pending a second opinion
     for round_no in range(OVERPASS_ROUNDS):
         for endpoint in OVERPASS_ENDPOINTS:
             attempts += 1
@@ -370,11 +386,21 @@ async def overpass(client: httpx.AsyncClient, body: str,
                 continue
             if r.status_code == 200:
                 try:
-                    return r.json()
+                    data = r.json()
                 except json.JSONDecodeError:
                     last = f"{endpoint}: 200 but not JSON"
                     logger.warning("overpass %s", last)
                     continue
+                if data.get("elements"):
+                    return data
+                # A successful but empty answer is not yet believed: a regional
+                # mirror returns exactly this for a city it does not hold. Keep
+                # it, try the others, and only accept "nothing here" if no
+                # mirror can produce anything.
+                empty = data
+                last = f"{endpoint}: 200 but empty"
+                logger.info("overpass %s — cross-checking another mirror", last)
+                continue
             # A proxy refusing the host looks like 403/407, not a busy queue.
             if r.status_code in (401, 403, 407):
                 blocked += 1
@@ -387,6 +413,10 @@ async def overpass(client: httpx.AsyncClient, body: str,
                      f"{OVERPASS_ROUNDS}…")
             await asyncio.sleep(delay)
             delay *= 2          # 8s, 16s, 32s — the queue usually drains by then
+    if empty is not None:
+        # Every reachable mirror agreed there is nothing here. Now it is a fact
+        # about the map rather than a fact about one mirror.
+        return empty
     if blocked == attempts:
         # Never once got a reply. On a host that whitelists outbound traffic
         # (PythonAnywhere's free tier does) this is the normal outcome, and
