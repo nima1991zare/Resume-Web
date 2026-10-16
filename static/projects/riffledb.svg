@@ -1,0 +1,33 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 675" role="img" aria-labelledby="t d">
+  <title id="t">RiffleDB</title>
+  <desc id="d">A distributed SQL database engine in Rust with Raft consensus, MVCC and a PostgreSQL wire gateway.</desc>
+  <defs>
+    <linearGradient id="bg" x2="1" y2="1"><stop stop-color="#0b0f24"/><stop offset="1" stop-color="#080b12"/></linearGradient>
+    <linearGradient id="nd" x2="0" y2="1"><stop stop-color="#a78bfa"/><stop offset="1" stop-color="#818cf8"/></linearGradient>
+    <filter id="g"><feGaussianBlur stdDeviation="14" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+  </defs>
+  <rect width="1200" height="675" fill="url(#bg)"/>
+  <g transform="translate(300 338)">
+    <circle r="168" fill="none" stroke="#818cf8" stroke-opacity=".16" stroke-width="2"/>
+    <circle r="112" fill="none" stroke="#818cf8" stroke-opacity=".1" stroke-width="2"/>
+    <path d="M0 -140 L121 70 M121 70 L-121 70 M-121 70 L0 -140" stroke="#818cf8" stroke-opacity=".45" stroke-width="2.5" fill="none"/>
+    <g filter="url(#g)">
+      <circle cy="-140" r="46" fill="url(#nd)"/>
+      <circle cx="121" cy="70" r="36" fill="#818cf8" fill-opacity=".55"/>
+      <circle cx="-121" cy="70" r="36" fill="#818cf8" fill-opacity=".55"/>
+    </g>
+    <text y="-130" text-anchor="middle" font-family="ui-monospace,Menlo,monospace" font-size="27" font-weight="700" fill="#10112b">n1</text>
+    <text x="121" y="80" text-anchor="middle" font-family="ui-monospace,Menlo,monospace" font-size="22" fill="#0b0f24">n2</text>
+    <text x="-121" y="80" text-anchor="middle" font-family="ui-monospace,Menlo,monospace" font-size="22" fill="#0b0f24">n3</text>
+    <text y="-196" text-anchor="middle" font-family="ui-monospace,Menlo,monospace" font-size="22" fill="#a78bfa">LEADER</text>
+  </g>
+  <text x="640" y="246" font-family="ui-monospace,Menlo,monospace" font-size="80" font-weight="700" fill="#a78bfa">RiffleDB</text>
+  <text x="642" y="306" font-family="ui-monospace,Menlo,monospace" font-size="29" fill="#818cf8" fill-opacity=".9">Distributed SQL · Rust</text>
+  <g font-family="ui-monospace,Menlo,monospace" font-size="25" fill="#8798b2">
+    <text x="642" y="382">Gather  (3 shards)</text>
+    <text x="642" y="424">  └─ HashAggregate</text>
+    <text x="642" y="466">     └─ Distributed Scan</text>
+    <text x="642" y="516" fill="#4ade80">snapshot (MVCC) · raft term 7</text>
+  </g>
+  <text x="642" y="572" font-family="ui-monospace,Menlo,monospace" font-size="22" fill="#818cf8" fill-opacity=".75">postgres wire · :5433</text>
+</svg>

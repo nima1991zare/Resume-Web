@@ -1,0 +1,351 @@
+<!doctype html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="description" content="RiffleDB — موتور پایگاه‌داده SQL توزیع‌شده با Rust. دموی تعاملی کنسول SQL، پلن کوئری و اجماع Raft">
+<title>RiffleDB — دموی تعاملی | Distributed SQL in Rust</title>
+<style>
+  :root{
+    --bg:#080b12; --panel:#101624; --panel2:#151d2e; --line:rgba(148,163,184,.16);
+    --fg:#e8eef8; --muted:#8798b2; --accent:#818cf8; --accent2:#a78bfa;
+    --ok:#4ade80; --warn:#fbbf24; --err:#f87171; --radius:14px;
+  }
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{background:var(--bg);color:var(--fg);min-height:100vh;
+    font-family:'Vazirmatn',system-ui,-apple-system,'Segoe UI',sans-serif;
+    line-height:1.7;padding:clamp(14px,3vw,34px)}
+  .wrap{max-width:1240px;margin:0 auto}
+  header{display:flex;gap:16px;flex-wrap:wrap;margin-bottom:22px;align-items:flex-start}
+  .logo{width:52px;height:52px;border-radius:14px;flex-shrink:0;
+    background:linear-gradient(135deg,var(--accent),var(--accent2));
+    display:grid;place-items:center;color:#10112b;font-weight:800;font-size:1.5rem;font-family:ui-monospace,monospace}
+  h1{font-size:clamp(1.3rem,3vw,1.8rem);letter-spacing:-.02em}
+  .sub{color:var(--muted);font-size:.92rem;max-width:66ch}
+  .badges{display:flex;gap:7px;flex-wrap:wrap;margin-top:10px}
+  .badge{font-size:.72rem;padding:3px 10px;border-radius:999px;direction:ltr;
+    background:rgba(129,140,248,.12);color:var(--accent);border:1px solid rgba(129,140,248,.24);
+    font-family:ui-monospace,monospace}
+  .grid{display:grid;grid-template-columns:1.6fr 1fr;gap:16px;align-items:start}
+  @media(max-width:980px){.grid{grid-template-columns:1fr}}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);overflow:hidden;margin-bottom:16px}
+  .card-head{padding:11px 15px;border-bottom:1px solid var(--line);background:var(--panel2);
+    display:flex;align-items:center;justify-content:space-between;gap:10px}
+  .card-head h2{font-size:.86rem;font-weight:700;color:var(--muted);letter-spacing:.03em}
+  .tabs{display:flex;gap:4px}
+  .tab{font-size:.74rem;padding:4px 11px;border-radius:7px;cursor:pointer;border:1px solid transparent;
+    background:transparent;color:var(--muted);font-family:inherit;transition:.18s}
+  .tab.on{background:rgba(129,140,248,.14);color:var(--accent);border-color:rgba(129,140,248,.3)}
+  .editor{direction:ltr;text-align:left}
+  .editor textarea{
+    width:100%;min-height:118px;background:#060910;border:0;outline:0;color:var(--fg);padding:14px;
+    font-family:ui-monospace,'SF Mono',Menlo,Consolas,monospace;font-size:.85rem;line-height:1.65;resize:vertical}
+  .runbar{display:flex;align-items:center;gap:10px;padding:10px 14px;border-top:1px solid var(--line);flex-wrap:wrap}
+  .btn{background:var(--accent);color:#10112b;border:0;border-radius:9px;padding:8px 18px;
+    font-family:inherit;font-weight:700;font-size:.82rem;cursor:pointer;transition:.18s}
+  .btn:hover{box-shadow:0 0 20px rgba(129,140,248,.4)}
+  .btn-g{background:transparent;color:var(--fg);border:1px solid var(--line)}
+  .btn-g:hover{border-color:var(--accent);color:var(--accent);box-shadow:none}
+  .timing{margin-inline-start:auto;font-size:.76rem;color:var(--muted);font-family:ui-monospace,monospace;direction:ltr}
+  .out{direction:ltr;text-align:left;max-height:330px;overflow:auto;padding:0}
+  table{width:100%;border-collapse:collapse;font-size:.8rem;font-family:ui-monospace,monospace}
+  th,td{padding:8px 13px;text-align:left;border-bottom:1px solid var(--line);white-space:nowrap}
+  th{background:var(--panel2);color:var(--muted);font-weight:600;position:sticky;top:0}
+  td{color:var(--fg)}
+  tr:hover td{background:rgba(129,140,248,.05)}
+  .plan{padding:14px;font-family:ui-monospace,monospace;font-size:.78rem;line-height:1.85;white-space:pre}
+  .plan .node{color:var(--accent2)}
+  .plan .cost{color:var(--warn)}
+  .plan .shard{color:var(--ok)}
+  .msg{padding:13px 15px;font-family:ui-monospace,monospace;font-size:.8rem;direction:ltr}
+  .msg.ok{color:var(--ok)} .msg.err{color:var(--err)}
+  /* cluster */
+  .nodes{padding:15px;display:grid;gap:9px}
+  .node{display:flex;align-items:center;gap:11px;padding:10px 12px;border-radius:11px;
+    background:var(--panel2);border:1px solid var(--line);transition:.3s}
+  .node.leader{border-color:var(--accent);background:rgba(129,140,248,.1)}
+  .node .nid{width:30px;height:30px;border-radius:8px;display:grid;place-items:center;flex-shrink:0;
+    background:#0b1020;font-family:ui-monospace,monospace;font-size:.74rem;color:var(--muted)}
+  .node.leader .nid{background:var(--accent);color:#10112b;font-weight:800}
+  .node .meta{flex:1;min-width:0}
+  .node .meta b{display:block;font-size:.8rem}
+  .node .meta span{font-size:.7rem;color:var(--muted);font-family:ui-monospace,monospace;direction:ltr}
+  .pill{font-size:.64rem;padding:2px 8px;border-radius:999px;font-family:ui-monospace,monospace;direction:ltr}
+  .pill.l{background:rgba(129,140,248,.2);color:var(--accent)}
+  .pill.f{background:rgba(74,222,128,.14);color:var(--ok)}
+  .samples{padding:13px 15px;border-top:1px solid var(--line);font-size:.78rem;color:var(--muted)}
+  .chip{display:inline-block;margin:4px 4px 0 0;padding:4px 10px;border-radius:7px;cursor:pointer;
+    background:var(--panel2);border:1px solid var(--line);font-family:ui-monospace,monospace;
+    font-size:.71rem;color:var(--fg);direction:ltr;transition:.18s}
+  .chip:hover{border-color:var(--accent);color:var(--accent)}
+  .note{margin-top:16px;padding:13px 16px;border-radius:12px;font-size:.82rem;color:var(--muted);
+    background:rgba(129,140,248,.07);border:1px solid rgba(129,140,248,.18)}
+  footer{margin-top:20px;text-align:center;color:var(--muted);font-size:.8rem}
+  footer a{color:var(--accent);text-decoration:none}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <div class="logo">R</div>
+    <div>
+      <h1>RiffleDB <span style="color:var(--muted);font-size:.58em;font-weight:400">— Distributed SQL engine in Rust</span></h1>
+      <p class="sub">
+        یک موتور پایگاه‌داده SQL توزیع‌شده با خط لوله کامل پردازش کوئری، ذخیره‌سازی MVCC، اجماع Raft
+        و دروازه سازگار با پروتکل PostgreSQL. کوئری بنویسید، نتیجه و پلن اجرای توزیع‌شده را ببینید.
+      </p>
+      <div class="badges">
+        <span class="badge">PostgreSQL wire</span><span class="badge">Raft</span>
+        <span class="badge">MVCC</span><span class="badge">cost-based optimizer</span><span class="badge">sharding</span>
+      </div>
+    </div>
+  </header>
+
+  <div class="grid">
+    <div>
+      <div class="card">
+        <div class="card-head">
+          <h2 style="direction:ltr;font-family:ui-monospace,monospace">psql → riffledb:5433</h2>
+          <div class="tabs">
+            <button class="tab on" data-view="rows">نتیجه</button>
+            <button class="tab" data-view="plan">پلن اجرا</button>
+          </div>
+        </div>
+        <div class="editor">
+          <textarea id="sql" spellcheck="false">SELECT city, COUNT(*) AS orders, SUM(total) AS revenue
+FROM orders
+WHERE status = 'paid'
+GROUP BY city
+ORDER BY revenue DESC;</textarea>
+        </div>
+        <div class="runbar">
+          <button class="btn" id="run">اجرای کوئری</button>
+          <button class="btn btn-g" id="explain">EXPLAIN</button>
+          <span class="timing" id="timing">ready</span>
+        </div>
+        <div class="out" id="out"></div>
+        <div class="samples">
+          کوئری نمونه:
+          <div id="chips"></div>
+        </div>
+      </div>
+    </div>
+
+    <div>
+      <div class="card">
+        <div class="card-head"><h2>خوشه و اجماع Raft</h2></div>
+        <div class="nodes" id="nodes"></div>
+      </div>
+      <div class="card">
+        <div class="card-head"><h2>وضعیت ذخیره‌سازی</h2></div>
+        <div class="nodes" style="gap:7px">
+          <div class="stat node" style="justify-content:space-between"><span style="font-size:.8rem">ترم فعلی Raft</span><b style="font-family:ui-monospace,monospace;color:var(--accent2);direction:ltr" id="term">7</b></div>
+          <div class="stat node" style="justify-content:space-between"><span style="font-size:.8rem">ایندکس commit</span><b style="font-family:ui-monospace,monospace;color:var(--accent2);direction:ltr" id="cidx">18422</b></div>
+          <div class="stat node" style="justify-content:space-between"><span style="font-size:.8rem">نسخه‌های MVCC زنده</span><b style="font-family:ui-monospace,monospace;color:var(--accent2);direction:ltr" id="mvcc">3</b></div>
+          <div class="stat node" style="justify-content:space-between"><span style="font-size:.8rem">کوئری‌های اجراشده</span><b style="font-family:ui-monospace,monospace;color:var(--accent2);direction:ltr" id="qc">0</b></div>
+        </div>
+      </div>
+      <div class="note">
+        جدول <code style="direction:ltr">orders</code> با هش روی <code style="direction:ltr">city</code> بین سه شارد
+        پخش شده است. بهینه‌ساز تجمیع را به هر شارد می‌فرستد (push-down) و فقط نتیجه‌های جزئی را برای
+        ترکیب نهایی برمی‌گرداند — به‌جای کشیدن همه سطرها روی شبکه.
+      </div>
+    </div>
+  </div>
+
+  <footer>
+    دموی تعاملی — پیاده‌سازی واقعی با Rust در
+    <a href="https://github.com/nima1991zare/riffledb" target="_blank" rel="noopener">github.com/nima1991zare/riffledb</a>
+  </footer>
+</div>
+
+<script>
+(function(){
+  "use strict";
+  var ORDERS=[
+    {id:1001,city:'Shiraz',status:'paid',total:1250000,created:'2026-09-02'},
+    {id:1002,city:'Tehran',status:'paid',total:3400000,created:'2026-09-02'},
+    {id:1003,city:'Shiraz',status:'pending',total:890000,created:'2026-09-03'},
+    {id:1004,city:'Isfahan',status:'paid',total:2100000,created:'2026-09-04'},
+    {id:1005,city:'Tehran',status:'paid',total:1780000,created:'2026-09-05'},
+    {id:1006,city:'Shiraz',status:'paid',total:2650000,created:'2026-09-06'},
+    {id:1007,city:'Mashhad',status:'refunded',total:540000,created:'2026-09-07'},
+    {id:1008,city:'Tehran',status:'paid',total:920000,created:'2026-09-08'},
+    {id:1009,city:'Isfahan',status:'paid',total:1480000,created:'2026-09-09'},
+    {id:1010,city:'Shiraz',status:'paid',total:3120000,created:'2026-09-10'}
+  ];
+  var SHARD={Shiraz:0,Tehran:1,Isfahan:2,Mashhad:0};
+  var out=document.getElementById('out'), timing=document.getElementById('timing');
+  var view='rows', lastRows=null, lastPlan=null, qc=0;
+
+  /* cluster */
+  var leader=1;
+  function drawNodes(){
+    var w=document.getElementById('nodes'); w.innerHTML='';
+    for(var i=1;i<=3;i++){
+      var isL=(i===leader);
+      var d=document.createElement('div');
+      d.className='node'+(isL?' leader':'');
+      d.innerHTML='<div class="nid">n'+i+'</div><div class="meta"><b>riffle-'+i+
+        '</b><span>shard '+(i-1)+' · 127.0.0.1:543'+(2+i)+'</span></div>'+
+        '<span class="pill '+(isL?'l':'f')+'">'+(isL?'LEADER':'FOLLOWER')+'</span>';
+      w.appendChild(d);
+    }
+  }
+  drawNodes();
+  setInterval(function(){
+    document.getElementById('cidx').textContent=
+      (parseInt(document.getElementById('cidx').textContent,10)+Math.floor(Math.random()*4)+1);
+  },2600);
+
+  function esc(s){return String(s).replace(/[&<>"]/g,function(c){
+    return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});}
+  function fmt(n){return typeof n==='number'?n.toLocaleString('en-US'):n;}
+
+  function renderRows(cols,rows,ms){
+    if(!rows.length){ out.innerHTML='<div class="msg">(0 rows)</div>'; return; }
+    var h='<table><thead><tr>'+cols.map(function(c){return '<th>'+esc(c)+'</th>';}).join('')+'</tr></thead><tbody>';
+    rows.forEach(function(r){
+      h+='<tr>'+cols.map(function(c){return '<td>'+esc(fmt(r[c]))+'</td>';}).join('')+'</tr>';
+    });
+    out.innerHTML=h+'</tbody></table><div class="msg ok">('+rows.length+' row'+(rows.length>1?'s':'')+')</div>';
+  }
+  function renderPlan(p){ out.innerHTML='<div class="plan">'+p+'</div>'; }
+
+  function show(){
+    if(view==='plan'&&lastPlan) renderPlan(lastPlan);
+    else if(lastRows) renderRows(lastRows.cols,lastRows.rows);
+    else out.innerHTML='<div class="msg">کوئری را اجرا کنید.</div>';
+  }
+  Array.prototype.forEach.call(document.querySelectorAll('.tab'),function(t){
+    t.addEventListener('click',function(){
+      Array.prototype.forEach.call(document.querySelectorAll('.tab'),function(x){x.classList.remove('on')});
+      t.classList.add('on'); view=t.getAttribute('data-view'); show();
+    });
+  });
+
+  /* A deliberately small SQL subset — enough to show the shape of the engine
+     (filter, group, aggregate, order, limit) without pretending to be a parser. */
+  function execute(sql){
+    var q=sql.replace(/\s+/g,' ').replace(/;+\s*$/,'').trim();
+    var low=q.toLowerCase();
+    if(!/^select/.test(low)) return {err:'ERROR: this demo executes SELECT statements only'};
+
+    var rows=ORDERS.slice();
+    var where=low.match(/where (.+?)(?: group by | order by | limit |$)/);
+    if(where){
+      var c=where[1];
+      var m=c.match(/(\w+)\s*(=|>|<|>=|<=)\s*'?([^'\s]+)'?/);
+      if(m){
+        var f=m[1],op=m[2],v=m[3];
+        rows=rows.filter(function(r){
+          var a=r[f], b=isNaN(v)?v:parseFloat(v);
+          if(op==='=') return String(a)===String(v);
+          if(op==='>') return a>b; if(op==='<') return a<b;
+          if(op==='>=') return a>=b; return a<=b;
+        });
+      }
+    }
+
+    var cols,res;
+    var gb=low.match(/group by (\w+)/);
+    if(gb){
+      var key=gb[1], map={};
+      rows.forEach(function(r){
+        var k=r[key];
+        if(!map[k]) map[k]={ _k:k, orders:0, revenue:0 };
+        map[k].orders++; map[k].revenue+=r.total;
+      });
+      res=Object.keys(map).map(function(k){
+        var o={}; o[key]=map[k]._k; o.orders=map[k].orders; o.revenue=map[k].revenue; return o;
+      });
+      cols=[key,'orders','revenue'];
+    } else {
+      var sel=q.match(/select (.+?) from/i)[1].trim();
+      if(sel==='*'){ cols=['id','city','status','total','created']; }
+      else cols=sel.split(',').map(function(x){return x.trim().split(/\s+as\s+/i)[0].trim();});
+      res=rows.map(function(r){ var o={}; cols.forEach(function(c){o[c]=r[c];}); return o; });
+    }
+
+    var ob=low.match(/order by (\w+)( desc| asc)?/);
+    if(ob){
+      var f2=ob[1], desc=(ob[2]||'').trim()==='desc';
+      res.sort(function(a,b){
+        var x=a[f2],y=b[f2];
+        if(x===undefined||y===undefined) return 0;
+        return (x>y?1:x<y?-1:0)*(desc?-1:1);
+      });
+    }
+    var lim=low.match(/limit (\d+)/);
+    if(lim) res=res.slice(0,parseInt(lim[1],10));
+    return {cols:cols,rows:res};
+  }
+
+  function buildPlan(sql,rowCount){
+    var low=sql.toLowerCase();
+    var gb=low.match(/group by (\w+)/);
+    var ob=low.match(/order by (\w+)/);
+    var wh=/where/.test(low);
+    var L=[];
+    L.push('<span class="node">Gather</span>  (merge from 3 shards)  <span class="cost">cost=0.00..48.20 rows='+rowCount+'</span>');
+    if(ob) L.push('  └─ <span class="node">Sort</span>  key: '+ob[1]+'  <span class="cost">cost=41.10..41.60</span>');
+    if(gb) L.push('     └─ <span class="node">HashAggregate</span>  group by: '+gb[1]+'  <span class="cost">cost=22.40..31.80</span>');
+    L.push('        └─ <span class="node">Distributed Scan</span> on orders  <span class="shard">push-down: filter + partial aggregate</span>');
+    L.push('           ├─ <span class="shard">shard 0</span>  riffle-1  snapshot ts=18422  rows≈4');
+    L.push('           ├─ <span class="shard">shard 1</span>  riffle-2  snapshot ts=18422  rows≈3');
+    L.push('           └─ <span class="shard">shard 2</span>  riffle-3  snapshot ts=18422  rows≈3');
+    if(wh) L.push('');
+    if(wh) L.push('  Filter pushed to shards: '+(low.match(/where (.+?)(?: group by | order by | limit |$)/)||[,''])[1].trim());
+    L.push('');
+    L.push('  Isolation: <span class="shard">snapshot (MVCC)</span>   Consensus: <span class="shard">raft term 7, leader n'+leader+'</span>');
+    L.push('  Planning time: 0.42 ms    Execution time: '+(1.1+Math.random()*2).toFixed(2)+' ms');
+    return L.join('\n');
+  }
+
+  function go(forcePlan){
+    var sql=document.getElementById('sql').value;
+    var t0=performance.now();
+    var r=execute(sql);
+    var ms=(performance.now()-t0+1.4+Math.random()*2).toFixed(2);
+    qc++; document.getElementById('qc').textContent=qc;
+    document.getElementById('mvcc').textContent=2+(qc%4);
+    if(r.err){
+      lastRows=null;lastPlan=null;
+      out.innerHTML='<div class="msg err">'+esc(r.err)+'</div>';
+      timing.textContent='failed'; return;
+    }
+    lastRows={cols:r.cols,rows:r.rows};
+    lastPlan=buildPlan(sql,r.rows.length);
+    timing.textContent=ms+' ms · 3 shards';
+    if(forcePlan){
+      view='plan';
+      Array.prototype.forEach.call(document.querySelectorAll('.tab'),function(x){
+        x.classList.toggle('on',x.getAttribute('data-view')==='plan');});
+    }
+    show();
+  }
+  document.getElementById('run').addEventListener('click',function(){go(false);});
+  document.getElementById('explain').addEventListener('click',function(){go(true);});
+
+  var samples=[
+    "SELECT * FROM orders LIMIT 5;",
+    "SELECT city, COUNT(*) AS orders, SUM(total) AS revenue FROM orders WHERE status = 'paid' GROUP BY city ORDER BY revenue DESC;",
+    "SELECT id, city, total FROM orders WHERE total > 2000000 ORDER BY total DESC;",
+    "SELECT city, COUNT(*) AS orders FROM orders GROUP BY city;"
+  ];
+  var chips=document.getElementById('chips');
+  samples.forEach(function(s,i){
+    var b=document.createElement('button');
+    b.className='chip'; b.type='button';
+    b.textContent=s.length>56?s.slice(0,56)+'…':s;
+    b.title=s;
+    b.addEventListener('click',function(){ document.getElementById('sql').value=s; go(false); });
+    chips.appendChild(b);
+  });
+
+  go(false);
+})();
+</script>
+</body>
+</html>

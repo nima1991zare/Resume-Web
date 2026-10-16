@@ -1,0 +1,349 @@
+<!doctype html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="description" content="rudis — پایگاه‌داده کلید-مقدار سازگار با ردیس، نوشته‌شده با Rust. دموی تعاملی redis-cli">
+<title>rudis — دموی تعاملی | Redis-compatible store in Rust</title>
+<style>
+  :root{
+    --bg:#0a0e14; --panel:#111722; --panel2:#161d2b; --line:rgba(148,163,184,.16);
+    --fg:#e6edf6; --muted:#8b9bb4; --accent:#f97316; --accent2:#fbbf24;
+    --ok:#4ade80; --err:#f87171; --info:#60a5fa; --radius:14px;
+  }
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{
+    background:var(--bg); color:var(--fg); min-height:100vh;
+    font-family:'Vazirmatn',system-ui,-apple-system,'Segoe UI',sans-serif;
+    line-height:1.7; padding:clamp(14px,3vw,34px);
+  }
+  .wrap{max-width:1180px;margin:0 auto}
+  header{display:flex;align-items:flex-start;gap:16px;flex-wrap:wrap;margin-bottom:22px}
+  .logo{
+    width:52px;height:52px;border-radius:14px;flex-shrink:0;
+    background:linear-gradient(135deg,var(--accent),var(--accent2));
+    display:grid;place-items:center;font-weight:800;font-size:1.3rem;color:#2a1403;
+    font-family:ui-monospace,monospace;
+  }
+  h1{font-size:clamp(1.3rem,3vw,1.8rem);letter-spacing:-.02em}
+  .sub{color:var(--muted);font-size:.92rem;max-width:62ch}
+  .badges{display:flex;gap:7px;flex-wrap:wrap;margin-top:10px}
+  .badge{
+    font-size:.72rem;padding:3px 10px;border-radius:999px;
+    background:rgba(249,115,22,.12);color:var(--accent);border:1px solid rgba(249,115,22,.22);
+    font-family:ui-monospace,monospace;direction:ltr;
+  }
+  .grid{display:grid;grid-template-columns:1.55fr .95fr;gap:16px;align-items:start}
+  @media(max-width:900px){.grid{grid-template-columns:1fr}}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);overflow:hidden}
+  .card-head{
+    padding:11px 15px;border-bottom:1px solid var(--line);display:flex;
+    align-items:center;justify-content:space-between;gap:10px;background:var(--panel2);
+  }
+  .card-head h2{font-size:.86rem;font-weight:700;color:var(--muted);letter-spacing:.04em}
+  .dots{display:flex;gap:6px}
+  .dot{width:11px;height:11px;border-radius:50%}
+  /* ---- terminal ---- */
+  .term{
+    direction:ltr;text-align:left;font-family:ui-monospace,'SF Mono',Menlo,Consolas,monospace;
+    font-size:.84rem;line-height:1.65;padding:14px;height:432px;overflow-y:auto;
+    background:#070a10;
+  }
+  .term::-webkit-scrollbar{width:9px}
+  .term::-webkit-scrollbar-thumb{background:#243049;border-radius:9px}
+  .ln{white-space:pre-wrap;word-break:break-word}
+  .ps1{color:var(--accent)}
+  .cmd{color:var(--fg)}
+  .res{color:var(--ok)}
+  .errl{color:var(--err)}
+  .dim{color:var(--muted)}
+  .inf{color:var(--info)}
+  .inputline{display:flex;align-items:center;gap:8px;padding:11px 14px;border-top:1px solid var(--line);direction:ltr;background:#070a10}
+  .inputline span{color:var(--accent);font-family:ui-monospace,monospace;font-size:.84rem;flex-shrink:0}
+  .inputline input{
+    flex:1;background:transparent;border:0;outline:0;color:var(--fg);
+    font-family:ui-monospace,monospace;font-size:.84rem;
+  }
+  /* ---- shards ---- */
+  .shards{display:grid;grid-template-columns:repeat(4,1fr);gap:7px;padding:15px}
+  .shard{
+    aspect-ratio:1;border-radius:9px;background:var(--panel2);border:1px solid var(--line);
+    display:grid;place-items:center;font-family:ui-monospace,monospace;font-size:.68rem;
+    color:var(--muted);transition:all .4s;position:relative;direction:ltr;
+  }
+  .shard.hit{background:rgba(249,115,22,.2);border-color:var(--accent);color:var(--accent2);transform:scale(1.06)}
+  .shard b{position:absolute;bottom:3px;font-size:.6rem;color:var(--fg);opacity:.7}
+  .stats{padding:0 15px 15px;display:grid;gap:8px}
+  .stat{display:flex;justify-content:space-between;font-size:.8rem;border-bottom:1px dashed var(--line);padding-bottom:6px}
+  .stat b{font-family:ui-monospace,monospace;color:var(--accent2);direction:ltr}
+  .hint{padding:13px 15px;border-top:1px solid var(--line);font-size:.78rem;color:var(--muted)}
+  .chip{
+    display:inline-block;margin:3px 3px 0 0;padding:3px 9px;border-radius:7px;cursor:pointer;
+    background:var(--panel2);border:1px solid var(--line);font-family:ui-monospace,monospace;
+    font-size:.72rem;color:var(--fg);direction:ltr;transition:.18s;
+  }
+  .chip:hover{border-color:var(--accent);color:var(--accent)}
+  footer{margin-top:20px;text-align:center;color:var(--muted);font-size:.8rem}
+  footer a{color:var(--accent);text-decoration:none}
+  .note{
+    margin-top:16px;padding:13px 16px;border-radius:12px;font-size:.82rem;color:var(--muted);
+    background:rgba(96,165,250,.07);border:1px solid rgba(96,165,250,.18);
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <div class="logo">ru</div>
+    <div>
+      <h1>rudis <span style="color:var(--muted);font-size:.6em;font-weight:400">— Redis-compatible store in Rust</span></h1>
+      <p class="sub">
+        یک پایگاه‌داده کلید-مقدار درون‌حافظه‌ای که پروتکل <code style="direction:ltr;display:inline-block">RESP2</code> را
+        روی TCP پیاده‌سازی می‌کند. ترمینال زیر همان دستورهای واقعی را می‌پذیرد — تایپ کنید و پاسخ بگیرید.
+      </p>
+      <div class="badges">
+        <span class="badge">RESP2</span><span class="badge">16 shards</span>
+        <span class="badge">pub/sub</span><span class="badge">TTL</span><span class="badge">AOF + RDB</span>
+      </div>
+    </div>
+  </header>
+
+  <div class="grid">
+    <div class="card">
+      <div class="card-head">
+        <div class="dots"><i class="dot" style="background:#ff5f57"></i><i class="dot" style="background:#febc2e"></i><i class="dot" style="background:#28c840"></i></div>
+        <h2 style="direction:ltr;font-family:ui-monospace,monospace">redis-cli -p 6390</h2>
+      </div>
+      <div class="term" id="term"></div>
+      <form class="inputline" id="form">
+        <span id="ps1">127.0.0.1:6390&gt;</span>
+        <input id="inp" autocomplete="off" spellcheck="false" autofocus aria-label="command">
+      </form>
+      <div class="hint">
+        نمونه دستور — کلیک کنید تا اجرا شود:
+        <div id="chips"></div>
+      </div>
+    </div>
+
+    <div>
+      <div class="card">
+        <div class="card-head"><h2>موتور ذخیره‌سازی ۱۶ شارده</h2></div>
+        <div class="shards" id="shards"></div>
+        <div class="stats">
+          <div class="stat"><span>کلیدها</span><b id="s-keys">0</b></div>
+          <div class="stat"><span>دستورهای اجراشده</span><b id="s-cmds">0</b></div>
+          <div class="stat"><span>کانال‌های فعال</span><b id="s-ch">0</b></div>
+          <div class="stat" style="border:0"><span>رکوردهای AOF</span><b id="s-aof">0</b></div>
+        </div>
+      </div>
+      <div class="note">
+        هر کلید با الگوریتم FNV-1a هش می‌شود و به یکی از ۱۶ شارد می‌رسد. هر شارد قفل مستقل خودش را
+        دارد، بنابراین نوشتن روی کلیدهای مختلف همدیگر را بلاک نمی‌کند. شاردی که دستور به آن خورده،
+        لحظه‌ای روشن می‌شود.
+      </div>
+    </div>
+  </div>
+
+  <footer>
+    دموی تعاملی — پیاده‌سازی واقعی با Rust در
+    <a href="https://github.com/nima1991zare/rudis" target="_blank" rel="noopener">github.com/nima1991zare/rudis</a>
+  </footer>
+</div>
+
+<script>
+(function(){
+  "use strict";
+  var term=document.getElementById('term'), inp=document.getElementById('inp');
+  var store=new Map(), expires=new Map(), lists=new Map(), subs=new Set();
+  var cmdCount=0, aof=0, history=[], hIdx=-1;
+
+  /* FNV-1a, the same hash the Rust engine uses to pick a shard */
+  function shardOf(key){
+    var h=2166136261>>>0;
+    for(var i=0;i<key.length;i++){ h^=key.charCodeAt(i); h=Math.imul(h,16777619)>>>0; }
+    return h%16;
+  }
+  var shardEls=[];
+  var sw=document.getElementById('shards');
+  for(var i=0;i<16;i++){
+    var d=document.createElement('div');
+    d.className='shard'; d.innerHTML=i+'<b>0</b>';
+    sw.appendChild(d); shardEls.push(d);
+  }
+  function flash(key){
+    var s=shardOf(key), el=shardEls[s];
+    el.classList.add('hit');
+    setTimeout(function(){el.classList.remove('hit');},420);
+  }
+  function countShards(){
+    var c=new Array(16).fill(0);
+    store.forEach(function(_,k){c[shardOf(k)]++});
+    lists.forEach(function(_,k){c[shardOf(k)]++});
+    for(var i=0;i<16;i++) shardEls[i].querySelector('b').textContent=c[i];
+  }
+  function stats(){
+    document.getElementById('s-keys').textContent=store.size+lists.size;
+    document.getElementById('s-cmds').textContent=cmdCount;
+    document.getElementById('s-ch').textContent=subs.size;
+    document.getElementById('s-aof').textContent=aof;
+    countShards();
+  }
+
+  function out(text,cls){
+    var d=document.createElement('div');
+    d.className='ln '+(cls||'res'); d.textContent=text;
+    term.appendChild(d); term.scrollTop=term.scrollHeight;
+  }
+  function echoCmd(c){
+    var d=document.createElement('div'); d.className='ln';
+    d.innerHTML='<span class="ps1">127.0.0.1:6390&gt;</span> <span class="cmd"></span>';
+    d.querySelector('.cmd').textContent=c;
+    term.appendChild(d); term.scrollTop=term.scrollHeight;
+  }
+
+  /* expire lazily, exactly like the real engine: a key is only checked when touched */
+  function alive(k){
+    if(expires.has(k) && Date.now()>expires.get(k)){
+      store.delete(k); lists.delete(k); expires.delete(k); return false;
+    }
+    return store.has(k)||lists.has(k);
+  }
+
+  var CMDS={
+    PING:function(a){ return ['+'+(a[0]||'PONG'),'res']; },
+    SET:function(a){
+      if(a.length<2) return ["(error) ERR wrong number of arguments for 'set'",'errl'];
+      store.delete(a[0]); lists.delete(a[0]); expires.delete(a[0]);
+      store.set(a[0],a.slice(1).join(' ')); aof++; flash(a[0]);
+      var ex=a.indexOf('EX');
+      if(ex>-1 && a[ex+1]) expires.set(a[0],Date.now()+parseInt(a[ex+1],10)*1000);
+      return ['OK','res'];
+    },
+    GET:function(a){
+      if(!a[0]) return ["(error) ERR wrong number of arguments",'errl'];
+      flash(a[0]);
+      if(!alive(a[0])||!store.has(a[0])) return ['(nil)','dim'];
+      return ['"'+store.get(a[0])+'"','res'];
+    },
+    DEL:function(a){
+      var n=0; a.forEach(function(k){ if(alive(k)){store.delete(k);lists.delete(k);expires.delete(k);n++;flash(k);} });
+      if(n) aof++;
+      return ['(integer) '+n,'res'];
+    },
+    EXISTS:function(a){ flash(a[0]); return ['(integer) '+(alive(a[0])?1:0),'res']; },
+    INCR:function(a){
+      if(!a[0]) return ["(error) ERR wrong number of arguments",'errl'];
+      flash(a[0]);
+      var v=alive(a[0])?store.get(a[0]):'0';
+      if(!/^-?\d+$/.test(v)) return ['(error) ERR value is not an integer or out of range','errl'];
+      var n=parseInt(v,10)+1; store.set(a[0],String(n)); aof++;
+      return ['(integer) '+n,'res'];
+    },
+    EXPIRE:function(a){
+      if(!alive(a[0])) return ['(integer) 0','res'];
+      expires.set(a[0],Date.now()+parseInt(a[1],10)*1000); flash(a[0]); aof++;
+      return ['(integer) 1','res'];
+    },
+    TTL:function(a){
+      if(!alive(a[0])) return ['(integer) -2','dim'];
+      if(!expires.has(a[0])) return ['(integer) -1','dim'];
+      return ['(integer) '+Math.max(0,Math.round((expires.get(a[0])-Date.now())/1000)),'res'];
+    },
+    KEYS:function(a){
+      var pat=(a[0]||'*').replace(/[.+^${}()|[\]\\]/g,'\\$&').replace(/\*/g,'.*').replace(/\?/g,'.');
+      var re=new RegExp('^'+pat+'$'), all=[];
+      store.forEach(function(_,k){ if(alive(k)&&re.test(k)) all.push(k); });
+      lists.forEach(function(_,k){ if(alive(k)&&re.test(k)) all.push(k); });
+      if(!all.length) return ['(empty array)','dim'];
+      return [all.map(function(k,i){return (i+1)+') "'+k+'"';}).join('\n'),'res'];
+    },
+    LPUSH:function(a){
+      if(a.length<2) return ["(error) ERR wrong number of arguments",'errl'];
+      var l=lists.get(a[0])||[]; for(var i=1;i<a.length;i++) l.unshift(a[i]);
+      lists.set(a[0],l); aof++; flash(a[0]);
+      return ['(integer) '+l.length,'res'];
+    },
+    RPUSH:function(a){
+      var l=lists.get(a[0])||[]; for(var i=1;i<a.length;i++) l.push(a[i]);
+      lists.set(a[0],l); aof++; flash(a[0]);
+      return ['(integer) '+l.length,'res'];
+    },
+    LRANGE:function(a){
+      var l=lists.get(a[0]); flash(a[0]);
+      if(!l||!alive(a[0])) return ['(empty array)','dim'];
+      var s=parseInt(a[1]||0,10), e=parseInt(a[2]===undefined?-1:a[2],10);
+      if(s<0) s=l.length+s; if(e<0) e=l.length+e;
+      var sl=l.slice(s,e+1);
+      if(!sl.length) return ['(empty array)','dim'];
+      return [sl.map(function(v,i){return (i+1)+') "'+v+'"';}).join('\n'),'res'];
+    },
+    SUBSCRIBE:function(a){
+      if(!a[0]) return ["(error) ERR wrong number of arguments",'errl'];
+      subs.add(a[0]);
+      return ['Reading messages... (press Ctrl-C to quit)\n1) "subscribe"\n2) "'+a[0]+'"\n3) (integer) '+subs.size,'inf'];
+    },
+    PUBLISH:function(a){
+      if(!a[0]) return ["(error) ERR wrong number of arguments",'errl'];
+      var n=subs.has(a[0])?1:0;
+      if(n) setTimeout(function(){
+        out('1) "message"\n2) "'+a[0]+'"\n3) "'+a.slice(1).join(' ')+'"','inf');
+      },160);
+      return ['(integer) '+n,'res'];
+    },
+    SAVE:function(){ aof=0; return ['OK','res']; },
+    FLUSHALL:function(){ store.clear();lists.clear();expires.clear();aof++; return ['OK','res']; },
+    INFO:function(){
+      return ['# Server\nrudis_version:0.4.0\nbuild:rust-1.81 release\nmultiplexing_api:tokio\n'+
+              '# Keyspace\ndb0:keys='+(store.size+lists.size)+',expires='+expires.size+'\n'+
+              '# Storage\nshards:16\nhash:fnv1a\n# Persistence\naof_enabled:1\naof_pending:'+aof,'dim'];
+    },
+    COMMAND:function(){ return [Object.keys(CMDS).join(' '),'dim']; },
+    HELP:function(){
+      return ['Supported: '+Object.keys(CMDS).join(' ')+'\nTry: SET user:1 nima  ·  GET user:1  ·  EXPIRE user:1 30  ·  TTL user:1','dim'];
+    }
+  };
+
+  function run(line){
+    var parts=line.trim().match(/"[^"]*"|\S+/g)||[];
+    if(!parts.length) return;
+    var name=parts[0].toUpperCase();
+    var args=parts.slice(1).map(function(x){return x.replace(/^"|"$/g,'');});
+    cmdCount++;
+    var fn=CMDS[name];
+    if(!fn){ out('(error) ERR unknown command \''+parts[0]+'\'','errl'); stats(); return; }
+    var r=fn(args);
+    out(r[0],r[1]);
+    stats();
+  }
+
+  document.getElementById('form').addEventListener('submit',function(e){
+    e.preventDefault();
+    var v=inp.value; if(!v.trim()) return;
+    echoCmd(v); history.push(v); hIdx=history.length;
+    inp.value=''; run(v);
+  });
+  inp.addEventListener('keydown',function(e){
+    if(e.key==='ArrowUp'){ e.preventDefault(); if(hIdx>0){hIdx--;inp.value=history[hIdx];} }
+    if(e.key==='ArrowDown'){ e.preventDefault(); if(hIdx<history.length-1){hIdx++;inp.value=history[hIdx];} else {hIdx=history.length;inp.value='';} }
+  });
+
+  var samples=['SET user:1 nima','GET user:1','EXPIRE user:1 30','TTL user:1','INCR visits',
+               'RPUSH jobs build test deploy','LRANGE jobs 0 -1','KEYS *','SUBSCRIBE news',
+               'PUBLISH news "deploy finished"','INFO','HELP'];
+  var chips=document.getElementById('chips');
+  samples.forEach(function(s){
+    var b=document.createElement('button');
+    b.className='chip'; b.type='button'; b.textContent=s;
+    b.addEventListener('click',function(){ echoCmd(s); run(s); inp.focus(); });
+    chips.appendChild(b);
+  });
+
+  out('rudis 0.4.0 — Redis-compatible server written in Rust','dim');
+  out('Connected to 127.0.0.1:6390. Type HELP or click a sample below.','dim');
+  out('','dim');
+  stats();
+})();
+</script>
+</body>
+</html>

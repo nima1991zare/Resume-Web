@@ -178,15 +178,16 @@
     api("/api/admin/items/" + table).then(function (rows) {
       var el = document.getElementById("table-" + table);
       var hasBuyable = table === "apps" || table === "bots" || table === "games";
-      var hasUrl = table === "websites" || table === "bots" || table === "games";
-      var head = "<tr><th>Image</th><th>Title</th><th>Price</th>" +
+      var hasUrl = table !== "apps" || true;        // every table has a link now
+      var hasPrice = table !== "opensource";
+      var head = "<tr><th>Image</th><th>Title</th>" + (hasPrice ? "<th>Price</th>" : "") +
         (hasBuyable ? "<th>Buyable</th>" : "") + (hasUrl ? "<th>URL</th>" : "") +
         "<th>Status</th><th>Sort</th><th>Actions</th></tr>";
       el.innerHTML = head + rows.map(function (r) {
         return "<tr data-id='" + r.id + "'>" +
           "<td>" + (r.image ? '<img class="row-img" src="' + esc(r.image) + '" alt="">' : '<span class="row-img"></span>') + "</td>" +
           "<td><strong>" + esc(r.title_en) + "</strong><br><span style='color:var(--muted);font-size:.8rem'>" + esc(r.title_fa) + "</span></td>" +
-          "<td>" + r.price + " " + esc(r.currency) + "</td>" +
+          (hasPrice ? "<td>" + r.price + " " + esc(r.currency) + "</td>" : "") +
           (hasBuyable
             ? "<td>" + (r.buyable ? '<span class="tag">Yes</span>' : '<span class="tag off">No</span>') + "</td>" : "") +
           (hasUrl
@@ -249,14 +250,21 @@
 
   function openItemModal(table, row) {
     editCtx = { table: table, id: row ? row.id : null };
+    var LABEL = {
+      apps: "Application", bots: "Telegram Bot", games: "Game",
+      websites: "Website", opensource: "Open Source Project"
+    };
     document.getElementById("modal-title").textContent =
-      (row ? "Edit " : "Add ") +
-      (table === "apps" ? "Application" : (table === "bots" ? "Telegram Bot" : (table === "games" ? "Game" : "Website")));
-    document.getElementById("url-field").style.display =
-      (table === "websites" || table === "bots" || table === "games") ? "" : "none";
+      (row ? "Edit " : "Add ") + (LABEL[table] || "Item");
+    // every content table now carries its own link
+    document.getElementById("url-field").style.display = "";
     document.getElementById("buyable-field").style.display =
       (table === "apps" || table === "bots" || table === "games") ? "" : "none";
     document.getElementById("demo-only-field").hidden = table !== "websites";
+    // Open source projects are published, not sold — hiding price avoids
+    // implying a figure the public card does not even render.
+    document.getElementById("price-field").hidden = table === "opensource";
+    document.getElementById("currency-field").hidden = table === "opensource";
 
     itemForm.reset();
     itemErr.textContent = "";
@@ -907,6 +915,7 @@
     bots: function () { loadItems("bots"); },
     games: function () { loadItems("games"); },
     websites: function () { loadItems("websites"); },
+    opensource: function () { loadItems("opensource"); },
     brands: loadBrands,
     finder: fdLoad,
     messages: loadMessages,

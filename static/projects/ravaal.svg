@@ -1,0 +1,58 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 675" role="img" aria-labelledby="t d">
+  <title id="t">Ravaal</title>
+  <desc id="d">A Persian-first Android planner and habit tracker built with Flutter.</desc>
+  <defs>
+    <linearGradient id="bg" x2="1" y2="1"><stop stop-color="#06211c"/><stop offset="1" stop-color="#0c0f16"/></linearGradient>
+    <linearGradient id="br" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#34d399"/><stop offset="1" stop-color="#22d3ee"/></linearGradient>
+    <filter id="g"><feGaussianBlur stdDeviation="12" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+  </defs>
+  <rect width="1200" height="675" fill="url(#bg)"/>
+  <g transform="translate(128 86)">
+    <rect width="320" height="504" rx="44" fill="#141821" stroke="#34d399" stroke-opacity=".25" stroke-width="3"/>
+    <rect x="124" y="24" width="72" height="7" rx="4" fill="#0a0d13"/>
+    <g transform="translate(26 62)" fill="#1b212c">
+      <rect width="34" height="46" rx="11"/><rect x="39" width="34" height="46" rx="11"/>
+      <rect x="78" width="34" height="46" rx="11"/><rect x="117" width="34" height="46" rx="11"/>
+      <rect x="156" width="34" height="46" rx="11"/>
+      <rect x="195" width="34" height="46" rx="11" fill="url(#br)"/>
+      <rect x="234" width="34" height="46" rx="11"/>
+    </g>
+    <g transform="translate(26 134)">
+      <rect width="268" height="54" rx="15" fill="#1b212c"/>
+      <circle cx="30" cy="27" r="11" fill="#34d399"/>
+      <rect x="52" y="17" width="150" height="9" rx="4" fill="#8d9bb0" fill-opacity=".55"/>
+      <rect x="52" y="33" width="96" height="7" rx="3" fill="#8d9bb0" fill-opacity=".3"/>
+      <g transform="translate(0 66)">
+        <rect width="268" height="54" rx="15" fill="#1b212c"/>
+        <circle cx="30" cy="27" r="11" fill="none" stroke="#8d9bb0" stroke-width="3"/>
+        <rect x="52" y="17" width="176" height="9" rx="4" fill="#eef2f8" fill-opacity=".65"/>
+        <rect x="52" y="33" width="78" height="7" rx="3" fill="#8d9bb0" fill-opacity=".3"/>
+      </g>
+      <g transform="translate(0 132)">
+        <rect width="268" height="54" rx="15" fill="#1b212c"/>
+        <circle cx="30" cy="27" r="11" fill="none" stroke="#8d9bb0" stroke-width="3"/>
+        <rect x="52" y="17" width="128" height="9" rx="4" fill="#eef2f8" fill-opacity=".65"/>
+        <rect x="52" y="33" width="104" height="7" rx="3" fill="#8d9bb0" fill-opacity=".3"/>
+      </g>
+    </g>
+    <g transform="translate(26 340)" fill="#34d399">
+      <rect width="30" height="26" rx="8"/><rect x="36" width="30" height="26" rx="8"/>
+      <rect x="72" width="30" height="26" rx="8"/>
+      <rect x="108" width="30" height="26" rx="8" fill="#1b212c"/>
+      <rect x="144" width="30" height="26" rx="8"/><rect x="180" width="30" height="26" rx="8"/>
+      <rect x="216" width="30" height="26" rx="8" fill="none" stroke="#34d399" stroke-width="2.5" stroke-dasharray="5 4"/>
+    </g>
+    <g transform="translate(160 430)" filter="url(#g)">
+      <circle r="42" fill="none" stroke="#1b212c" stroke-width="9"/>
+      <circle r="42" fill="none" stroke="url(#br)" stroke-width="9" stroke-linecap="round" stroke-dasharray="264" stroke-dashoffset="80" transform="rotate(-90)"/>
+    </g>
+  </g>
+  <text x="540" y="246" font-family="Vazirmatn,system-ui,sans-serif" font-size="96" font-weight="700" fill="#34d399">روال</text>
+  <text x="540" y="312" font-family="Vazirmatn,system-ui,sans-serif" font-size="30" fill="#22d3ee" fill-opacity=".92">برنامه‌ریز و پیگیری عادت</text>
+  <g font-family="Vazirmatn,system-ui,sans-serif" font-size="26" fill="#8d9bb0">
+    <text x="540" y="386">تقویم شمسی · روال‌ها · عادت‌ها</text>
+    <text x="540" y="430">جلسات تمرکز · مرور هفتگی</text>
+    <text x="540" y="482" fill="#34d399">آفلاین‌محور · فلاتر · مایکت</text>
+  </g>
+  <rect x="540" y="516" width="248" height="4" rx="2" fill="#34d399" fill-opacity=".5"/>
+</svg>

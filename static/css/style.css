@@ -547,3 +547,10 @@ h3 a:hover { color: var(--acc-0); }
   }
   .reveal { opacity: 1; transform: none; }
 }
+
+/* ---------------- open source cards ----------------
+   No price, so the footer is links only — and the badge says "free" where the
+   other sections say what a thing costs. */
+.vbadge-os { background: rgba(129,140,248,.18); color: #818CF8; }
+.os-card .vcard-index { color: #818CF8; }
+.os-card .vfoot { justify-content: flex-start; gap: 10px; }

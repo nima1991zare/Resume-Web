@@ -1,0 +1,314 @@
+<!doctype html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="description" content="داشبورد فروشندگی آمازون — مرکز کنترل ۱۴ ماژولی با Streamlit، SQLite و SP-API">
+<title>داشبورد فروشندگی آمازون | دمو</title>
+<style>
+  :root{
+    --bg:#0b0f16;--panel:#121923;--panel2:#18212e;--line:rgba(148,163,184,.14);
+    --fg:#e9eff7;--muted:#8a9ab1;--brand:#ff9900;--brand2:#ffc46b;
+    --ok:#34d399;--down:#f87171;--info:#60a5fa;--radius:14px;
+  }
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{background:var(--bg);color:var(--fg);min-height:100vh;
+    font-family:'Vazirmatn',system-ui,-apple-system,'Segoe UI',sans-serif;
+    line-height:1.7;padding:clamp(12px,2.5vw,26px)}
+  .wrap{max-width:1320px;margin:0 auto}
+  header{display:flex;gap:14px;align-items:center;flex-wrap:wrap;margin-bottom:18px}
+  .logo{width:46px;height:46px;border-radius:13px;background:linear-gradient(135deg,var(--brand),var(--brand2));
+    display:grid;place-items:center;color:#2b1a00;font-weight:800;font-size:1.3rem}
+  h1{font-size:clamp(1.15rem,2.6vw,1.6rem)}
+  .sub{color:var(--muted);font-size:.85rem}
+  .src{margin-inline-start:auto;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+  .seg{display:flex;background:var(--panel2);border:1px solid var(--line);border-radius:10px;overflow:hidden}
+  .seg button{background:transparent;border:0;color:var(--muted);padding:7px 14px;cursor:pointer;
+    font-family:inherit;font-size:.78rem;font-weight:600;transition:.18s}
+  .seg button.on{background:var(--brand);color:#2b1a00}
+  .layout{display:grid;grid-template-columns:208px 1fr;gap:14px;align-items:start}
+  @media(max-width:900px){.layout{grid-template-columns:1fr}}
+  /* sidebar */
+  .side{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:9px}
+  .side h3{font-size:.7rem;color:var(--muted);padding:7px 10px 5px;letter-spacing:.04em}
+  .side button{display:flex;align-items:center;gap:9px;width:100%;background:transparent;border:0;
+    color:var(--muted);padding:8px 10px;border-radius:9px;cursor:pointer;font-family:inherit;
+    font-size:.81rem;text-align:right;transition:.16s}
+  .side button:hover{background:var(--panel2);color:var(--fg)}
+  .side button.on{background:rgba(255,153,0,.13);color:var(--brand);font-weight:600}
+  .side button i{width:7px;height:7px;border-radius:50%;background:currentColor;flex-shrink:0;opacity:.6}
+  /* main */
+  .kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(152px,1fr));gap:11px;margin-bottom:13px}
+  .kpi{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:13px 15px}
+  .kpi span{font-size:.73rem;color:var(--muted);display:block}
+  .kpi b{font-size:1.32rem;font-family:ui-monospace,monospace;direction:ltr;display:block;margin-top:2px}
+  .kpi em{font-style:normal;font-size:.72rem;font-family:ui-monospace,monospace;direction:ltr}
+  .kpi em.u{color:var(--ok)} .kpi em.d{color:var(--down)}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);
+    overflow:hidden;margin-bottom:13px}
+  .card-head{padding:11px 15px;border-bottom:1px solid var(--line);background:var(--panel2);
+    display:flex;justify-content:space-between;align-items:center;gap:9px;flex-wrap:wrap}
+  .card-head h2{font-size:.85rem;color:var(--muted);font-weight:700}
+  .tag{font-size:.67rem;padding:2px 9px;border-radius:999px;font-family:ui-monospace,monospace;direction:ltr}
+  .tag.o{background:rgba(255,153,0,.14);color:var(--brand)}
+  .tag.g{background:rgba(52,211,153,.14);color:var(--ok)}
+  .tag.r{background:rgba(248,113,113,.14);color:var(--down)}
+  canvas{display:block;width:100%;height:196px}
+  table{width:100%;border-collapse:collapse;font-size:.79rem}
+  th,td{padding:9px 13px;border-bottom:1px solid var(--line);text-align:right;white-space:nowrap}
+  th{color:var(--muted);font-size:.73rem;font-weight:600;background:var(--panel2)}
+  td.num{font-family:ui-monospace,monospace;direction:ltr;text-align:left}
+  .up{color:var(--ok)}.dn{color:var(--down)}
+  .two{display:grid;grid-template-columns:1fr 1fr;gap:13px}
+  @media(max-width:860px){.two{grid-template-columns:1fr}}
+  .list{padding:13px 15px;display:grid;gap:9px}
+  .li{display:flex;justify-content:space-between;gap:10px;align-items:center;font-size:.8rem;
+    border-bottom:1px dashed var(--line);padding-bottom:8px}
+  .li:last-child{border:0;padding:0}
+  .li b{font-family:ui-monospace,monospace;direction:ltr}
+  .bar{height:8px;border-radius:8px;background:var(--panel2);overflow:hidden;flex:1;max-width:120px}
+  .bar i{display:block;height:100%;background:linear-gradient(90deg,var(--brand),var(--brand2))}
+  .note{margin-top:13px;padding:12px 15px;border-radius:12px;font-size:.8rem;color:var(--muted);
+    background:rgba(255,153,0,.06);border:1px solid rgba(255,153,0,.18)}
+  .note code{direction:ltr;display:inline-block;background:var(--panel2);padding:1px 7px;border-radius:6px;
+    font-family:ui-monospace,monospace;font-size:.92em;color:var(--brand)}
+  footer{margin-top:16px;text-align:center;color:var(--muted);font-size:.78rem}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <div class="logo">a</div>
+    <div>
+      <h1>داشبورد فروشندگی آمازون <span style="color:var(--muted);font-size:.58em;font-weight:400">— Amazon.ae</span></h1>
+      <p class="sub">مرکز کنترل ۱۴ ماژولی برای اداره کامل یک حساب فروشندگی</p>
+    </div>
+    <div class="src">
+      <span style="font-size:.76rem;color:var(--muted)">منبع داده:</span>
+      <div class="seg">
+        <button class="on" data-s="mock">داده آزمایشی</button>
+        <button data-s="live">SP-API واقعی</button>
+      </div>
+    </div>
+  </header>
+
+  <div class="layout">
+    <aside class="side" id="side">
+      <h3>ماژول‌ها</h3>
+      <button class="on" data-m="home"><i></i>خانه</button>
+      <button data-m="intake"><i></i>ورود کالا</button>
+      <button data-m="stock"><i></i>موجودی</button>
+      <button data-m="fba"><i></i>FBA</button>
+      <button data-m="pricing"><i></i>قیمت‌گذاری</button>
+      <button data-m="orders"><i></i>سفارش و سود</button>
+      <button data-m="ads"><i></i>تبلیغات</button>
+      <button data-m="deals"><i></i>کمپین‌ها</button>
+      <button data-m="events"><i></i>رویدادها</button>
+      <button data-m="market"><i></i>تحلیل بازار</button>
+      <button data-m="hazmat"><i></i>غیرفعال و خطرناک</button>
+      <button data-m="opt"><i></i>بهینه‌سازی</button>
+      <button data-m="assets"><i></i>دارایی‌ها</button>
+      <button data-m="settings"><i></i>تنظیمات</button>
+    </aside>
+
+    <main>
+      <div class="kpis" id="kpis"></div>
+
+      <div class="card">
+        <div class="card-head">
+          <h2 id="chart-title">فروش ۳۰ روز گذشته</h2>
+          <span class="tag o" id="chart-tag">AED</span>
+        </div>
+        <canvas id="chart"></canvas>
+      </div>
+
+      <div class="two">
+        <div class="card">
+          <div class="card-head"><h2 id="t1-title">کالاهای پرفروش</h2><span class="tag g">۷ روز</span></div>
+          <div style="overflow-x:auto"><table id="t1"></table></div>
+        </div>
+        <div class="card">
+          <div class="card-head"><h2 id="t2-title">هشدارها</h2><span class="tag r" id="t2-count">۴</span></div>
+          <div class="list" id="t2"></div>
+        </div>
+      </div>
+
+      <div class="note">
+        امروز روی داده آزمایشی و فایل‌های بارگذاری‌شده کار می‌کند؛ با تغییر <code>USE_MOCK = False</code>
+        و پر کردن متدهای مشخص‌شده در <code>core/api_client.py</code> به SP-API و Ads API واقعی وصل می‌شود.
+        تنظیمات، وظایف، تاریخچه قیمت و وضعیت کاتالوگ در SQLite ذخیره می‌شوند.
+      </div>
+    </main>
+  </div>
+
+  <footer>
+    دموی تعاملی — سورس در
+    <a style="color:var(--brand);text-decoration:none" href="https://github.com/nima1991zare/Amazon_Dashboard" target="_blank" rel="noopener">github.com/nima1991zare/Amazon_Dashboard</a>
+  </footer>
+</div>
+
+<script>
+(function(){
+  "use strict";
+  var fa=function(n){return String(n).replace(/\d/g,function(d){return '۰۱۲۳۴۵۶۷۸۹'[d];});};
+  var money=function(n){return fa(n.toLocaleString('en-US'));};
+
+  var MODULES={
+    home:{title:'فروش ۳۰ روز گذشته',t1:'کالاهای پرفروش',t2:'هشدارها',
+      kpis:[['درآمد ماه',68420,'+۱۲٫۴٪','u'],['سود خالص',14890,'+۸٫۱٪','u'],
+            ['سفارش‌ها',412,'+۳۴','u'],['نرخ تبدیل','۴٫۸٪','−۰٫۳٪','d'],['ACoS','۱۸٪','−۲٪','u']]},
+    stock:{title:'روند موجودی',t1:'کم‌موجودی‌ترین کالاها',t2:'هشدار موجودی',
+      kpis:[['SKUهای فعال',184,'+۶','u'],['کم‌موجودی',12,'+۳','d'],
+            ['ناموجود',4,'−۱','u'],['ارزش انبار',98200,'+۴٪','u'],['روز پوشش','۲۱','−۳','d']]},
+    pricing:{title:'تاریخچه قیمت و Buy Box',t1:'تغییرات قیمت اخیر',t2:'از دست دادن Buy Box',
+      kpis:[['قوانین فعال',38,'+۲','u'],['برنده Buy Box','۷۶٪','+۴٪','u'],
+            ['حاشیه میانگین','۲۲٪','+۱٪','u'],['تغییر امروز',17,'','u'],['رقبای پایش‌شده',63,'','u']]},
+    ads:{title:'هزینه و بازده تبلیغات',t1:'کمپین‌های برتر',t2:'کلیدواژه‌های پرهزینه',
+      kpis:[['هزینه تبلیغات',8120,'+۵٪','d'],['فروش تبلیغاتی',45100,'+۱۱٪','u'],
+            ['ACoS','۱۸٪','−۲٪','u'],['CTR','۰٫۵۲٪','+۰٫۰۴','u'],['کمپین فعال',9,'','u']]},
+    orders:{title:'سفارش و سود روزانه',t1:'سفارش‌های اخیر',t2:'بازگشتی‌ها',
+      kpis:[['سفارش امروز',23,'+۵','u'],['سود امروز',742,'+۹٪','u'],
+            ['بازگشتی','۲٫۱٪','−۰٫۴٪','u'],['میانگین سبد',166,'+۳','u'],['لغو شده',2,'','d']]}
+  };
+  var ROWS={
+    home:[['Wireless Earbuds Pro','B0C4…','۴۸','۸٬۲۴۰','+۱۸٪'],
+          ['Kitchen Scale 5kg','B0B9…','۳۷','۴٬۱۱۰','+۹٪'],
+          ['USB-C Hub 7in1','B0D2…','۳۱','۵٬۹۸۰','−۴٪'],
+          ['Yoga Mat TPE','B0A7…','۲۸','۲٬۲۴۰','+۲۲٪'],
+          ['Desk Lamp LED','B0F1…','۲۴','۳٬۳۶۰','+۶٪']],
+    stock:[['Yoga Mat TPE','B0A7…','۳','۱۴','بحرانی'],
+           ['Desk Lamp LED','B0F1…','۷','۲۱','کم'],
+           ['USB-C Hub 7in1','B0D2…','۹','۱۹','کم'],
+           ['Kitchen Scale 5kg','B0B9…','۱۱','۲۶','کم']],
+    pricing:[['Wireless Earbuds Pro','۱۸۹ → ۱۷۹','برنده','۲۳٪','خودکار'],
+             ['USB-C Hub 7in1','۲۴۹ → ۲۳۹','برنده','۲۱٪','خودکار'],
+             ['Desk Lamp LED','۱۳۹ → ۱۴۵','بازنده','۲۶٪','دستی'],
+             ['Yoga Mat TPE','۸۹ → ۸۹','برنده','۱۸٪','خودکار']],
+    ads:[['Auto — Earbuds','۲٬۴۱۰','۱۲٬۸۰۰','۱۸٪'],
+         ['Exact — usb c hub','۱٬۸۶۰','۹٬۳۰۰','۲۰٪'],
+         ['Broad — kitchen scale','۱٬۲۴۰','۵٬۱۰۰','۲۴٪'],
+         ['Auto — Yoga','۹۸۰','۶٬۷۰۰','۱۵٪']],
+    orders:[['۴۰۲-۸۸۱۹','Wireless Earbuds Pro','۱۷۹','۴۲','ارسال شد'],
+            ['۴۰۲-۸۸۲۰','USB-C Hub 7in1','۲۳۹','۵۱','در حال آماده‌سازی'],
+            ['۴۰۲-۸۸۲۱','Yoga Mat TPE','۸۹','۱۶','ارسال شد'],
+            ['۴۰۲-۸۸۲۲','Desk Lamp LED','۱۴۵','۳۸','تحویل شد']]
+  };
+  var HEADS={
+    home:['کالا','ASIN','تعداد','درآمد','رشد'],
+    stock:['کالا','ASIN','موجودی','روز پوشش','وضعیت'],
+    pricing:['کالا','تغییر قیمت','Buy Box','حاشیه','حالت'],
+    ads:['کمپین','هزینه','فروش','ACoS'],
+    orders:['شماره','کالا','مبلغ','سود','وضعیت']
+  };
+  var ALERTS={
+    home:[['موجودی Yoga Mat به ۳ عدد رسید','بحرانی',88],
+          ['Buy Box کالای Desk Lamp از دست رفت','مهم',64],
+          ['۲ کالا به‌دلیل hazmat غیرفعال شد','مهم',52],
+          ['ACoS کمپین Broad از ۲۴٪ گذشت','توجه',38]],
+    stock:[['Yoga Mat TPE — ۳ عدد','بحرانی',92],['Desk Lamp — ۷ عدد','مهم',70],
+           ['USB-C Hub — ۹ عدد','مهم',61],['Kitchen Scale — ۱۱ عدد','توجه',44]],
+    pricing:[['Desk Lamp LED','۶ ساعت',72],['Phone Stand','۲ ساعت',48],
+             ['Cable Organizer','۴۵ دقیقه',30]],
+    ads:[['keyword: bluetooth earphone','۴۱۰ AED',80],
+         ['keyword: usb hub adapter','۲۸۰ AED',58],
+         ['keyword: led lamp desk','۱۹۰ AED',40]],
+    orders:[['۴۰۲-۸۸۱۰ — مرجوعی','کیفیت',60],['۴۰۲-۸۷۹۴ — مرجوعی','اشتباه سایز',42]]
+  };
+
+  function pick(m){ return MODULES[m]?m:'home'; }
+
+  function render(m){
+    m=pick(m);
+    var cfg=MODULES[m];
+    document.getElementById('chart-title').textContent=cfg.title;
+    document.getElementById('t1-title').textContent=cfg.t1;
+    document.getElementById('t2-title').textContent=cfg.t2;
+
+    document.getElementById('kpis').innerHTML=cfg.kpis.map(function(k){
+      var v=typeof k[1]==='number'?money(k[1]):k[1];
+      return '<div class="kpi"><span>'+k[0]+'</span><b>'+v+'</b>'+
+        (k[2]?'<em class="'+k[3]+'">'+k[2]+'</em>':'')+'</div>';
+    }).join('');
+
+    var h=HEADS[m], rows=ROWS[m];
+    document.getElementById('t1').innerHTML=
+      '<thead><tr>'+h.map(function(x){return '<th>'+x+'</th>';}).join('')+'</tr></thead><tbody>'+
+      rows.map(function(r){
+        return '<tr>'+r.map(function(c,i){
+          var cls=i===0?'':'num';
+          if(/^[+−-]/.test(c)) cls+=' '+(c[0]==='+'?'up':'dn');
+          return '<td class="'+cls+'">'+c+'</td>';
+        }).join('')+'</tr>';
+      }).join('')+'</tbody>';
+
+    var al=ALERTS[m];
+    document.getElementById('t2-count').textContent=fa(al.length);
+    document.getElementById('t2').innerHTML=al.map(function(a){
+      return '<div class="li"><span>'+a[0]+'</span>'+
+        '<span class="bar"><i style="width:'+a[2]+'%"></i></span>'+
+        '<b style="font-size:.72rem;color:var(--muted)">'+a[1]+'</b></div>';
+    }).join('');
+
+    drawChart(m);
+  }
+
+  /* chart */
+  var cv=document.getElementById('chart'), ctx=cv.getContext('2d'), series=[];
+  function makeSeries(seed){
+    var a=[],v=50+seed*7;
+    for(var i=0;i<30;i++){ v+=(Math.sin(i*0.7+seed)*8)+(Math.random()-0.42)*11; a.push(Math.max(8,v)); }
+    return a;
+  }
+  function drawChart(m){
+    series=makeSeries(Object.keys(MODULES).indexOf(m)+1);
+    var w=cv.width=cv.clientWidth*devicePixelRatio, h=cv.height=196*devicePixelRatio;
+    ctx.setTransform(1,0,0,1,0,0); ctx.clearRect(0,0,w,h);
+    var pad=12*devicePixelRatio;
+    var hi=Math.max.apply(null,series), lo=Math.min.apply(null,series), rng=(hi-lo)||1;
+    var x=function(i){return pad+i/(series.length-1)*(w-pad*2);};
+    var y=function(v){return pad+(hi-v)/rng*(h-pad*2);};
+
+    ctx.strokeStyle='rgba(148,163,184,.08)';ctx.lineWidth=1;
+    for(var g=0;g<=3;g++){
+      var gy=pad+(h-pad*2)*g/3;
+      ctx.beginPath();ctx.moveTo(pad,gy);ctx.lineTo(w-pad,gy);ctx.stroke();
+    }
+    var grad=ctx.createLinearGradient(0,0,0,h);
+    grad.addColorStop(0,'rgba(255,153,0,.34)');grad.addColorStop(1,'rgba(255,153,0,0)');
+    ctx.beginPath();ctx.moveTo(x(0),y(series[0]));
+    series.forEach(function(v,i){ctx.lineTo(x(i),y(v));});
+    ctx.lineTo(x(series.length-1),h-pad);ctx.lineTo(x(0),h-pad);ctx.closePath();
+    ctx.fillStyle=grad;ctx.fill();
+
+    ctx.beginPath();ctx.moveTo(x(0),y(series[0]));
+    series.forEach(function(v,i){ctx.lineTo(x(i),y(v));});
+    ctx.strokeStyle='#ff9900';ctx.lineWidth=2.1*devicePixelRatio;
+    ctx.lineJoin='round';ctx.stroke();
+  }
+  window.addEventListener('resize',function(){drawChart(current);});
+
+  var current='home';
+  document.getElementById('side').addEventListener('click',function(e){
+    var b=e.target.closest('button'); if(!b) return;
+    Array.prototype.forEach.call(this.querySelectorAll('button'),function(x){x.classList.remove('on')});
+    b.classList.add('on');
+    current=b.getAttribute('data-m');
+    render(current);
+  });
+  Array.prototype.forEach.call(document.querySelectorAll('.seg button'),function(b){
+    b.addEventListener('click',function(){
+      Array.prototype.forEach.call(document.querySelectorAll('.seg button'),function(x){x.classList.remove('on')});
+      b.classList.add('on');
+      var live=b.getAttribute('data-s')==='live';
+      document.getElementById('chart-tag').textContent=live?'SP-API · live':'AED';
+      document.getElementById('chart-tag').className='tag '+(live?'g':'o');
+      render(current);
+    });
+  });
+
+  render('home');
+})();
+</script>
+</body>
+</html>

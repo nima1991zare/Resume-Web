@@ -277,7 +277,7 @@ def _load_public_content() -> dict:
     try:
         settings = {k: get_setting(conn, k) for k in PUBLIC_SETTINGS}
         apps = [dict(r) for r in conn.execute(
-            "SELECT id,title_en,title_fa,desc_en,desc_fa,image,tech,demo_url,price,currency,buyable "
+            "SELECT id,title_en,title_fa,desc_en,desc_fa,image,url,tech,demo_url,price,currency,buyable "
             "FROM apps WHERE active=1 ORDER BY sort, id")]
         games = [dict(r) for r in conn.execute(
             "SELECT id,title_en,title_fa,desc_en,desc_fa,image,url,tech,demo_url,price,currency,buyable "
@@ -290,8 +290,11 @@ def _load_public_content() -> dict:
             "FROM websites WHERE active=1 ORDER BY sort, id")]
         brands = [dict(r) for r in conn.execute(
             "SELECT id,name,logo,url FROM brands WHERE active=1 ORDER BY sort, id")]
+        opensource = [dict(r) for r in conn.execute(
+            "SELECT id,title_en,title_fa,desc_en,desc_fa,image,url,tech,demo_url "
+            "FROM opensource WHERE active=1 ORDER BY sort, id")]
         return {"settings": settings, "apps": apps, "bots": bots, "games": games,
-                "websites": websites, "brands": brands}
+                "websites": websites, "brands": brands, "opensource": opensource}
     finally:
         conn.close()
 
@@ -399,18 +402,22 @@ def admin_stats(authorization: Optional[str] = Header(None)):
 TABLES = {
     "apps": "apps", "bots": "telegram_bots",
     "games": "games", "websites": "websites",
+    "opensource": "opensource",
 }
 
 # writable columns per table (games have both a demo URL and a buyable flag)
 TABLE_COLS = {
-    "apps": ["title_en", "title_fa", "desc_en", "desc_fa", "image", "tech", "demo_url",
-             "price", "currency", "buyable", "sort", "active"],
+    "apps": ["title_en", "title_fa", "desc_en", "desc_fa", "image", "url", "tech",
+             "demo_url", "price", "currency", "buyable", "sort", "active"],
     "games": ["title_en", "title_fa", "desc_en", "desc_fa", "image", "url", "tech",
                "demo_url", "price", "currency", "buyable", "sort", "active"],
     "bots": ["title_en", "title_fa", "desc_en", "desc_fa", "image", "url", "tech",
              "demo_url", "price", "currency", "buyable", "sort", "active"],
     "websites": ["title_en", "title_fa", "desc_en", "desc_fa", "image", "url", "tech",
                   "demo_url", "demo_only", "price", "currency", "sort", "active"],
+    # Open source is the one section with no price: these are published, not sold.
+    "opensource": ["title_en", "title_fa", "desc_en", "desc_fa", "image", "url", "tech",
+                   "demo_url", "sort", "active"],
 }
 
 
@@ -957,7 +964,7 @@ def _render_index(request: Request) -> str:
 
 
 TYPE_LABEL = {
-    "apps": "APPLICATION", "bots": "TELEGRAM BOT",
+    "apps": "APPLICATION", "bots": "TELEGRAM BOT", "opensource": "OPEN SOURCE",
     "games": "GAME", "websites": "WEBSITE",
 }
 
@@ -1025,7 +1032,7 @@ def _render_product(request: Request, table: str, item_id: int) -> Optional[str]
                         f'  <meta property="og:image" content="{_esc(img_abs)}">')
     html = html.replace("<!--P:JSONLD-->",
                         '<script type="application/ld+json">' + _json_for_script(jsonld) + "</script>")
-    html = html.replace("<!--P:BADGE-->", TYPE_LABEL[table])
+    html = html.replace("<!--P:BADGE-->", TYPE_LABEL.get(table, table.upper()))
     html = html.replace("<!--P:IMAGE-->", img_html)
     html = html.replace("<!--P:TECH-->", tech_html)
     html = html.replace("<!--P:DATA-->", _json_for_script(data))
@@ -1069,7 +1076,7 @@ def sitemap(request: Request):
     try:
         settings = {"site_url": get_setting(conn, "site_url")}
         product_urls = []
-        for table in ("apps", "bots", "games", "websites"):
+        for table in ("apps", "bots", "games", "websites", "opensource"):
             extra = " AND demo_only=0" if table == "websites" else ""
             for r in conn.execute(
                     f"SELECT id FROM {TABLES[table]} WHERE active=1{extra} ORDER BY id"):

@@ -61,8 +61,9 @@
     [45, 212, 191],   // 3 bots      — teal
     [251, 113, 133],  // 4 games     — rose
     [96, 165, 250],   // 5 websites  — blue
-    [251, 191, 36],   // 6 brands    — amber
-    [74, 222, 128]    // 7 contact   — green
+    [251, 191, 36],   // 6 brands     — amber
+    [129, 140, 248],  // 7 opensource — indigo
+    [74, 222, 128]    // 8 contact    — green
   ];
 
   /* ---------------- formations ----------------
@@ -234,6 +235,35 @@
   }
   function lVortex(i) { return i < N - 1 ? i + 1 : -1; }
 
+
+  // 7 · LATTICE — a crystal of stacked cubes; links draw the edges
+  var latN = 4;                                   // cubes per axis
+  function fLattice(i, t, o) {
+    var per = latN * latN * latN;
+    var k = i % per;
+    var gx = k % latN;
+    var gy = Math.floor(k / latN) % latN;
+    var gz = Math.floor(k / (latN * latN)) % latN;
+    var step = R * 0.58;
+    var off = (latN - 1) / 2;
+    // a slow breath so the crystal is never completely static
+    var pulse = 1 + Math.sin(t * 0.6 + (gx + gy + gz) * 0.35) * 0.05;
+    var spin = t * 0.18;
+    var x = (gx - off) * step * pulse;
+    var z = (gz - off) * step * pulse;
+    o[0] = x * Math.cos(spin) - z * Math.sin(spin);
+    o[1] = (gy - off) * step * pulse + Math.sin(t * 0.5) * R * 0.04;
+    o[2] = x * Math.sin(spin) + z * Math.cos(spin);
+  }
+  function lLattice(i) {
+    var per = latN * latN * latN;
+    var k = i % per;
+    // link along x only, and never across the edge of a row: joining the last
+    // cube of one row to the first of the next would draw a diagonal through
+    // the whole crystal and ruin the shape.
+    return (k % latN) < latN - 1 ? i + 1 : -1;
+  }
+
   var FORMS = [
     { f: fNebula,  l: lNebula  },
     { f: fHelix,   l: lHelix   },
@@ -242,6 +272,7 @@
     { f: fInvader, l: lInvader },
     { f: fGlobe,   l: lGlobe   },
     { f: fOrbits,  l: lOrbits  },
+    { f: fLattice, l: lLattice },
     { f: fVortex,  l: lVortex  }
   ];
 

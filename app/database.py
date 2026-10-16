@@ -138,6 +138,20 @@ CREATE TABLE IF NOT EXISTS sessions (
     created_at TEXT NOT NULL DEFAULT (datetime('now'))
 );
 
+CREATE TABLE IF NOT EXISTS opensource (
+    id        INTEGER PRIMARY KEY AUTOINCREMENT,
+    title_en  TEXT NOT NULL,
+    title_fa  TEXT NOT NULL DEFAULT '',
+    desc_en   TEXT NOT NULL DEFAULT '',
+    desc_fa   TEXT NOT NULL DEFAULT '',
+    image     TEXT NOT NULL DEFAULT '',
+    url       TEXT NOT NULL DEFAULT '',
+    tech      TEXT NOT NULL DEFAULT '',
+    demo_url  TEXT NOT NULL DEFAULT '',
+    sort      INTEGER NOT NULL DEFAULT 0,
+    active    INTEGER NOT NULL DEFAULT 1
+);
+
 /* ---------- Project Finder (see app/finder.py) ----------
    Local businesses that look like they need a website, so they can be pitched
    a project. One row per business; the OSM id is the identity, so re-running
@@ -326,6 +340,95 @@ FEATURED_BRANDS = [
 SEED_BRANDS = []
 
 
+FEATURED_OPENSOURCE = [
+    ("rudis", "رودیس",
+     "A Redis-compatible in-memory key-value store written in Rust. It speaks RESP2 "
+     "over TCP, so the official redis-cli and any Redis client library connect to it "
+     "unchanged. Sixteen-shard storage engine, TTL expiry, pub/sub, and AOF plus "
+     "snapshot persistence — built as a cargo workspace with a library crate and a "
+     "server binary, covered by four integration suites and a criterion benchmark.",
+     "یک پایگاه‌داده کلید-مقدار درون‌حافظه‌ای سازگار با ردیس، نوشته‌شده با زبان Rust. "
+     "پروتکل RESP2 را روی TCP پیاده‌سازی می‌کند؛ بنابراین redis-cli رسمی و هر کتابخانه "
+     "کلاینت ردیس، بدون هیچ تغییری به آن وصل می‌شوند. موتور ذخیره‌سازی ۱۶ شارده، انقضای "
+     "خودکار کلیدها، pub/sub و ماندگاری داده با AOF و اسنپ‌شات — به‌صورت یک cargo "
+     "workspace با یک کتابخانه و یک سرور، همراه با چهار مجموعه تست یکپارچه و بنچمارک.",
+     "/static/projects/rudis.svg",
+     "https://github.com/nima1991zare/rudis",
+     "Rust · Tokio · RESP2 · Cargo Workspace",
+     "/static/demos/rudis/index.html", 1),
+
+    ("RiffleDB", "ریفل‌دی‌بی",
+     "A distributed SQL database engine in Rust. A complete query pipeline — parser, "
+     "analyzer, planner, cost-based optimizer and executor — sits on MVCC storage with "
+     "snapshot isolation, Raft consensus for replication, and a PostgreSQL wire-protocol "
+     "gateway, so existing clients, drivers and ORMs connect without changes.",
+     "موتور پایگاه‌داده SQL توزیع‌شده با زبان Rust. یک خط لوله کامل پردازش کوئری — "
+     "پارسر، تحلیل‌گر، برنامه‌ریز، بهینه‌ساز هزینه‌محور و اجراکننده — روی ذخیره‌سازی "
+     "MVCC با جداسازی اسنپ‌شات، اجماع Raft برای تکثیر داده، و یک دروازه سازگار با "
+     "پروتکل شبکه PostgreSQL؛ به این ترتیب کلاینت‌ها، درایورها و ORMهای موجود بدون "
+     "تغییر به آن متصل می‌شوند.",
+     "/static/projects/riffledb.svg",
+     "https://github.com/nima1991zare/riffledb",
+     "Rust · Raft · MVCC · PostgreSQL Wire · SQL",
+     "/static/demos/riffledb/index.html", 2),
+]
+
+# Apps added later than the original seed. Keyed on title_en so a re-run updates
+# rather than duplicating, and so a renamed project keeps its row and its id.
+FEATURED_APPS = [
+    ("Trade Man", "تریدمن",
+     "A self-hosted trading panel for the Nobitex exchange. Every five minutes its agent "
+     "scans eight pairs on hourly candles and trades one setup — an uptrend above the "
+     "200 and 1200 EMAs, entry when RSI(14) falls under 33, take-profit and stop sized "
+     "from ATR. Paper and live margin modes run identical rules, and a logistic-regression "
+     "model trained on three years of replayed history, and on every trade it closes, "
+     "picks the exit profile. Backtester and Telegram alerts included.",
+     "پنل معاملاتی خودمیزبان برای صرافی نوبیتکس. عامل معاملاتی هر پنج دقیقه هشت جفت‌ارز "
+     "را روی کندل‌های یک‌ساعته بررسی می‌کند و یک ستاپ مشخص را معامله می‌کند: روند صعودی "
+     "بالای میانگین‌های ۲۰۰ و ۱۲۰۰، ورود وقتی RSI زیر ۳۳ برود، و حد سود و حد ضرر بر پایه "
+     "ATR. حالت آزمایشی و حالت واقعی با قوانین کاملاً یکسان اجرا می‌شوند و یک مدل "
+     "رگرسیون لجستیک — آموزش‌دیده روی سه سال داده تاریخی و روی تک‌تک معاملات بسته‌شده "
+     "خودش — نوع خروج هر معامله را انتخاب می‌کند. همراه با بک‌تست و هشدارهای تلگرام.",
+     "/static/projects/trade-man.svg",
+     "",
+     "Node.js · JavaScript · Python · scikit-learn · SQLite · Nobitex API",
+     "/static/demos/trade-man/index.html", 20000000, "IRT", 1, 1),
+
+    ("Ravaal", "روال",
+     "A Persian-first Android productivity app built with Flutter. Tasks, planning on "
+     "the Jalali calendar, routines, habits, focus sessions and weekly reviews in one "
+     "calm, fully right-to-left experience. Local-first storage so it works with no "
+     "connection, background sync when there is one, reminders that actually fire, and "
+     "a premium subscription billed through Myket.",
+     "اپلیکیشن اندرویدی بهره‌وری، ساخته‌شده با فلاتر و کاملاً فارسی و راست‌چین. کارها، "
+     "برنامه‌ریزی روی تقویم شمسی، روال‌ها، عادت‌ها، جلسات تمرکز و مرور هفتگی، همه در یک "
+     "تجربه آرام و بدون شلوغی. داده‌ها اول روی خود دستگاه ذخیره می‌شوند تا بدون اینترنت "
+     "هم کار کند، در پس‌زمینه همگام‌سازی می‌شود، یادآورها واقعاً به‌موقع اجرا می‌شوند و "
+     "اشتراک ویژه از طریق مایکت پرداخت می‌شود.",
+     "/static/projects/ravaal.svg",
+     "",
+     "Flutter · Dart · Jalali Calendar · Offline-first · Myket Billing",
+     "/static/demos/ravaal/index.html", 12000000, "IRT", 1, 2),
+
+    ("Amazon Seller Dashboard", "داشبورد فروشندگی آمازون",
+     "A fourteen-module control centre for running an Amazon.ae seller account end to "
+     "end: intake, stock, FBA, pricing with full history, orders and profit, advertising, "
+     "deals, events, market analysis, hazmat and inactive listings, and optimisation. "
+     "Configuration, tasks, price history and catalogue state persist in SQLite. It runs "
+     "today on mock data and local file uploads, and switches to the live SP-API and Ads "
+     "API behind a single flag.",
+     "مرکز کنترل چهارده‌ماژولی برای اداره کامل یک حساب فروشندگی در آمازون امارات: ورود "
+     "کالا، موجودی، FBA، قیمت‌گذاری با تاریخچه کامل، سفارش‌ها و سود، تبلیغات، کمپین‌ها، "
+     "رویدادها، تحلیل بازار، کالاهای خطرناک و غیرفعال، و بهینه‌سازی. تنظیمات، وظایف، "
+     "تاریخچه قیمت و وضعیت کاتالوگ در SQLite ذخیره می‌شوند. امروز با داده آزمایشی و "
+     "بارگذاری فایل کار می‌کند و با یک کلید به SP-API و Ads API واقعی سوییچ می‌شود.",
+     "/static/projects/amazon-dashboard.svg",
+     "https://github.com/nima1991zare/Amazon_Dashboard",
+     "Python · Streamlit · SQLite · Pandas · Amazon SP-API",
+     "/static/demos/amazon-dashboard/index.html", 0, "IRT", 0, 3),
+]
+
+
 def init_db() -> None:
     conn = get_db()
     try:
@@ -336,6 +439,11 @@ def init_db() -> None:
             if "demo_url" not in cols:
                 conn.execute(
                     f"ALTER TABLE {table} ADD COLUMN demo_url TEXT NOT NULL DEFAULT ''")
+        # migration: apps were the one content table without a link of their own,
+        # which left no way to point at a repository or a store listing
+        app_cols = [r["name"] for r in conn.execute("PRAGMA table_info(apps)")]
+        if "url" not in app_cols:
+            conn.execute("ALTER TABLE apps ADD COLUMN url TEXT NOT NULL DEFAULT ''")
         website_cols_existing = [
             r["name"] for r in conn.execute("PRAGMA table_info(websites)")]
         if "demo_only" not in website_cols_existing:
@@ -406,6 +514,32 @@ def init_db() -> None:
         conn.execute(
             "UPDATE websites SET active=0 WHERE title_en IN "
             "('Restaurant Ordering Website','Corporate Landing Page')")
+        os_cols = "title_en,title_fa,desc_en,desc_fa,image,url,tech,demo_url,sort"
+        for row in FEATURED_OPENSOURCE:
+            if conn.execute("SELECT 1 FROM opensource WHERE title_en=?",
+                            (row[0],)).fetchone() is None:
+                conn.execute(
+                    f"INSERT INTO opensource({os_cols}) VALUES({','.join('?' * 9)})", row)
+            else:
+                conn.execute(
+                    "UPDATE opensource SET title_fa=?,desc_en=?,desc_fa=?,image=?,url=?,"
+                    "tech=?,demo_url=?,sort=?,active=1 WHERE title_en=?",
+                    row[1:] + (row[0],))
+        app_cols2 = ("title_en,title_fa,desc_en,desc_fa,image,url,tech,demo_url,"
+                     "price,currency,buyable,sort")
+        for row in FEATURED_APPS:
+            if conn.execute("SELECT 1 FROM apps WHERE title_en=?",
+                            (row[0],)).fetchone() is None:
+                conn.execute(
+                    f"INSERT INTO apps({app_cols2}) VALUES({','.join('?' * 12)})", row)
+            else:
+                conn.execute(
+                    "UPDATE apps SET title_fa=?,desc_en=?,desc_fa=?,image=?,url=?,tech=?,"
+                    "demo_url=?,price=?,currency=?,buyable=?,sort=?,active=1 "
+                    "WHERE title_en=?", row[1:] + (row[0],))
+        # Trade Man replaces the earlier placeholder, keeping its row and id so an
+        # existing link to /p/apps/<id> does not break.
+        conn.execute("UPDATE apps SET active=0 WHERE title_en='Crypto Trade Panel'")
         if conn.execute("SELECT COUNT(*) c FROM brands").fetchone()["c"] == 0:
             conn.executemany("INSERT INTO brands(name,logo,url) VALUES(?,?,?)", SEED_BRANDS)
         conn.execute(

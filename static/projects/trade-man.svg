@@ -1,0 +1,35 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 675" role="img" aria-labelledby="t d">
+  <title id="t">Trade Man</title>
+  <desc id="d">A self-hosted Nobitex trading panel with an automated margin agent and a machine-learning exit model.</desc>
+  <defs>
+    <linearGradient id="bg" x2="1" y2="1"><stop stop-color="#15100a"/><stop offset="1" stop-color="#070b11"/></linearGradient>
+    <filter id="g"><feGaussianBlur stdDeviation="10" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+  </defs>
+  <rect width="1200" height="675" fill="url(#bg)"/>
+  <g stroke="#eab308" stroke-opacity=".07" stroke-width="1.5"><path d="M0 170h1200M0 290h1200M0 410h1200M0 530h1200"/></g>
+  <g transform="translate(96 120)">
+    <g stroke-width="7" stroke-linecap="round">
+      <path d="M20 300v-96" stroke="#22c55e"/><path d="M70 236v104" stroke="#ef4444"/>
+      <path d="M120 276v-132" stroke="#22c55e"/><path d="M170 232v-104" stroke="#22c55e"/>
+      <path d="M220 160v122" stroke="#ef4444"/><path d="M270 268v-146" stroke="#22c55e"/>
+      <path d="M320 136v118" stroke="#ef4444"/><path d="M370 254v-160" stroke="#22c55e"/>
+    </g>
+    <g stroke-width="22" stroke-linecap="round">
+      <path d="M20 262v-58" stroke="#22c55e"/><path d="M70 268v42" stroke="#ef4444"/>
+      <path d="M120 236v-72" stroke="#22c55e"/><path d="M170 198v-48" stroke="#22c55e"/>
+      <path d="M220 192v62" stroke="#ef4444"/><path d="M270 228v-88" stroke="#22c55e"/>
+      <path d="M320 166v62" stroke="#ef4444"/><path d="M370 212v-100" stroke="#22c55e"/>
+    </g>
+    <path d="M10 300 C 80 268, 150 220, 220 206 S 330 164, 390 120" fill="none" stroke="#eab308" stroke-width="4" stroke-opacity=".85" filter="url(#g)"/>
+  </g>
+  <circle cx="466" cy="240" r="15" fill="#eab308" filter="url(#g)"/>
+  <text x="640" y="236" font-family="ui-monospace,Menlo,monospace" font-size="76" font-weight="700" fill="#eab308">Trade Man</text>
+  <text x="642" y="296" font-family="ui-monospace,Menlo,monospace" font-size="28" fill="#fbbf24" fill-opacity=".86">Nobitex · margin agent</text>
+  <g font-family="ui-monospace,Menlo,monospace" font-size="25" fill="#8496ad">
+    <text x="642" y="372">close &gt; EMA200 &amp; EMA1200</text>
+    <text x="642" y="414">RSI(14) &lt; 33  →  BUY</text>
+    <text x="642" y="456">TP +1 ATR  ·  SL −4 ATR</text>
+    <text x="642" y="506" fill="#38bdf8">logistic regression picks the exit</text>
+  </g>
+  <rect x="640" y="542" width="268" height="4" rx="2" fill="#eab308" fill-opacity=".5"/>
+</svg>

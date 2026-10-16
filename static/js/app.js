@@ -19,6 +19,11 @@
       "v2.chEmail": "Email",
       "v2.chWhatsapp": "WhatsApp",
       "v2.chTelegram": "Telegram",
+      "nav.opensource": "Open Source",
+      "os.title": "Open Source",
+      "os.sub": "Infrastructure written in Rust — free, source available, and built to be read.",
+      "os.source": "Source on GitHub",
+      "os.free": "Free · Open source",
       "v2.chInstagram": "Instagram",
       "v2.chGithub": "GitHub",
       "v2.chLinkedin": "LinkedIn"
@@ -38,6 +43,11 @@
       "v2.chEmail": "ایمیل",
       "v2.chWhatsapp": "واتس‌اپ",
       "v2.chTelegram": "تلگرام",
+      "nav.opensource": "متن‌باز",
+      "os.title": "پروژه‌های متن‌باز",
+      "os.sub": "زیرساخت‌هایی که با زبان Rust نوشته‌ام — رایگان، با سورس باز، و نوشته‌شده برای اینکه خوانده شوند.",
+      "os.source": "سورس در گیت‌هاب",
+      "os.free": "رایگان · متن‌باز",
       "v2.chInstagram": "اینستاگرام",
       "v2.chGithub": "گیت‌هاب",
       "v2.chLinkedin": "لینکدین"
@@ -455,6 +465,22 @@
             (isLink(bot.url)
               ? '<a class="btn btn-ghost" href="' + esc(bot.url) + '" target="_blank" rel="noopener">' + t("bots.source") + "</a>"
               : (bot.buyable ? '<a class="btn btn-primary" href="#contact" data-subject="' + esc(pick(bot, "title")) + '">' + t("apps.buy") + "</a>" : "")) +
+          "</div></div></article>";
+    }).join("");
+
+    document.getElementById("opensource-grid").innerHTML = (c.opensource || []).map(function (o, i) {
+      var link = "/p/opensource/" + o.id;
+      return '<article class="vcard os-card reveal in">' +
+        '<a class="vcard-media" href="' + link + '">' + media(o) +
+          '<span class="vcard-index">OSS/' + pad(i + 1) + "</span>" +
+          '<span class="vbadge vbadge-os">' + t("os.free") + "</span>" +
+        "</a>" +
+        '<div class="vcard-body"><h3><a href="' + link + '">' + esc(pick(o, "title")) + "</a></h3>" +
+          '<p class="desc">' + esc(pick(o, "desc")) + "</p>" + tech(o.tech) +
+          '<div class="vfoot">' + demoBtn(o) +
+            (isLink(o.url)
+              ? '<a class="btn btn-ghost" href="' + esc(o.url) + '" target="_blank" rel="noopener">' + t("os.source") + "</a>"
+              : "") +
           "</div></div></article>";
     }).join("");
 

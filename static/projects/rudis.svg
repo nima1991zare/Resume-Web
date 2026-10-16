@@ -1,0 +1,38 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 675" role="img" aria-labelledby="t d">
+  <title id="t">rudis</title>
+  <desc id="d">A Redis-compatible in-memory key-value store written in Rust.</desc>
+  <defs>
+    <linearGradient id="bg" x2="1" y2="1"><stop stop-color="#1a0d03"/><stop offset="1" stop-color="#0a0e14"/></linearGradient>
+    <linearGradient id="sh" x2="0" y2="1"><stop stop-color="#fbbf24"/><stop offset="1" stop-color="#f97316"/></linearGradient>
+    <filter id="g"><feGaussianBlur stdDeviation="13" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+  </defs>
+  <rect width="1200" height="675" fill="url(#bg)"/>
+  <g stroke="#f97316" stroke-opacity=".08" stroke-width="1.5"><path d="M0 180h1200M0 340h1200M0 500h1200"/></g>
+  <g filter="url(#g)" transform="translate(150 158)" fill="url(#sh)">
+    <rect x="0" y="0" width="78" height="78" rx="17"/>
+    <rect x="100" y="0" width="78" height="78" rx="17" fill-opacity=".5"/>
+    <rect x="200" y="0" width="78" height="78" rx="17" fill-opacity=".72"/>
+    <rect x="300" y="0" width="78" height="78" rx="17" fill-opacity=".34"/>
+    <rect x="0" y="100" width="78" height="78" rx="17" fill-opacity=".46"/>
+    <rect x="100" y="100" width="78" height="78" rx="17"/>
+    <rect x="200" y="100" width="78" height="78" rx="17" fill-opacity=".3"/>
+    <rect x="300" y="100" width="78" height="78" rx="17" fill-opacity=".62"/>
+    <rect x="0" y="200" width="78" height="78" rx="17" fill-opacity=".66"/>
+    <rect x="100" y="200" width="78" height="78" rx="17" fill-opacity=".36"/>
+    <rect x="200" y="200" width="78" height="78" rx="17" fill-opacity=".88"/>
+    <rect x="300" y="200" width="78" height="78" rx="17" fill-opacity=".44"/>
+    <rect x="0" y="300" width="78" height="78" rx="17" fill-opacity=".3"/>
+    <rect x="100" y="300" width="78" height="78" rx="17" fill-opacity=".58"/>
+    <rect x="200" y="300" width="78" height="78" rx="17" fill-opacity=".4"/>
+    <rect x="300" y="300" width="78" height="78" rx="17" fill-opacity=".76"/>
+  </g>
+  <text x="690" y="252" font-family="ui-monospace,Menlo,monospace" font-size="92" font-weight="700" fill="#fbbf24">rudis</text>
+  <text x="692" y="316" font-family="ui-monospace,Menlo,monospace" font-size="31" fill="#f97316" fill-opacity=".9">RESP2 · 16 shards · Rust</text>
+  <g font-family="ui-monospace,Menlo,monospace" font-size="26" fill="#8b9bb4">
+    <text x="692" y="392">&gt; SET user:1 nima</text>
+    <text x="692" y="436" fill="#4ade80">OK</text>
+    <text x="692" y="480">&gt; GET user:1</text>
+    <text x="692" y="524" fill="#4ade80">"nima"</text>
+  </g>
+  <rect x="690" y="556" width="300" height="4" rx="2" fill="#f97316" fill-opacity=".5"/>
+</svg>

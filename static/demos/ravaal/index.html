@@ -1,0 +1,340 @@
+<!doctype html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="description" content="روال — برنامه‌ریز و پیگیری عادت با تقویم شمسی، ساخته‌شده با فلاتر">
+<title>روال | برنامه‌ریز و پیگیری عادت — دمو</title>
+<style>
+  :root{
+    --bg:#0c0f16;--ink:#141821;--card:#1b212c;--line:rgba(148,163,184,.14);
+    --fg:#eef2f8;--muted:#8d9bb0;--brand:#34d399;--brand2:#22d3ee;
+    --warn:#fbbf24;--rose:#fb7185;--radius:18px;
+  }
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{background:var(--bg);color:var(--fg);min-height:100vh;
+    font-family:'Vazirmatn',system-ui,-apple-system,'Segoe UI',sans-serif;
+    line-height:1.75;padding:clamp(14px,3vw,34px)}
+  .wrap{max-width:1180px;margin:0 auto}
+  header{display:flex;gap:15px;align-items:flex-start;flex-wrap:wrap;margin-bottom:24px}
+  .logo{width:52px;height:52px;border-radius:16px;flex-shrink:0;
+    background:linear-gradient(140deg,var(--brand),var(--brand2));
+    display:grid;place-items:center;color:#042f26;font-weight:800;font-size:1.5rem}
+  h1{font-size:clamp(1.3rem,3vw,1.8rem)}
+  .sub{color:var(--muted);font-size:.92rem;max-width:62ch}
+  .badges{display:flex;gap:7px;flex-wrap:wrap;margin-top:9px}
+  .badge{font-size:.73rem;padding:3px 11px;border-radius:999px;
+    background:rgba(52,211,153,.12);color:var(--brand);border:1px solid rgba(52,211,153,.22)}
+  .stage{display:grid;grid-template-columns:330px 1fr;gap:26px;align-items:start}
+  @media(max-width:880px){.stage{grid-template-columns:1fr}}
+  /* phone */
+  .phone{
+    background:var(--ink);border:9px solid #0a0d13;border-radius:40px;overflow:hidden;
+    box-shadow:0 30px 70px rgba(0,0,0,.55);position:relative;margin:0 auto;width:330px;max-width:100%;
+  }
+  .notch{height:26px;display:grid;place-items:center}
+  .notch i{width:92px;height:5px;border-radius:9px;background:#0a0d13;display:block}
+  .screen{height:600px;display:flex;flex-direction:column}
+  .top{padding:4px 18px 12px}
+  .top .date{color:var(--muted);font-size:.76rem}
+  .top h2{font-size:1.18rem;margin-top:1px}
+  .views{flex:1;overflow-y:auto;padding:0 14px 14px}
+  .views::-webkit-scrollbar{width:0}
+  .view{display:none}.view.on{display:block}
+  /* week strip */
+  .week{display:grid;grid-template-columns:repeat(7,1fr);gap:5px;margin-bottom:14px}
+  .day{border-radius:12px;padding:7px 2px;text-align:center;background:var(--card);
+    border:1px solid var(--line);cursor:pointer;transition:.18s}
+  .day small{display:block;font-size:.62rem;color:var(--muted)}
+  .day b{font-size:.92rem;font-family:ui-monospace,monospace}
+  .day.on{background:var(--brand);color:#042f26;border-color:var(--brand)}
+  .day.on small{color:#065f46}
+  .day .pips{display:flex;gap:2px;justify-content:center;margin-top:3px;height:4px}
+  .day .pips i{width:4px;height:4px;border-radius:50%;background:var(--brand2);display:block}
+  .day.on .pips i{background:#042f26}
+  /* tasks */
+  .grp{color:var(--muted);font-size:.74rem;margin:12px 2px 7px;display:flex;justify-content:space-between}
+  .task{display:flex;gap:10px;align-items:flex-start;background:var(--card);border:1px solid var(--line);
+    border-radius:14px;padding:11px 12px;margin-bottom:8px;cursor:pointer;transition:.18s}
+  .task:active{transform:scale(.985)}
+  .chk{width:20px;height:20px;border-radius:7px;border:2px solid var(--muted);flex-shrink:0;
+    margin-top:2px;display:grid;place-items:center;transition:.18s}
+  .task.done .chk{background:var(--brand);border-color:var(--brand)}
+  .task.done .chk::after{content:'✓';color:#042f26;font-size:.76rem;font-weight:800}
+  .task.done .t-body b{text-decoration:line-through;color:var(--muted)}
+  .t-body{flex:1;min-width:0}
+  .t-body b{font-size:.87rem;font-weight:600;display:block}
+  .t-body span{font-size:.72rem;color:var(--muted)}
+  .t-tag{font-size:.64rem;padding:2px 8px;border-radius:999px;flex-shrink:0;margin-top:2px}
+  .t-tag.w{background:rgba(251,191,36,.14);color:var(--warn)}
+  .t-tag.p{background:rgba(34,211,238,.14);color:var(--brand2)}
+  .t-tag.h{background:rgba(251,113,133,.14);color:var(--rose)}
+  /* habits */
+  .habit{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:12px;margin-bottom:9px}
+  .habit-h{display:flex;justify-content:space-between;align-items:center;margin-bottom:9px}
+  .habit-h b{font-size:.86rem}
+  .streak{font-size:.7rem;color:var(--warn)}
+  .dots7{display:grid;grid-template-columns:repeat(7,1fr);gap:4px}
+  .dots7 i{height:22px;border-radius:7px;background:rgba(148,163,184,.1);display:block;cursor:pointer;transition:.18s}
+  .dots7 i.f{background:var(--brand)}
+  .dots7 i.t{border:1.6px dashed var(--brand)}
+  /* focus */
+  .focus{text-align:center;padding:22px 0}
+  .ring{width:186px;height:186px;margin:0 auto 16px;position:relative}
+  .ring svg{transform:rotate(-90deg)}
+  .ring .lbl{position:absolute;inset:0;display:grid;place-items:center}
+  .ring .lbl b{font-size:2.1rem;font-family:ui-monospace,monospace;direction:ltr}
+  .ring .lbl span{font-size:.74rem;color:var(--muted)}
+  .fbtn{background:var(--brand);color:#042f26;border:0;border-radius:13px;padding:11px 30px;
+    font-family:inherit;font-weight:700;font-size:.88rem;cursor:pointer}
+  .fbtn.alt{background:transparent;color:var(--fg);border:1px solid var(--line)}
+  .fmeta{color:var(--muted);font-size:.76rem;margin-top:13px}
+  /* tabbar */
+  .tabbar{display:grid;grid-template-columns:repeat(4,1fr);border-top:1px solid var(--line);background:var(--ink)}
+  .tabbar button{background:transparent;border:0;color:var(--muted);padding:11px 0 14px;cursor:pointer;
+    font-family:inherit;font-size:.68rem;display:grid;gap:3px;justify-items:center;transition:.18s}
+  .tabbar button svg{width:21px;height:21px;stroke:currentColor;fill:none;stroke-width:1.9}
+  .tabbar button.on{color:var(--brand)}
+  /* side */
+  .feat{display:grid;gap:12px}
+  .f{background:var(--ink);border:1px solid var(--line);border-radius:var(--radius);padding:15px 17px}
+  .f h3{font-size:.95rem;margin-bottom:5px;display:flex;align-items:center;gap:8px}
+  .f h3 i{width:26px;height:26px;border-radius:8px;background:rgba(52,211,153,.14);color:var(--brand);
+    display:grid;place-items:center;font-style:normal;font-size:.85rem;flex-shrink:0}
+  .f p{color:var(--muted);font-size:.84rem}
+  .specs{display:grid;grid-template-columns:repeat(auto-fit,minmax(135px,1fr));gap:9px;margin-top:4px}
+  .spec{background:var(--ink);border:1px solid var(--line);border-radius:12px;padding:11px 13px}
+  .spec span{font-size:.71rem;color:var(--muted);display:block}
+  .spec b{font-size:.84rem}
+  footer{margin-top:22px;text-align:center;color:var(--muted);font-size:.8rem}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <div class="logo">ر</div>
+    <div>
+      <h1>روال <span style="color:var(--muted);font-size:.6em;font-weight:400">— برنامه‌ریز و پیگیری عادت</span></h1>
+      <p class="sub">
+        اپلیکیشن اندرویدی بهره‌وری با فلاتر؛ کارها، تقویم شمسی، روال‌ها، عادت‌ها و جلسات تمرکز
+        در یک تجربه آرام و کاملاً راست‌چین. دمو را لمس کنید — کارها تیک می‌خورند و تایمر واقعاً کار می‌کند.
+      </p>
+      <div class="badges">
+        <span class="badge">فلاتر</span><span class="badge">تقویم شمسی</span>
+        <span class="badge">آفلاین‌محور</span><span class="badge">مایکت</span><span class="badge">RTL</span>
+      </div>
+    </div>
+  </header>
+
+  <div class="stage">
+    <div class="phone">
+      <div class="notch"><i></i></div>
+      <div class="screen">
+        <div class="top">
+          <div class="date" id="today">پنج‌شنبه ۲۴ مهر ۱۴۰۵</div>
+          <h2 id="greet">امروز</h2>
+        </div>
+
+        <div class="views">
+          <!-- tasks -->
+          <section class="view on" id="v-tasks">
+            <div class="week" id="week"></div>
+            <div class="grp"><span>کارهای امروز</span><span id="prog">۱ از ۴</span></div>
+            <div id="tasks"></div>
+          </section>
+
+          <!-- calendar -->
+          <section class="view" id="v-cal">
+            <div class="grp"><span>مهر ۱۴۰۵</span><span>۴ برنامه</span></div>
+            <div class="week" style="grid-template-columns:repeat(7,1fr);gap:5px" id="month"></div>
+            <div class="grp"><span>برنامه‌های این هفته</span></div>
+            <div class="task"><div class="chk"></div><div class="t-body"><b>جلسه با کارفرما</b><span>شنبه ۲۶ مهر · ۱۰:۰۰</span></div><span class="t-tag w">کاری</span></div>
+            <div class="task"><div class="chk"></div><div class="t-body"><b>تحویل فاز اول پروژه</b><span>دوشنبه ۲۸ مهر</span></div><span class="t-tag h">مهلت</span></div>
+            <div class="task"><div class="chk"></div><div class="t-body"><b>مرور هفتگی</b><span>جمعه ۱ آبان · ۲۰:۰۰</span></div><span class="t-tag p">شخصی</span></div>
+          </section>
+
+          <!-- habits -->
+          <section class="view" id="v-habits">
+            <div class="grp"><span>عادت‌ها</span><span>۷ روز اخیر</span></div>
+            <div id="habits"></div>
+          </section>
+
+          <!-- focus -->
+          <section class="view" id="v-focus">
+            <div class="focus">
+              <div class="ring">
+                <svg width="186" height="186" viewBox="0 0 186 186">
+                  <circle cx="93" cy="93" r="82" stroke="rgba(148,163,184,.13)" stroke-width="11" fill="none"/>
+                  <circle id="arc" cx="93" cy="93" r="82" stroke="#34d399" stroke-width="11" fill="none"
+                          stroke-linecap="round" stroke-dasharray="515" stroke-dashoffset="0"/>
+                </svg>
+                <div class="lbl"><div><b id="clock">۲۵:۰۰</b><span>جلسه تمرکز</span></div></div>
+              </div>
+              <button class="fbtn" id="fstart">شروع</button>
+              <button class="fbtn alt" id="freset">بازنشانی</button>
+              <p class="fmeta" id="fmeta">امروز: ۲ جلسه · ۵۰ دقیقه</p>
+            </div>
+          </section>
+        </div>
+
+        <nav class="tabbar" id="tabbar">
+          <button class="on" data-v="tasks"><svg viewBox="0 0 24 24"><path d="M4 7h16M4 12h16M4 17h10"/></svg>کارها</button>
+          <button data-v="cal"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="16" rx="3"/><path d="M3 10h18M8 3v4M16 3v4"/></svg>تقویم</button>
+          <button data-v="habits"><svg viewBox="0 0 24 24"><path d="M3 17l5-5 4 3 5-7 4 4"/></svg>عادت‌ها</button>
+          <button data-v="focus"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>تمرکز</button>
+        </nav>
+      </div>
+    </div>
+
+    <div class="feat">
+      <div class="f"><h3><i>۱</i>تقویم شمسی، نه تقویم ترجمه‌شده</h3>
+        <p>برنامه‌ریزی روی تقویم جلالی ساخته شده — ماه‌ها، هفته‌ها، تعطیلات رسمی و محاسبه فاصله روزها همه بومی‌اند، نه نتیجه تبدیل تاریخ میلادی.</p></div>
+      <div class="f"><h3><i>۲</i>اول آفلاین</h3>
+        <p>همه‌چیز روی خود دستگاه ذخیره می‌شود و بدون اینترنت کامل کار می‌کند. همگام‌سازی در پس‌زمینه انجام می‌شود و تداخل‌ها بر اساس آخرین تغییر حل می‌شوند.</p></div>
+      <div class="f"><h3><i>۳</i>یادآورهایی که واقعاً اجرا می‌شوند</h3>
+        <p>زمان‌بندی دقیق اندروید با مدیریت بهینه‌سازی باتری و بازسازی یادآورها بعد از ری‌استارت دستگاه — مشکلی که بیشتر اپ‌های مشابه از آن رنج می‌برند.</p></div>
+      <div class="f"><h3><i>۴</i>بدون حس گناه</h3>
+        <p>روزی که از دست می‌رود، خط قرمز نمی‌شود. آمارها روند را نشان می‌دهند نه شکست را — چون اپلیکیشنی که سرزنش می‌کند، حذف می‌شود.</p></div>
+      <div class="specs">
+        <div class="spec"><span>پلتفرم</span><b>اندروید · فلاتر</b></div>
+        <div class="spec"><span>انتشار</span><b>مایکت</b></div>
+        <div class="spec"><span>مدل درآمد</span><b>اشتراک ویژه</b></div>
+        <div class="spec"><span>زبان</span><b>فارسی · RTL</b></div>
+      </div>
+    </div>
+  </div>
+
+  <footer>دموی تعاملی روال — پروژه خصوصی</footer>
+</div>
+
+<script>
+(function(){
+  "use strict";
+  var fa=function(n){return String(n).replace(/\d/g,function(d){return '۰۱۲۳۴۵۶۷۸۹'[d];});};
+
+  /* week strip */
+  var DN=['ش','ی','د','س','چ','پ','ج'], start=21;
+  var wk=document.getElementById('week');
+  for(var i=0;i<7;i++){
+    var d=document.createElement('div');
+    d.className='day'+(i===5?' on':'');
+    var pips=i%3===0?2:(i%2?1:3);
+    var ph=''; for(var k=0;k<pips;k++) ph+='<i></i>';
+    d.innerHTML='<small>'+DN[i]+'</small><b>'+fa(start+i)+'</b><span class="pips">'+ph+'</span>';
+    (function(el){
+      el.addEventListener('click',function(){
+        Array.prototype.forEach.call(wk.children,function(x){x.classList.remove('on')});
+        el.classList.add('on');
+      });
+    })(d);
+    wk.appendChild(d);
+  }
+
+  /* month grid */
+  var mo=document.getElementById('month');
+  for(var m=1;m<=30;m++){
+    var c=document.createElement('div');
+    c.className='day'+(m===24?' on':'');
+    c.innerHTML='<b>'+fa(m)+'</b>';
+    if([2,9,17,24,28].indexOf(m)>-1) c.innerHTML+='<span class="pips"><i></i></span>';
+    mo.appendChild(c);
+  }
+
+  /* tasks */
+  var TASKS=[
+    {t:'تماس با مشتری کافه سِرین',s:'۰۹:۳۰ · یادآور فعال',g:'w',d:true},
+    {t:'تحویل طرح اولیه سایت',s:'امروز · مهلت',g:'h',d:false},
+    {t:'ورزش صبحگاهی',s:'بخشی از روال صبح',g:'p',d:false},
+    {t:'مرور هزینه‌های هفته',s:'۲۱:۰۰',g:'p',d:false}
+  ];
+  var tw=document.getElementById('tasks');
+  function renderTasks(){
+    tw.innerHTML=TASKS.map(function(t,i){
+      return '<div class="task'+(t.d?' done':'')+'" data-i="'+i+'"><div class="chk"></div>'+
+        '<div class="t-body"><b>'+t.t+'</b><span>'+t.s+'</span></div>'+
+        '<span class="t-tag '+t.g+'">'+(t.g==='w'?'کاری':t.g==='h'?'مهلت':'شخصی')+'</span></div>';
+    }).join('');
+    document.getElementById('prog').textContent=
+      fa(TASKS.filter(function(t){return t.d;}).length)+' از '+fa(TASKS.length);
+  }
+  renderTasks();
+  tw.addEventListener('click',function(e){
+    var el=e.target.closest('.task'); if(!el) return;
+    TASKS[+el.getAttribute('data-i')].d=!TASKS[+el.getAttribute('data-i')].d;
+    renderTasks();
+  });
+
+  /* habits */
+  var HABITS=[
+    {n:'مطالعه ۲۰ دقیقه',s:12,d:[1,1,1,0,1,1,0]},
+    {n:'نوشیدن آب',s:31,d:[1,1,1,1,1,1,0]},
+    {n:'کد زدن روی پروژه شخصی',s:5,d:[0,1,1,0,1,1,0]}
+  ];
+  var hw=document.getElementById('habits');
+  function renderHabits(){
+    hw.innerHTML=HABITS.map(function(h,hi){
+      var dots=h.d.map(function(v,di){
+        return '<i class="'+(v?'f':(di===6?'t':''))+'" data-h="'+hi+'" data-d="'+di+'"></i>';
+      }).join('');
+      return '<div class="habit"><div class="habit-h"><b>'+h.n+'</b>'+
+        '<span class="streak">🔥 '+fa(h.s)+' روز پیاپی</span></div>'+
+        '<div class="dots7">'+dots+'</div></div>';
+    }).join('');
+  }
+  renderHabits();
+  hw.addEventListener('click',function(e){
+    if(e.target.tagName!=='I') return;
+    var h=+e.target.getAttribute('data-h'), d=+e.target.getAttribute('data-d');
+    HABITS[h].d[d]=HABITS[h].d[d]?0:1;
+    HABITS[h].s+=HABITS[h].d[d]?1:-1;
+    if(HABITS[h].s<0) HABITS[h].s=0;
+    renderHabits();
+  });
+
+  /* focus timer */
+  var total=25*60, left=total, running=false, tick=null, done=2, mins=50;
+  var arc=document.getElementById('arc'), clock=document.getElementById('clock');
+  function paint(){
+    var m=Math.floor(left/60), s=left%60;
+    clock.textContent=fa(('0'+m).slice(-2)+':'+('0'+s).slice(-2));
+    arc.setAttribute('stroke-dashoffset',String(515*(1-left/total)));
+  }
+  paint();
+  document.getElementById('fstart').addEventListener('click',function(){
+    running=!running;
+    this.textContent=running?'توقف':'ادامه';
+    if(running){
+      tick=setInterval(function(){
+        left--; if(left<=0){
+          left=0;running=false;clearInterval(tick);
+          document.getElementById('fstart').textContent='شروع';
+          done++; mins+=25;
+          document.getElementById('fmeta').textContent='امروز: '+fa(done)+' جلسه · '+fa(mins)+' دقیقه';
+          left=total;
+        }
+        paint();
+      },1000);
+    } else clearInterval(tick);
+  });
+  document.getElementById('freset').addEventListener('click',function(){
+    clearInterval(tick);running=false;left=total;
+    document.getElementById('fstart').textContent='شروع';paint();
+  });
+
+  /* tabs */
+  var TITLES={tasks:'امروز',cal:'تقویم',habits:'عادت‌ها',focus:'تمرکز'};
+  document.getElementById('tabbar').addEventListener('click',function(e){
+    var b=e.target.closest('button'); if(!b) return;
+    Array.prototype.forEach.call(this.children,function(x){x.classList.remove('on')});
+    b.classList.add('on');
+    var v=b.getAttribute('data-v');
+    Array.prototype.forEach.call(document.querySelectorAll('.view'),function(s){
+      s.classList.toggle('on',s.id==='v-'+v);
+    });
+    document.getElementById('greet').textContent=TITLES[v];
+  });
+})();
+</script>
+</body>
+</html>

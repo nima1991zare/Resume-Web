@@ -1,0 +1,315 @@
+<!doctype html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="description" content="تریدمن — پنل معاملاتی خودمیزبان نوبیتکس با عامل خودکار، بک‌تست و مدل یادگیری ماشین">
+<title>تریدمن | پنل معاملاتی نوبیتکس — دمو</title>
+<style>
+  :root{
+    --bg:#070b11;--panel:#0f1620;--panel2:#141d2a;--line:rgba(148,163,184,.14);
+    --fg:#e8eff8;--muted:#8496ad;--up:#22c55e;--down:#ef4444;--accent:#eab308;
+    --info:#38bdf8;--radius:14px;
+  }
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{background:var(--bg);color:var(--fg);min-height:100vh;
+    font-family:'Vazirmatn',system-ui,-apple-system,'Segoe UI',sans-serif;
+    line-height:1.7;padding:clamp(12px,2.5vw,28px)}
+  .wrap{max-width:1300px;margin:0 auto}
+  header{display:flex;align-items:center;gap:14px;flex-wrap:wrap;margin-bottom:18px}
+  .logo{width:46px;height:46px;border-radius:13px;background:linear-gradient(135deg,var(--accent),#f59e0b);
+    display:grid;place-items:center;color:#2b1d00;font-weight:800;font-size:1.15rem}
+  h1{font-size:clamp(1.15rem,2.6vw,1.6rem)}
+  .sub{color:var(--muted);font-size:.85rem}
+  .mode{margin-inline-start:auto;display:flex;gap:7px;align-items:center;flex-wrap:wrap}
+  .seg{display:flex;background:var(--panel2);border:1px solid var(--line);border-radius:10px;overflow:hidden}
+  .seg button{background:transparent;border:0;color:var(--muted);padding:7px 15px;cursor:pointer;
+    font-family:inherit;font-size:.8rem;font-weight:600;transition:.18s}
+  .seg button.on{background:var(--accent);color:#2b1d00}
+  .live-dot{width:8px;height:8px;border-radius:50%;background:var(--up);animation:pulse 1.8s infinite}
+  @keyframes pulse{0%,100%{opacity:1}50%{opacity:.25}}
+  @media(prefers-reduced-motion:reduce){.live-dot{animation:none}}
+  .kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(158px,1fr));gap:11px;margin-bottom:15px}
+  .kpi{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:13px 15px}
+  .kpi span{display:block;font-size:.74rem;color:var(--muted)}
+  .kpi b{font-size:1.4rem;font-family:ui-monospace,monospace;direction:ltr;display:block;margin-top:2px}
+  .kpi .up{color:var(--up)} .kpi .down{color:var(--down)}
+  .grid{display:grid;grid-template-columns:1.5fr 1fr;gap:14px;align-items:start}
+  @media(max-width:980px){.grid{grid-template-columns:1fr}}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);
+    overflow:hidden;margin-bottom:14px}
+  .card-head{padding:11px 15px;border-bottom:1px solid var(--line);background:var(--panel2);
+    display:flex;align-items:center;justify-content:space-between;gap:9px;flex-wrap:wrap}
+  .card-head h2{font-size:.85rem;color:var(--muted);font-weight:700}
+  .tag{font-size:.68rem;padding:2px 9px;border-radius:999px;font-family:ui-monospace,monospace;direction:ltr}
+  .tag.g{background:rgba(34,197,94,.14);color:var(--up)}
+  .tag.y{background:rgba(234,179,8,.14);color:var(--accent)}
+  .tag.b{background:rgba(56,189,248,.14);color:var(--info)}
+  canvas{display:block;width:100%;height:268px}
+  table{width:100%;border-collapse:collapse;font-size:.79rem}
+  th,td{padding:9px 13px;border-bottom:1px solid var(--line);text-align:right}
+  th{color:var(--muted);font-weight:600;font-size:.74rem;background:var(--panel2)}
+  td.num{font-family:ui-monospace,monospace;direction:ltr;text-align:left}
+  .log{height:244px;overflow-y:auto;padding:11px 14px;font-size:.78rem}
+  .log::-webkit-scrollbar{width:8px}.log::-webkit-scrollbar-thumb{background:#223047;border-radius:8px}
+  .ev{display:flex;gap:9px;padding:6px 0;border-bottom:1px dashed var(--line);align-items:flex-start}
+  .ev time{color:var(--muted);font-family:ui-monospace,monospace;font-size:.7rem;flex-shrink:0;direction:ltr}
+  .ev.buy{color:var(--up)}.ev.sell{color:var(--down)}.ev.ml{color:var(--info)}.ev.skip{color:var(--muted)}
+  .rules{padding:14px 15px;display:grid;gap:8px;font-size:.8rem}
+  .rule{display:flex;justify-content:space-between;gap:10px;border-bottom:1px dashed var(--line);padding-bottom:7px}
+  .rule:last-child{border:0;padding:0}
+  .rule b{font-family:ui-monospace,monospace;color:var(--accent);direction:ltr}
+  .bars{padding:14px 15px;display:grid;gap:10px}
+  .bar-row{display:grid;grid-template-columns:62px 1fr 56px;gap:9px;align-items:center;font-size:.76rem}
+  .bar{height:9px;border-radius:9px;background:var(--panel2);overflow:hidden}
+  .bar i{display:block;height:100%;border-radius:9px;background:linear-gradient(90deg,var(--up),#4ade80)}
+  .bar-row span:last-child{font-family:ui-monospace,monospace;direction:ltr;text-align:left;color:var(--muted)}
+  .warn{margin-top:14px;padding:12px 15px;border-radius:12px;font-size:.79rem;color:var(--muted);
+    background:rgba(234,179,8,.07);border:1px solid rgba(234,179,8,.2)}
+  footer{margin-top:16px;text-align:center;color:var(--muted);font-size:.78rem}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <div class="logo">TM</div>
+    <div>
+      <h1>تریدمن <span style="color:var(--muted);font-size:.6em;font-weight:400">— پنل معاملاتی نوبیتکس</span></h1>
+      <p class="sub">عامل خودکار، بک‌تست و مدل یادگیری ماشین که از معاملات بسته‌شده خودش یاد می‌گیرد</p>
+    </div>
+    <div class="mode">
+      <span class="live-dot"></span>
+      <div class="seg">
+        <button class="on" data-mode="paper">حالت آزمایشی</button>
+        <button data-mode="live">حالت واقعی</button>
+      </div>
+    </div>
+  </header>
+
+  <div class="kpis">
+    <div class="kpi"><span>موجودی کیف مارجین</span><b id="k-bal">۱۸۴٫۲ <small style="font-size:.6em">USDT</small></b></div>
+    <div class="kpi"><span>سود/زیان باز</span><b class="up" id="k-pnl">+۱۲٫۸۴</b></div>
+    <div class="kpi"><span>معاملات باز</span><b id="k-open">۲</b></div>
+    <div class="kpi"><span>نرخ برد (۹۰ روز)</span><b id="k-wr">۵۸٪</b></div>
+    <div class="kpi"><span>اسکن بعدی</span><b id="k-next">۰۴:۱۲</b></div>
+  </div>
+
+  <div class="grid">
+    <div>
+      <div class="card">
+        <div class="card-head">
+          <h2>BTC/USDT — کندل یک‌ساعته</h2>
+          <div style="display:flex;gap:6px">
+            <span class="tag g">EMA200 ↑</span><span class="tag g">EMA1200 ↑</span>
+            <span class="tag y" id="rsi-tag">RSI 31.4</span>
+          </div>
+        </div>
+        <canvas id="chart"></canvas>
+      </div>
+
+      <div class="card">
+        <div class="card-head"><h2>معاملات باز</h2><span class="tag b">مارجین — فقط خرید</span></div>
+        <div style="overflow-x:auto">
+          <table>
+            <thead><tr><th>جفت‌ارز</th><th>ورود</th><th>حد سود</th><th>حد ضرر</th><th>خروج انتخابی مدل</th><th>سود/زیان</th></tr></thead>
+            <tbody id="pos"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-head"><h2>نتیجه بک‌تست — ۳ سال داده نوبیتکس</h2><span class="tag g">۱۲۴۷ معامله</span></div>
+        <div class="bars" id="bars"></div>
+      </div>
+    </div>
+
+    <div>
+      <div class="card">
+        <div class="card-head"><h2>گزارش زنده عامل</h2><span class="tag y">هر ۵ دقیقه</span></div>
+        <div class="log" id="log"></div>
+      </div>
+
+      <div class="card">
+        <div class="card-head"><h2>استراتژی Trend Dip</h2></div>
+        <div class="rules">
+          <div class="rule"><span>روند صعودی</span><b>close &gt; EMA200 &amp; EMA1200</b></div>
+          <div class="rule"><span>سیگنال ورود</span><b>RSI(14) &lt; 33</b></div>
+          <div class="rule"><span>حد سود پیش‌فرض</span><b>+1 ATR</b></div>
+          <div class="rule"><span>حد ضرر</span><b>−4 ATR</b></div>
+          <div class="rule"><span>بستن زمانی</span><b>48h</b></div>
+          <div class="rule"><span>جهت</span><b>long only</b></div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-head"><h2>مدل تریدمن</h2><span class="tag b">logistic regression</span></div>
+        <div class="rules">
+          <div class="rule"><span>پروفایل‌های خروج</span><b>3</b></div>
+          <div class="rule"><span>نمونه‌های آموزشی</span><b id="m-n">۱٬۲۴۷</b></div>
+          <div class="rule"><span>دقت اعتبارسنجی</span><b>۰٫۶۴</b></div>
+          <div class="rule"><span>آخرین بازآموزی</span><b>۲ ساعت پیش</b></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="warn">
+    ⚠️ این یک دموی نمایشی با داده شبیه‌سازی‌شده است، نه مشاوره مالی. معامله با اهرم می‌تواند بیش از
+    سرمایه اولیه زیان بزند و نتیجه بک‌تست هیچ تضمینی برای آینده نیست.
+  </div>
+
+  <footer>دموی تعاملی تریدمن — پروژه خصوصی</footer>
+</div>
+
+<script>
+(function(){
+  "use strict";
+  var fa=function(n){return String(n).replace(/\d/g,function(d){return '۰۱۲۳۴۵۶۷۸۹'[d];});};
+
+  /* ---------- candles ---------- */
+  var cv=document.getElementById('chart'), ctx=cv.getContext('2d');
+  var candles=[], price=63200;
+  (function seed(){
+    for(var i=0;i<70;i++){
+      var drift=(Math.random()-0.46)*520;
+      var o=price, c=price+drift;
+      var h=Math.max(o,c)+Math.random()*260, l=Math.min(o,c)-Math.random()*260;
+      candles.push({o:o,h:h,l:l,c:c}); price=c;
+    }
+  })();
+  function ema(vals,p){
+    var k=2/(p+1), out=[], prev=vals[0];
+    for(var i=0;i<vals.length;i++){ prev=vals[i]*k+prev*(1-k); out.push(prev); }
+    return out;
+  }
+  function draw(){
+    var w=cv.width=cv.clientWidth*devicePixelRatio, h=cv.height=268*devicePixelRatio;
+    ctx.setTransform(1,0,0,1,0,0); ctx.clearRect(0,0,w,h);
+    var pad=10*devicePixelRatio;
+    var closes=candles.map(function(c){return c.c;});
+    var e1=ema(closes,20), e2=ema(closes,50);
+    var hi=Math.max.apply(null,candles.map(function(c){return c.h;}));
+    var lo=Math.min.apply(null,candles.map(function(c){return c.l;}));
+    var rng=(hi-lo)||1;
+    var y=function(v){return pad+(hi-v)/rng*(h-pad*2);};
+    var cw=(w-pad*2)/candles.length;
+
+    ctx.strokeStyle='rgba(148,163,184,.08)'; ctx.lineWidth=1;
+    for(var g=0;g<=4;g++){
+      var gy=pad+(h-pad*2)*g/4;
+      ctx.beginPath(); ctx.moveTo(pad,gy); ctx.lineTo(w-pad,gy); ctx.stroke();
+    }
+    candles.forEach(function(c,i){
+      var x=pad+i*cw+cw/2, up=c.c>=c.o;
+      ctx.strokeStyle=up?'#22c55e':'#ef4444'; ctx.fillStyle=ctx.strokeStyle;
+      ctx.lineWidth=Math.max(1,devicePixelRatio);
+      ctx.beginPath(); ctx.moveTo(x,y(c.h)); ctx.lineTo(x,y(c.l)); ctx.stroke();
+      var bw=Math.max(2,cw*0.62);
+      var top=y(Math.max(c.o,c.c)), bh=Math.max(1.5,Math.abs(y(c.o)-y(c.c)));
+      ctx.fillRect(x-bw/2,top,bw,bh);
+    });
+    [[e1,'rgba(234,179,8,.9)'],[e2,'rgba(56,189,248,.75)']].forEach(function(p){
+      ctx.strokeStyle=p[1]; ctx.lineWidth=1.6*devicePixelRatio; ctx.beginPath();
+      p[0].forEach(function(v,i){
+        var x=pad+i*cw+cw/2;
+        i?ctx.lineTo(x,y(v)):ctx.moveTo(x,y(v));
+      });
+      ctx.stroke();
+    });
+  }
+  draw(); window.addEventListener('resize',draw);
+
+  /* ---------- positions ---------- */
+  var POS=[
+    {p:'BTC/USDT',e:'63,180',tp:'64,410',sl:'58,940',x:'TP 1 / SL 4 ATR',pnl:+8.42},
+    {p:'XRP/USDT',e:'0.5812',tp:'0.5990',sl:'0.5410',x:'TP 1.5 / SL 3 ATR',pnl:+4.42}
+  ];
+  document.getElementById('pos').innerHTML=POS.map(function(r){
+    return '<tr><td>'+r.p+'</td><td class="num">'+r.e+'</td><td class="num">'+r.tp+
+      '</td><td class="num">'+r.sl+'</td><td style="color:var(--info);font-size:.74rem">'+r.x+
+      '</td><td class="num" style="color:var(--up)">+'+r.pnl.toFixed(2)+'</td></tr>';
+  }).join('');
+
+  /* ---------- backtest bars ---------- */
+  var BT=[['BTC',71,'+214 USDT'],['ETH',63,'+128 USDT'],['XRP',58,'+74 USDT'],
+          ['ADA',52,'+31 USDT'],['DOT',49,'−12 USDT'],['XLM',55,'+46 USDT']];
+  document.getElementById('bars').innerHTML=BT.map(function(b){
+    return '<div class="bar-row"><span>'+b[0]+'</span><span class="bar"><i style="width:'+b[1]+'%"></i></span><span>'+b[2]+'</span></div>';
+  }).join('');
+
+  /* ---------- agent log ---------- */
+  var log=document.getElementById('log');
+  var PAIRS=['BTC','ETH','GRAM','DOT','XRP','XLM','ADA'];
+  function stamp(){
+    var d=new Date();
+    return fa(('0'+d.getHours()).slice(-2)+':'+('0'+d.getMinutes()).slice(-2)+':'+('0'+d.getSeconds()).slice(-2));
+  }
+  function ev(cls,text){
+    var d=document.createElement('div');
+    d.className='ev '+cls;
+    d.innerHTML='<time>'+stamp()+'</time><div>'+text+'</div>';
+    log.insertBefore(d,log.firstChild);
+    while(log.children.length>40) log.removeChild(log.lastChild);
+  }
+  ev('','شروع اسکن — ۸ جفت‌ارز روی کندل یک‌ساعته');
+  ev('skip','ETH — روند صعودی تأیید شد، اما RSI ۴۷٫۲ بالای آستانه است → رد');
+  ev('ml','تریدمن برای BTC پروفایل «TP 1 / SL 4 ATR» را انتخاب کرد (احتمال برد ۰٫۶۱)');
+  ev('buy','خرید BTC/USDT در ۶۳٬۱۸۰ — حد سود ۶۴٬۴۱۰ · حد ضرر ۵۸٬۹۴۰');
+
+  var MSG=[
+    ['skip','{P} — قیمت زیر EMA200 است → رد'],
+    ['skip','{P} — RSI {R} بالای ۳۳ → رد'],
+    ['ml','تریدمن برای {P} پروفایل «TP 1.5 / SL 3 ATR» را انتخاب کرد (احتمال برد ۰٫{N})'],
+    ['buy','خرید {P}/USDT در قیمت بازار — اندازه موقعیت ۱۲٪ کیف مارجین'],
+    ['sell','بستن {P}/USDT با حد سود — سود {M} USDT'],
+    ['','اسکن تمام شد — {C} جفت‌ارز بررسی شد، هیچ ستاپ جدیدی پیدا نشد'],
+    ['ml','بازآموزی مدل با {T} معامله بسته‌شده انجام شد']
+  ];
+  setInterval(function(){
+    var m=MSG[Math.floor(Math.random()*MSG.length)];
+    var txt=m[1]
+      .replace('{P}',PAIRS[Math.floor(Math.random()*PAIRS.length)])
+      .replace('{R}',fa((30+Math.random()*25).toFixed(1)))
+      .replace('{N}',fa(Math.floor(50+Math.random()*25)))
+      .replace('{M}',fa((2+Math.random()*14).toFixed(2)))
+      .replace('{C}',fa(8))
+      .replace('{T}',fa(1247+Math.floor(Math.random()*9)));
+    ev(m[0],txt);
+  },4200);
+
+  /* countdown + drift */
+  var secs=252;
+  setInterval(function(){
+    secs--; if(secs<0) secs=300;
+    document.getElementById('k-next').textContent=
+      fa(('0'+Math.floor(secs/60)).slice(-2)+':'+('0'+(secs%60)).slice(-2));
+  },1000);
+  setInterval(function(){
+    var last=candles[candles.length-1];
+    var d=(Math.random()-0.47)*420;
+    candles.push({o:last.c,h:Math.max(last.c,last.c+d)+Math.random()*180,
+                  l:Math.min(last.c,last.c+d)-Math.random()*180,c:last.c+d});
+    if(candles.length>70) candles.shift();
+    draw();
+    var rsi=(26+Math.random()*22).toFixed(1);
+    document.getElementById('rsi-tag').textContent='RSI '+rsi;
+    document.getElementById('rsi-tag').className='tag '+(parseFloat(rsi)<33?'g':'y');
+  },3600);
+
+  /* paper / live */
+  Array.prototype.forEach.call(document.querySelectorAll('.seg button'),function(b){
+    b.addEventListener('click',function(){
+      Array.prototype.forEach.call(document.querySelectorAll('.seg button'),function(x){x.classList.remove('on')});
+      b.classList.add('on');
+      var live=b.getAttribute('data-mode')==='live';
+      ev(live?'sell':'', live
+        ? 'حالت واقعی فعال شد — معاملات فقط روی کیف مارجین انجام می‌شود، هرگز روی اسپات'
+        : 'حالت آزمایشی فعال شد — پول مجازی، دقیقاً با همان قوانین');
+      document.getElementById('k-bal').innerHTML=(live?'۸۴۱٫۶':'۱۸۴٫۲')+' <small style="font-size:.6em">USDT</small>';
+    });
+  });
+})();
+</script>
+</body>
+</html>
