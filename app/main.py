@@ -14,6 +14,7 @@ from fastapi.responses import FileResponse, HTMLResponse, JSONResponse, PlainTex
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field
 
+from . import finder
 from .database import (
     get_db, init_db, get_setting, set_setting, hash_password, verify_password,
 )
@@ -32,6 +33,12 @@ PUBLIC_SETTINGS = (
     "phone", "email", "telegram", "github", "linkedin", "whatsapp",
     "site_url",
 )
+
+# Editable from the admin panel but never served to the public site. Project
+# Finder config lives here: which city is being prospected is nobody's business
+# but Nima's.
+ADMIN_ONLY_SETTINGS = ("finder_sender_name", "finder_city", "finder_radius_km")
+ADMIN_SETTINGS = PUBLIC_SETTINGS + ADMIN_ONLY_SETTINGS
 
 # NOTE: .svg intentionally NOT allowed — SVG files can carry embedded
 # scripts and become a stored-XSS vector when served from our origin.
@@ -248,6 +255,20 @@ def _validate_link(value: str, field: str, allow_local: bool = False) -> str:
 class PasswordIn(BaseModel):
     current: str
     new: str = Field(min_length=8)
+
+
+class DiscoverIn(BaseModel):
+    city: str = Field(default="", max_length=120)
+    categories: list[str] = Field(default_factory=list, max_length=40)
+    radius_km: int = Field(default=20, ge=1, le=60)
+    limit: int = Field(default=400, ge=10, le=1200)
+    profile: bool = True
+
+
+class LeadIn(BaseModel):
+    status: str = Field(default="", max_length=20)
+    note: Optional[str] = Field(default=None, max_length=2000)
+    pitch: Optional[str] = Field(default=None, max_length=3000)
 
 
 # ------------------------------------------------------------------ public api
@@ -567,7 +588,7 @@ def admin_get_settings(authorization: Optional[str] = Header(None)):
     require_admin(authorization)
     conn = get_db()
     try:
-        return {k: get_setting(conn, k) for k in PUBLIC_SETTINGS}
+        return {k: get_setting(conn, k) for k in ADMIN_SETTINGS}
     finally:
         conn.close()
 
@@ -578,7 +599,7 @@ def admin_update_settings(data: SettingsIn, authorization: Optional[str] = Heade
     conn = get_db()
     try:
         for k, v in data.settings.items():
-            if k in PUBLIC_SETTINGS:
+            if k in ADMIN_SETTINGS:
                 set_setting(conn, k, v)
         conn.commit()
         return {"ok": True}
@@ -649,6 +670,122 @@ def admin_upload(request: Request, file: UploadFile = File(...),
         dest.unlink(missing_ok=True)
         raise HTTPException(status_code=500, detail="Upload failed")
     return {"url": f"/static/uploads/{name}"}
+
+
+# -------------------------------------------------------------- project finder
+# Finds local businesses that need a website, so they can be pitched a project.
+# The engine lives in app/finder.py; these routes are the admin panel's view of
+# it. Nothing here sends a message — every lead ends as a drafted Persian text
+# and a wa.me link that Nima presses himself.
+@app.get("/api/admin/finder")
+def finder_overview(authorization: Optional[str] = Header(None)):
+    require_admin(authorization)
+    conn = get_db()
+    try:
+        cfg = {
+            "city": get_setting(conn, "finder_city") or "Shiraz, Iran",
+            "radius_km": get_setting(conn, "finder_radius_km") or "20",
+            "sender_name": get_setting(conn, "finder_sender_name"),
+        }
+    finally:
+        conn.close()
+    return {
+        "config": cfg,
+        "categories": [{"key": c["key"], "fa": c["fa"], "en": c["en"]}
+                       for c in finder.CATEGORIES],
+        "default_categories": finder.DEFAULT_CATEGORIES,
+        "statuses": [{"key": k, "fa": v} for k, v in finder.STATUS_FA.items()],
+        "summary": finder.summary(),
+        "runs": finder.recent_runs(),
+        "active_run": finder.active_run(),
+    }
+
+
+@app.get("/api/admin/finder/leads")
+def finder_leads(status: str = "", tier: str = "", category: str = "", q: str = "",
+                 limit: int = 200, offset: int = 0,
+                 authorization: Optional[str] = Header(None)):
+    require_admin(authorization)
+    return {"leads": finder.lead_rows(status=status, tier=tier, category=category,
+                                      q=q[:80], limit=min(max(limit, 1), 500),
+                                      offset=max(offset, 0))}
+
+
+@app.post("/api/admin/finder/discover")
+def finder_discover(data: DiscoverIn, request: Request,
+                    authorization: Optional[str] = Header(None)):
+    require_admin(authorization)
+    # Overpass is free volunteer infrastructure — a run is a handful of heavy
+    # queries, so the button cannot become a hammer.
+    rate_limit(request, "finder_discover", limit=4, window_s=900)
+    conn = get_db()
+    try:
+        city = (data.city or "").strip() or get_setting(conn, "finder_city") or "Shiraz, Iran"
+        set_setting(conn, "finder_city", city[:120])
+        set_setting(conn, "finder_radius_km", str(data.radius_km))
+        conn.commit()
+    finally:
+        conn.close()
+    try:
+        return finder.launch("discover", city=city, categories=data.categories,
+                             radius_km=data.radius_km, limit=data.limit,
+                             profile=bool(data.profile))
+    except RuntimeError as e:
+        raise HTTPException(status_code=409, detail=str(e))
+
+
+@app.post("/api/admin/finder/profile")
+def finder_profile(request: Request, authorization: Optional[str] = Header(None)):
+    require_admin(authorization)
+    rate_limit(request, "finder_profile", limit=6, window_s=900)
+    try:
+        return finder.launch("profile", limit=200)
+    except RuntimeError as e:
+        raise HTTPException(status_code=409, detail=str(e))
+
+
+@app.get("/api/admin/finder/run")
+def finder_run_status(authorization: Optional[str] = Header(None)):
+    """Polled by the panel while a run is in flight."""
+    require_admin(authorization)
+    runs = finder.recent_runs(limit=1)
+    return {"active": finder.active_run(), "last": runs[0] if runs else None,
+            "summary": finder.summary()}
+
+
+@app.put("/api/admin/finder/leads/{lead_id}")
+def finder_update_lead(lead_id: int, data: LeadIn,
+                       authorization: Optional[str] = Header(None)):
+    require_admin(authorization)
+    try:
+        lead = finder.update_lead(lead_id, status=data.status or "",
+                                  note=data.note, pitch=data.pitch)
+    except LookupError:
+        raise HTTPException(status_code=404, detail="Lead not found")
+    except ValueError:
+        raise HTTPException(status_code=422, detail="Unknown status")
+    return {"ok": True, "lead": lead}
+
+
+@app.post("/api/admin/finder/leads/{lead_id}/regenerate")
+def finder_regenerate(lead_id: int, authorization: Optional[str] = Header(None)):
+    require_admin(authorization)
+    return {"pitch": finder.regenerate_pitch(lead_id)}
+
+
+@app.delete("/api/admin/finder/leads/{lead_id}")
+def finder_delete_lead(lead_id: int, authorization: Optional[str] = Header(None)):
+    require_admin(authorization)
+    finder.delete_lead(lead_id)
+    return {"ok": True}
+
+
+@app.get("/api/admin/finder/export.csv")
+def finder_export(authorization: Optional[str] = Header(None)):
+    require_admin(authorization)
+    # BOM so Excel opens the Persian columns in the right encoding.
+    return Response("﻿" + finder.export_csv(), media_type="text/csv; charset=utf-8",
+                    headers={"Content-Disposition": 'attachment; filename="leads.csv"'})
 
 
 # ------------------------------------------------------------------ SEO layer

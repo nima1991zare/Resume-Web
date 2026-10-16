@@ -41,8 +41,10 @@
   function closeModals() {
     var m = document.getElementById("modal");
     var bm = document.getElementById("brand-modal");
+    var lm = document.getElementById("lead-modal");
     if (m) m.hidden = true;
     if (bm) bm.hidden = true;
+    if (lm) lm.hidden = true;
   }
 
   function show(view) {
@@ -167,7 +169,8 @@
   /* ---------------- items (apps / websites) ---------------- */
   var ICONS = {
     edit: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 3a2.8 2.8 0 114 4L7.5 20.5 2 22l1.5-5.5L17 3z"/></svg>',
-    del: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M8 6V4a1 1 0 011-1h6a1 1 0 011 1v2m3 0v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6"/></svg>'
+    del: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M8 6V4a1 1 0 011-1h6a1 1 0 011 1v2m3 0v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6"/></svg>',
+    wa: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 11.5a8.5 8.5 0 01-12.6 7.4L3 20.5l1.7-5.3A8.5 8.5 0 1121 11.5z"/><path d="M8.8 9c.4 2.6 3.6 5.8 6.2 6.2l1-1.4 1.8.8-.4 1.6c-2.9.6-7.9-3-9.4-7l1.6-.5.8 1.8L8.8 9z"/></svg>'
   };
 
   function loadItems(table) {
@@ -498,6 +501,360 @@
       });
   });
 
+  /* ---------------- project finder ---------------- */
+  /* Finds local businesses that need a website and drafts the Persian message
+     that names the gap. The panel never sends anything — see app/finder.py. */
+  var fdMeta = null;        // categories + statuses, fetched once
+  var fdLeads = [];
+  var fdPoll = null;
+  var fdLead = null;        // the lead open in the modal
+
+  function fdEl(id) { return document.getElementById(id); }
+
+  function fdLoad() {
+    return api("/api/admin/finder").then(function (d) {
+      var first = !fdMeta;
+      fdMeta = d;
+      fdSummary(d.summary);
+      if (first) fdBuildControls(d);
+      fdConfig(d.config);
+      fdRunCard(d.active_run, d.runs && d.runs[0]);
+      if (d.active_run) fdStartPoll();
+      return fdLoadLeads();
+    }).catch(function () {});
+  }
+
+  function fdSummary(s) {
+    if (!s) return;
+    fdEl("fd-total").textContent = s.total;
+    fdEl("fd-hot").textContent = s.hot;
+    fdEl("fd-nosite").textContent = s.no_website;
+    fdEl("fd-reach").textContent = s.reachable;
+    fdEl("fd-unprofiled").textContent = s.unprofiled;
+    // the sidebar pill counts what is actually waiting on you: untouched leads
+    var pill = fdEl("fd-pill");
+    var waiting = (s.by_status && s.by_status["new"]) || 0;
+    pill.textContent = waiting;
+    pill.hidden = waiting === 0;
+  }
+
+  function fdBuildControls(d) {
+    fdEl("fd-cats").innerHTML = d.categories.map(function (c) {
+      var on = d.default_categories.indexOf(c.key) !== -1;
+      return '<label class="fd-cat"><input type="checkbox" value="' + esc(c.key) + '"' +
+        (on ? " checked" : "") + '><span>' + esc(c.en) +
+        '<em dir="rtl">' + esc(c.fa) + "</em></span></label>";
+    }).join("");
+
+    fdEl("fd-f-cat").innerHTML = '<option value="">All types</option>' +
+      d.categories.map(function (c) {
+        return '<option value="' + esc(c.key) + '">' + esc(c.en) + "</option>";
+      }).join("");
+
+    var statusOpts = d.statuses.map(function (s) {
+      return '<option value="' + esc(s.key) + '">' + esc(s.key) + " — " + esc(s.fa) + "</option>";
+    }).join("");
+    fdEl("fd-f-status").innerHTML = '<option value="">All statuses</option>' + statusOpts;
+    fdEl("lead-status").innerHTML = statusOpts;
+  }
+
+  function fdConfig(c) {
+    if (!c) return;
+    fdEl("fd-city").value = c.city || "";
+    fdEl("fd-radius").value = c.radius_km || 20;
+  }
+
+  function fdCheckedCats() {
+    return Array.prototype.filter.call(
+      fdEl("fd-cats").querySelectorAll("input"), function (i) { return i.checked; }
+    ).map(function (i) { return i.value; });
+  }
+
+  function fdLoadLeads() {
+    var qs = "?status=" + encodeURIComponent(fdEl("fd-f-status").value) +
+      "&tier=" + encodeURIComponent(fdEl("fd-f-tier").value) +
+      "&category=" + encodeURIComponent(fdEl("fd-f-cat").value) +
+      "&q=" + encodeURIComponent(fdEl("fd-f-q").value.trim());
+    return api("/api/admin/finder/leads" + qs).then(function (d) {
+      fdLeads = d.leads;
+      fdRenderTable();
+    }).catch(function () {});
+  }
+
+  function fdRenderTable() {
+    var el = fdEl("table-finder");
+    if (!fdLeads.length) {
+      el.innerHTML = '<tr><td class="fd-empty">No leads yet — press ' +
+        "<strong>Find businesses</strong> to search your city. " +
+        "The first run takes a minute or two.</td></tr>";
+      return;
+    }
+    el.innerHTML = "<tr><th>Score</th><th>Business</th><th>Why</th><th>Reach</th>" +
+      "<th>Status</th><th>Actions</th></tr>" +
+      fdLeads.map(function (l) {
+        // Only the top three signals: the table answers "is this worth opening",
+        // the modal answers "what exactly did you find".
+        var tags = l.signals.slice(0, 3).map(function (s) {
+          return '<span class="sig' + (s.weight < 0 ? " neg" : "") + '" dir="rtl">' +
+            esc(s.fa) + "</span>";
+        }).join("");
+        var more = l.signals.length > 3
+          ? '<span class="sig muted">+' + (l.signals.length - 3) + "</span>" : "";
+        var reach = [];
+        if (l.is_mobile) reach.push('<span class="reach wa">WhatsApp</span>');
+        else if (l.phone_e164) reach.push('<span class="reach">Landline</span>');
+        if (l.instagram) reach.push('<span class="reach ig">@' + esc(l.instagram) + "</span>");
+        if (!reach.length) reach.push('<span class="reach off">—</span>');
+        var statusClass = l.status === "won" ? "" :
+          (l.status === "lost" || l.status === "skip" ? " off" : " neutral");
+        return "<tr data-id='" + l.id + "'>" +
+          '<td><span class="score-badge ' + esc(l.tier) + '">' + l.score + "</span></td>" +
+          "<td><strong>" + esc(l.name) + "</strong><br>" +
+            '<span class="fd-meta">' + esc(l.category_fa) +
+            (l.domain ? " · " + esc(l.domain) : "") + "</span></td>" +
+          '<td class="sig-cell">' + tags + more + "</td>" +
+          "<td>" + reach.join(" ") + "</td>" +
+          '<td><span class="tag' + statusClass + '" dir="rtl">' + esc(l.status_fa) + "</span></td>" +
+          '<td><div class="row-actions">' +
+            '<button class="icon-btn" data-act="open" title="Open">' + ICONS.edit + "</button>" +
+            (l.is_mobile
+              ? '<button class="icon-btn wa-btn" data-act="wa" title="WhatsApp">' + ICONS.wa + "</button>"
+              : "") +
+          "</div></td></tr>";
+      }).join("");
+  }
+
+  fdEl("table-finder").addEventListener("click", function (e) {
+    var btn = e.target.closest("button[data-act]");
+    var tr = e.target.closest("tr[data-id]");
+    if (!tr) return;
+    var id = +tr.getAttribute("data-id");
+    var lead = fdLeads.filter(function (l) { return l.id === id; })[0];
+    if (!lead) return;
+    if (btn && btn.getAttribute("data-act") === "wa") {
+      fdOpenWhatsApp(lead, lead.pitch);
+      return;
+    }
+    fdOpenLead(lead);
+  });
+
+  ["fd-f-status", "fd-f-tier", "fd-f-cat"].forEach(function (id) {
+    fdEl(id).addEventListener("change", fdLoadLeads);
+  });
+  var fdSearchTimer = null;
+  fdEl("fd-f-q").addEventListener("input", function () {
+    clearTimeout(fdSearchTimer);
+    fdSearchTimer = setTimeout(fdLoadLeads, 300);
+  });
+
+  /* ----- runs ----- */
+  function fdRunCard(active, last) {
+    var card = fdEl("fd-run-card");
+    var msg = fdEl("fd-run-msg");
+    var spin = fdEl("fd-spinner");
+    var run = active || last;
+    if (!run) { card.hidden = true; return; }
+    card.hidden = false;
+    spin.hidden = !active;
+    var parts = [];
+    if (run.found) parts.push(run.found + " found");
+    if (run.added) parts.push(run.added + " new");
+    if (run.profiled) parts.push(run.profiled + " sites checked");
+    var detail = parts.length ? " (" + parts.join(", ") + ")" : "";
+    if (active) {
+      msg.textContent = (run.message || "Working…") + detail;
+      msg.className = "";
+    } else if (run.status === "error") {
+      msg.textContent = "Failed: " + (run.message || "unknown error");
+      msg.className = "fd-bad";
+    } else {
+      msg.textContent = "Last run finished" + detail + ". " + (run.message || "");
+      msg.className = "fd-ok";
+    }
+  }
+
+  function fdStartPoll() {
+    if (fdPoll) return;
+    fdPoll = setInterval(function () {
+      api("/api/admin/finder/run").then(function (d) {
+        fdSummary(d.summary);
+        fdRunCard(d.active, d.last);
+        if (!d.active) {
+          clearInterval(fdPoll);
+          fdPoll = null;
+          fdLoadLeads();
+        }
+      }).catch(function () { clearInterval(fdPoll); fdPoll = null; });
+    }, 3000);
+  }
+
+  function fdBusy(on) {
+    ["fd-run", "fd-profile"].forEach(function (id) { fdEl(id).disabled = on; });
+  }
+
+  function fdRunError(err) {
+    fdEl("fd-run-card").hidden = false;
+    fdEl("fd-run-msg").textContent = err && err.message ? err.message : "Could not start.";
+    fdEl("fd-run-msg").className = "fd-bad";
+    fdEl("fd-spinner").hidden = true;
+  }
+
+  fdEl("fd-run").addEventListener("click", function () {
+    fdBusy(true);
+    api("/api/admin/finder/discover", {
+      method: "POST",
+      body: {
+        city: fdEl("fd-city").value.trim(),
+        categories: fdCheckedCats(),
+        radius_km: +fdEl("fd-radius").value || 20,
+        limit: +fdEl("fd-limit").value || 400,
+        profile: true
+      }
+    }).then(function (run) {
+      fdRunCard(run, run);
+      fdStartPoll();
+    }).catch(fdRunError).then(function () { fdBusy(false); });
+  });
+
+  fdEl("fd-profile").addEventListener("click", function () {
+    fdBusy(true);
+    api("/api/admin/finder/profile", { method: "POST" })
+      .then(function (run) { fdRunCard(run, run); fdStartPoll(); })
+      .catch(fdRunError).then(function () { fdBusy(false); });
+  });
+
+  fdEl("fd-export").addEventListener("click", function () {
+    // the CSV route needs the Bearer header, so it cannot be a plain link
+    fetch("/api/admin/finder/export.csv", {
+      headers: { "Authorization": "Bearer " + token }
+    }).then(function (r) { return r.blob(); }).then(function (blob) {
+      var url = URL.createObjectURL(blob);
+      var a = document.createElement("a");
+      a.href = url;
+      a.download = "leads.csv";
+      a.click();
+      setTimeout(function () { URL.revokeObjectURL(url); }, 1000);
+    }).catch(function () {});
+  });
+
+  /* ----- lead modal ----- */
+  function fdOpenWhatsApp(lead, text) {
+    if (!lead.is_mobile) return;
+    window.open("https://wa.me/" + lead.phone_e164 + "?text=" + encodeURIComponent(text),
+                "_blank", "noopener");
+  }
+
+  function fdOpenLead(lead) {
+    fdLead = lead;
+    fdEl("lead-name").textContent = lead.name;
+    fdEl("lead-sub").textContent = [lead.category_fa, lead.address, lead.city]
+      .filter(Boolean).join(" · ");
+    var badge = fdEl("lead-score");
+    badge.textContent = lead.score;
+    badge.className = "score-badge " + lead.tier;
+
+    var c = [];
+    if (lead.phone) {
+      c.push('<a class="lead-chip" href="tel:+' + esc(lead.phone_e164) + '">' +
+        esc(lead.phone) + (lead.is_mobile ? " (mobile)" : " (landline)") + "</a>");
+    }
+    if (lead.instagram) {
+      c.push('<a class="lead-chip" target="_blank" rel="noopener" href="https://instagram.com/' +
+        esc(lead.instagram) + '">@' + esc(lead.instagram) + "</a>");
+    }
+    if (lead.website) {
+      c.push('<a class="lead-chip" target="_blank" rel="noopener" href="' +
+        esc(lead.website) + '">' + esc(lead.domain) + "</a>");
+    }
+    if (lead.email) c.push('<span class="lead-chip">' + esc(lead.email) + "</span>");
+    c.push('<a class="lead-chip" target="_blank" rel="noopener" href="https://www.openstreetmap.org/' +
+      esc(lead.osm_id) + '">on the map</a>');
+    fdEl("lead-contacts").innerHTML = c.join("");
+
+    fdEl("lead-signals").innerHTML = lead.signals.map(function (s) {
+      var body = '<span class="sig' + (s.weight < 0 ? " neg" : "") + '" dir="rtl" title="' +
+        esc(s.code + (s.value ? " = " + s.value : "")) + '">' + esc(s.fa) +
+        (s.value ? " · " + esc(s.value) : "") + "</span>";
+      // evidence is a URL the profiler actually fetched — let it be checked
+      return (s.evidence && s.evidence.indexOf("http") === 0)
+        ? '<a href="' + esc(s.evidence) + '" target="_blank" rel="noopener">' + body + "</a>"
+        : body;
+    }).join("") || '<span class="fd-meta">No signals recorded.</span>';
+
+    fdEl("lead-pitch").value = lead.pitch || "";
+    fdEl("lead-note").value = lead.note || "";
+    fdEl("lead-status").value = lead.status;
+    fdEl("lead-err").textContent = "";
+    fdEl("lead-err").className = "modal-err";
+    fdEl("lead-wa").disabled = !lead.is_mobile;
+    fdEl("lead-wa").textContent = lead.is_mobile ? "Open WhatsApp" : "No mobile number";
+    fdEl("lead-modal").hidden = false;
+  }
+
+  fdEl("lead-cancel").addEventListener("click", function () {
+    fdEl("lead-modal").hidden = true;
+  });
+
+  fdEl("lead-copy").addEventListener("click", function () {
+    var text = fdEl("lead-pitch").value;
+    var done = function () {
+      fdEl("lead-err").textContent = "Copied.";
+      fdEl("lead-err").className = "modal-err ok";
+    };
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(text).then(done, function () {});
+    } else {
+      // no clipboard API off localhost/https — select it so Ctrl+C works
+      fdEl("lead-pitch").select();
+      done();
+    }
+  });
+
+  fdEl("lead-regen").addEventListener("click", function () {
+    if (!fdLead) return;
+    api("/api/admin/finder/leads/" + fdLead.id + "/regenerate", { method: "POST" })
+      .then(function (d) { fdEl("lead-pitch").value = d.pitch; })
+      .catch(function (err) { fdEl("lead-err").textContent = err.message || "Failed."; });
+  });
+
+  fdEl("lead-wa").addEventListener("click", function () {
+    if (!fdLead) return;
+    fdOpenWhatsApp(fdLead, fdEl("lead-pitch").value);
+    // Opening the chat is not the same as sending it, so the status is only
+    // pre-selected here — it is saved when you press Save.
+    if (fdEl("lead-status").value === "new") {
+      fdEl("lead-status").value = "contacted";
+      fdEl("lead-err").textContent = "Marked as contacted — press Save to keep it.";
+      fdEl("lead-err").className = "modal-err ok";
+    }
+  });
+
+  fdEl("lead-save").addEventListener("click", function () {
+    if (!fdLead) return;
+    api("/api/admin/finder/leads/" + fdLead.id, {
+      method: "PUT",
+      body: {
+        status: fdEl("lead-status").value,
+        note: fdEl("lead-note").value,
+        pitch: fdEl("lead-pitch").value
+      }
+    }).then(function () {
+      fdEl("lead-modal").hidden = true;
+      fdLoad();
+    }).catch(function (err) {
+      fdEl("lead-err").textContent = err.message || "Save failed.";
+      fdEl("lead-err").className = "modal-err";
+    });
+  });
+
+  fdEl("lead-delete").addEventListener("click", function () {
+    if (!fdLead) return;
+    if (!confirm("Delete this lead? Re-running discovery will find it again.")) return;
+    api("/api/admin/finder/leads/" + fdLead.id, { method: "DELETE" })
+      .then(function () { fdEl("lead-modal").hidden = true; fdLoad(); })
+      .catch(function () {});
+  });
+
   /* ---------------- boot ---------------- */
   var loaders = {
     stats: loadStats,
@@ -506,6 +863,7 @@
     games: function () { loadItems("games"); },
     websites: function () { loadItems("websites"); },
     brands: loadBrands,
+    finder: fdLoad,
     messages: loadMessages,
     settings: loadSettings
   };

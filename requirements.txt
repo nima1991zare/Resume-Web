@@ -2,3 +2,4 @@ fastapi>=0.110
 uvicorn[standard]>=0.29
 python-multipart>=0.0.9
 a2wsgi>=1.10
+httpx>=0.27

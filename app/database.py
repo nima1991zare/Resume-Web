@@ -137,6 +137,70 @@ CREATE TABLE IF NOT EXISTS sessions (
     token      TEXT PRIMARY KEY,
     created_at TEXT NOT NULL DEFAULT (datetime('now'))
 );
+
+/* ---------- Project Finder (see app/finder.py) ----------
+   Local businesses that look like they need a website, so they can be pitched
+   a project. One row per business; the OSM id is the identity, so re-running
+   discovery updates instead of duplicating, and the status/note you set by hand
+   survives every later run. */
+CREATE TABLE IF NOT EXISTS leads (
+    id           INTEGER PRIMARY KEY AUTOINCREMENT,
+    osm_id       TEXT NOT NULL UNIQUE,
+    name         TEXT NOT NULL,
+    category     TEXT NOT NULL DEFAULT '',
+    osm_category TEXT NOT NULL DEFAULT '',
+    phone        TEXT NOT NULL DEFAULT '',
+    phone_e164   TEXT NOT NULL DEFAULT '',
+    is_mobile    INTEGER NOT NULL DEFAULT 0,
+    website      TEXT NOT NULL DEFAULT '',
+    domain       TEXT NOT NULL DEFAULT '',
+    instagram    TEXT NOT NULL DEFAULT '',
+    telegram     TEXT NOT NULL DEFAULT '',
+    email        TEXT NOT NULL DEFAULT '',
+    address      TEXT NOT NULL DEFAULT '',
+    city         TEXT NOT NULL DEFAULT '',
+    lat          REAL,
+    lon          REAL,
+    score        INTEGER NOT NULL DEFAULT 0,
+    tier         TEXT NOT NULL DEFAULT 'cold',
+    status       TEXT NOT NULL DEFAULT 'new',
+    pitch        TEXT NOT NULL DEFAULT '',
+    pitch_edited INTEGER NOT NULL DEFAULT 0,
+    note         TEXT NOT NULL DEFAULT '',
+    profiled_at  TEXT,
+    found_at     TEXT NOT NULL DEFAULT (datetime('now')),
+    updated_at   TEXT NOT NULL DEFAULT (datetime('now'))
+);
+CREATE INDEX IF NOT EXISTS idx_leads_score  ON leads(score DESC);
+CREATE INDEX IF NOT EXISTS idx_leads_status ON leads(status);
+
+/* Every fact is a row, never a column — so a new signal needs no migration,
+   the same signal observed again is history rather than an overwrite, and the
+   evidence URL that proved a claim travels with the claim. */
+CREATE TABLE IF NOT EXISTS lead_signals (
+    id          INTEGER PRIMARY KEY AUTOINCREMENT,
+    lead_id     INTEGER NOT NULL REFERENCES leads(id) ON DELETE CASCADE,
+    code        TEXT NOT NULL,
+    value       TEXT NOT NULL DEFAULT '',
+    evidence    TEXT NOT NULL DEFAULT '',
+    observed_at TEXT NOT NULL DEFAULT (datetime('now')),
+    UNIQUE(lead_id, code)
+);
+CREATE INDEX IF NOT EXISTS idx_signals_code ON lead_signals(code);
+
+CREATE TABLE IF NOT EXISTS finder_runs (
+    id          INTEGER PRIMARY KEY AUTOINCREMENT,
+    kind        TEXT NOT NULL,
+    city        TEXT NOT NULL DEFAULT '',
+    categories  TEXT NOT NULL DEFAULT '',
+    status      TEXT NOT NULL DEFAULT 'running',
+    found       INTEGER NOT NULL DEFAULT 0,
+    added       INTEGER NOT NULL DEFAULT 0,
+    profiled    INTEGER NOT NULL DEFAULT 0,
+    message     TEXT NOT NULL DEFAULT '',
+    started_at  TEXT NOT NULL DEFAULT (datetime('now')),
+    finished_at TEXT
+);
 """
 
 DEFAULT_SETTINGS = {
@@ -167,6 +231,10 @@ DEFAULT_SETTINGS = {
     "github": "",
     "linkedin": "",
     "whatsapp": "",
+    # Project Finder defaults — editable from the admin panel
+    "finder_city": "Shiraz, Iran",
+    "finder_radius_km": "20",
+    "finder_sender_name": "نیما زارع",
 }
 
 SEED_APPS = [
@@ -341,6 +409,13 @@ def init_db() -> None:
             conn.executemany("INSERT INTO brands(name,logo,url) VALUES(?,?,?)", SEED_BRANDS)
         conn.execute(
             "UPDATE brands SET active=0 WHERE name IN ('Brand One','Brand Two','Brand Three')")
+        # A finder run lives on a background thread, so a crash or a restart
+        # leaves it 'running' forever — and the one-run-at-a-time guard would
+        # then refuse every future run. Clear the orphans at startup.
+        conn.execute(
+            "UPDATE finder_runs SET status='error', "
+            "message='متوقف شد (سرور ری‌استارت شد)', finished_at=datetime('now') "
+            "WHERE status='running'")
         for name, image, url, sort in FEATURED_BRANDS:
             existing = conn.execute(
                 "SELECT id FROM brands WHERE lower(name)=lower(?)", (name,)).fetchone()
