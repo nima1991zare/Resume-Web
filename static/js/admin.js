@@ -170,7 +170,8 @@
   var ICONS = {
     edit: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 3a2.8 2.8 0 114 4L7.5 20.5 2 22l1.5-5.5L17 3z"/></svg>',
     del: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M8 6V4a1 1 0 011-1h6a1 1 0 011 1v2m3 0v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6"/></svg>',
-    wa: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 11.5a8.5 8.5 0 01-12.6 7.4L3 20.5l1.7-5.3A8.5 8.5 0 1121 11.5z"/><path d="M8.8 9c.4 2.6 3.6 5.8 6.2 6.2l1-1.4 1.8.8-.4 1.6c-2.9.6-7.9-3-9.4-7l1.6-.5.8 1.8L8.8 9z"/></svg>'
+    wa: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 11.5a8.5 8.5 0 01-12.6 7.4L3 20.5l1.7-5.3A8.5 8.5 0 1121 11.5z"/><path d="M8.8 9c.4 2.6 3.6 5.8 6.2 6.2l1-1.4 1.8.8-.4 1.6c-2.9.6-7.9-3-9.4-7l1.6-.5.8 1.8L8.8 9z"/></svg>',
+    ig: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="1"/></svg>'
   };
 
   function loadItems(table) {
@@ -530,6 +531,7 @@
     fdEl("fd-hot").textContent = s.hot;
     fdEl("fd-nosite").textContent = s.no_website;
     fdEl("fd-reach").textContent = s.reachable;
+    fdEl("fd-igonly").textContent = s.ig_only;
     fdEl("fd-unprofiled").textContent = s.unprofiled;
     // the sidebar pill counts what is actually waiting on you: untouched leads
     var pill = fdEl("fd-pill");
@@ -574,6 +576,7 @@
     var qs = "?status=" + encodeURIComponent(fdEl("fd-f-status").value) +
       "&tier=" + encodeURIComponent(fdEl("fd-f-tier").value) +
       "&category=" + encodeURIComponent(fdEl("fd-f-cat").value) +
+      "&reach=" + encodeURIComponent(fdEl("fd-f-reach").value) +
       "&q=" + encodeURIComponent(fdEl("fd-f-q").value.trim());
     return api("/api/admin/finder/leads" + qs).then(function (d) {
       fdLeads = d.leads;
@@ -620,6 +623,9 @@
             (l.is_mobile
               ? '<button class="icon-btn wa-btn" data-act="wa" title="WhatsApp">' + ICONS.wa + "</button>"
               : "") +
+            (l.instagram
+              ? '<button class="icon-btn ig-btn" data-act="ig" title="Copy message and open Instagram DM">' + ICONS.ig + "</button>"
+              : "") +
           "</div></td></tr>";
       }).join("");
   }
@@ -635,10 +641,14 @@
       fdOpenWhatsApp(lead, lead.pitch);
       return;
     }
+    if (btn && btn.getAttribute("data-act") === "ig") {
+      fdOpenInstagram(lead, lead.pitch);
+      return;
+    }
     fdOpenLead(lead);
   });
 
-  ["fd-f-status", "fd-f-tier", "fd-f-cat"].forEach(function (id) {
+  ["fd-f-status", "fd-f-tier", "fd-f-cat", "fd-f-reach"].forEach(function (id) {
     fdEl(id).addEventListener("change", fdLoadLeads);
   });
   var fdSearchTimer = null;
@@ -744,6 +754,32 @@
                 "_blank", "noopener");
   }
 
+  /* Instagram cannot pre-fill a message from a URL — no app can, it simply is
+     not a feature. So the only honest flow is: put the pitch on the clipboard,
+     open the DM thread, and let the paste be one deliberate keystroke. */
+  function fdCopy(text) {
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      return navigator.clipboard.writeText(text).then(
+        function () { return true; }, function () { return false; });
+    }
+    return Promise.resolve(false);
+  }
+
+  function fdOpenInstagram(lead, text) {
+    if (!lead.ig) return;
+    // Copy first, then open: a popup stealing focus can cancel a clipboard write.
+    fdCopy(text).then(function (copied) {
+      window.open(lead.ig, "_blank", "noopener");
+      var err = fdEl("lead-err");
+      if (err && !fdEl("lead-modal").hidden) {
+        err.textContent = copied
+          ? "Message copied — paste it into the DM with Ctrl+V."
+          : "Could not copy automatically — select the message and copy it by hand.";
+        err.className = "modal-err" + (copied ? " ok" : "");
+      }
+    });
+  }
+
   function fdOpenLead(lead) {
     fdLead = lead;
     fdEl("lead-name").textContent = lead.name;
@@ -788,6 +824,9 @@
     fdEl("lead-err").className = "modal-err";
     fdEl("lead-wa").disabled = !lead.is_mobile;
     fdEl("lead-wa").textContent = lead.is_mobile ? "Open WhatsApp" : "No mobile number";
+    // Hidden rather than disabled: a greyed-out button on every lead without an
+    // account is just noise on the screen you spend the most time looking at.
+    fdEl("lead-ig").hidden = !lead.ig;
     fdEl("lead-modal").hidden = false;
   }
 
@@ -827,6 +866,12 @@
       fdEl("lead-err").textContent = "Marked as contacted — press Save to keep it.";
       fdEl("lead-err").className = "modal-err ok";
     }
+  });
+
+  fdEl("lead-ig").addEventListener("click", function () {
+    if (!fdLead) return;
+    fdOpenInstagram(fdLead, fdEl("lead-pitch").value);
+    if (fdEl("lead-status").value === "new") fdEl("lead-status").value = "contacted";
   });
 
   fdEl("lead-save").addEventListener("click", function () {

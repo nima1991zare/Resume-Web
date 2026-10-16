@@ -231,6 +231,7 @@ DEFAULT_SETTINGS = {
     "github": "",
     "linkedin": "",
     "whatsapp": "",
+    "instagram": "https://instagram.com/nima.z.are",
     # Project Finder defaults — editable from the admin panel
     "finder_city": "Shiraz, Iran",
     "finder_radius_km": "20",

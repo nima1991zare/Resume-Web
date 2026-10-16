@@ -352,3 +352,10 @@ a.lead-chip:hover { border-color: var(--accent); color: var(--accent); }
   .sig-cell { max-width: none; }
   .fd-setting-grid { grid-template-columns: 1fr; }
 }
+
+/* Instagram: the fallback channel for leads with no WhatsApp. Its own hue so
+   the two outreach routes are never confused at a glance. */
+.btn-ig { background: #C084FC; color: #2A0A42; }
+.btn-ig:hover { box-shadow: 0 0 22px rgba(192,132,252,.4); }
+.scard-num.ig { color: #C084FC; }
+.icon-btn.ig-btn:hover { color: #C084FC; border-color: #C084FC; }

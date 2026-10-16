@@ -31,7 +31,7 @@ init_db()
 PUBLIC_SETTINGS = (
     "site_title_en", "site_title_fa", "about_en", "about_fa",
     "phone", "email", "telegram", "github", "linkedin", "whatsapp",
-    "site_url",
+    "instagram", "site_url",
 )
 
 # Editable from the admin panel but never served to the public site. Project
@@ -703,11 +703,12 @@ def finder_overview(authorization: Optional[str] = Header(None)):
 
 @app.get("/api/admin/finder/leads")
 def finder_leads(status: str = "", tier: str = "", category: str = "", q: str = "",
-                 limit: int = 200, offset: int = 0,
+                 reach: str = "", limit: int = 200, offset: int = 0,
                  authorization: Optional[str] = Header(None)):
     require_admin(authorization)
     return {"leads": finder.lead_rows(status=status, tier=tier, category=category,
-                                      q=q[:80], limit=min(max(limit, 1), 500),
+                                      q=q[:80], reach=reach,
+                                      limit=min(max(limit, 1), 500),
                                       offset=max(offset, 0))}
 
 
@@ -820,7 +821,8 @@ def _human_price(price: float, currency: str) -> str:
 
 def _build_jsonld(content: dict, base: str) -> str:
     s = content["settings"]
-    same_as = [u for u in (s.get("github"), s.get("linkedin"), s.get("telegram")) if u]
+    same_as = [u for u in (s.get("github"), s.get("linkedin"), s.get("telegram"),
+                           s.get("instagram")) if u]
     person = {
         "@type": "Person",
         "@id": base + "/#person",

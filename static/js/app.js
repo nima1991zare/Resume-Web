@@ -19,6 +19,7 @@
       "v2.chEmail": "Email",
       "v2.chWhatsapp": "WhatsApp",
       "v2.chTelegram": "Telegram",
+      "v2.chInstagram": "Instagram",
       "v2.chGithub": "GitHub",
       "v2.chLinkedin": "LinkedIn"
     },
@@ -37,6 +38,7 @@
       "v2.chEmail": "ایمیل",
       "v2.chWhatsapp": "واتس‌اپ",
       "v2.chTelegram": "تلگرام",
+      "v2.chInstagram": "اینستاگرام",
       "v2.chGithub": "گیت‌هاب",
       "v2.chLinkedin": "لینکدین"
     }
@@ -491,6 +493,9 @@
     if (s.email) ch.push(['v2.chEmail', s.email, "https://mail.google.com/mail/?view=cm&fs=1&to=" + encodeURIComponent(s.email)]);
     if (s.whatsapp) ch.push(['v2.chWhatsapp', s.whatsapp.replace(/^https?:\/\/(?:www\.)?(?:wa\.me\/|api\.whatsapp\.com\/send\?phone=)/i, "+"), s.whatsapp]);
     if (s.telegram) ch.push(['v2.chTelegram', "@telegram", s.telegram]);
+    if (s.instagram) ch.push(['v2.chInstagram',
+      "@" + s.instagram.replace(/^https?:\/\/(?:www\.)?instagram\.com\//i, "").replace(/\/+$/, "").replace(/^@/, ""),
+      s.instagram]);
     if (s.github) ch.push(['v2.chGithub', "github", s.github]);
     if (s.linkedin) ch.push(['v2.chLinkedin', "linkedin", s.linkedin]);
     document.getElementById("channels").innerHTML = ch.map(function (x) {

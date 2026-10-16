@@ -217,6 +217,21 @@ def wa_link(phone_e164: str, message: str) -> str:
     return f"https://wa.me/{phone_e164}?text={quote(message)}"
 
 
+def ig_link(handle: str) -> str:
+    """A link that opens the DM thread with this account.
+
+    Instagram has no equivalent of wa.me's `?text=` — a message cannot be
+    pre-filled by URL, by anyone, at all. So the panel copies the pitch to the
+    clipboard and opens the thread; the paste is the one manual step, and
+    pretending otherwise would just produce an empty DM box.
+
+    This matters more than it sounds: plenty of Shiraz businesses list a mobile
+    that turns out not to be on WhatsApp, and Instagram is where they actually
+    answer.
+    """
+    return f"https://ig.me/m/{handle}" if handle else ""
+
+
 # ─────────────────────────────────────────────────────── domains
 JUNK_DOMAIN_PATTERNS = tuple(re.compile(p, re.I) for p in (
     # Social and directory links get tagged as `website` on OSM constantly. A
@@ -1124,12 +1139,26 @@ STATUS_FA = {"new": "جدید", "contacted": "پیام داده شد", "replied"
              "skip": "رد شد"}
 
 
+# How a lead can actually be contacted. "ig_only" is the pile that matters most
+# in practice: no mobile at all, or a number that is not on WhatsApp, but an
+# Instagram account that is clearly active.
+REACH = ("wa", "ig", "ig_only", "none")
+
+
 def lead_rows(status: str = "", tier: str = "", category: str = "",
-              q: str = "", limit: int = 200, offset: int = 0,
+              q: str = "", reach: str = "", limit: int = 200, offset: int = 0,
               _only_id: int | None = None) -> list[dict]:
     where, args = ["1=1"], []
     if _only_id is not None:
         where.append("id=?"); args.append(_only_id)
+    if reach == "wa":
+        where.append("is_mobile=1")
+    elif reach == "ig":
+        where.append("instagram<>''")
+    elif reach == "ig_only":
+        where.append("instagram<>'' AND is_mobile=0")
+    elif reach == "none":
+        where.append("instagram='' AND phone_e164=''")
     if status in STATUSES:
         where.append("status=?"); args.append(status)
     if tier in (TIER_HOT, TIER_WARM, TIER_COLD):
@@ -1159,6 +1188,7 @@ def lead_rows(status: str = "", tier: str = "", category: str = "",
             ]
             lead["signals"].sort(key=lambda s: -s["weight"])
             lead["wa"] = wa_link(lead["phone_e164"], lead["pitch"]) if lead["is_mobile"] else ""
+            lead["ig"] = ig_link(lead["instagram"])
             lead["category_fa"] = CATEGORY_FA.get(lead["category"], lead["category"])
             lead["status_fa"] = STATUS_FA.get(lead["status"], lead["status"])
             out.append(lead)
@@ -1194,6 +1224,8 @@ def summary() -> dict:
             "warm": by_tier.get(TIER_WARM, 0),
             "no_website": one("SELECT COUNT(*) FROM lead_signals WHERE code='NO_WEBSITE'"),
             "reachable": one("SELECT COUNT(*) FROM leads WHERE is_mobile=1"),
+            "ig_only": one("SELECT COUNT(*) FROM leads WHERE instagram<>'' "
+                           "AND is_mobile=0"),
             "unprofiled": one("SELECT COUNT(*) FROM leads WHERE website<>'' "
                               "AND profiled_at IS NULL"),
             "by_status": by_status,
@@ -1265,14 +1297,15 @@ def export_csv() -> str:
     buf = io.StringIO()
     w = csv.writer(buf)
     w.writerow(["name", "category", "score", "tier", "status", "phone", "whatsapp",
-                "instagram", "website", "address", "city", "signals", "osm"])
+                "instagram", "instagram_dm", "website", "address", "city",
+                "signals", "osm"])
     for lead in lead_rows(limit=5000):
         w.writerow([
             lead["name"], lead["category_fa"], lead["score"], lead["tier"],
             lead["status"], lead["phone"],
             f"+{lead['phone_e164']}" if lead["is_mobile"] else "",
             f"@{lead['instagram']}" if lead["instagram"] else "",
-            lead["website"], lead["address"], lead["city"],
+            lead["ig"], lead["website"], lead["address"], lead["city"],
             " | ".join(s["code"] for s in lead["signals"]),
             f"https://www.openstreetmap.org/{lead['osm_id']}",
         ])

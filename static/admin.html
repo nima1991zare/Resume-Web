@@ -7,7 +7,7 @@
   <title>Admin â€” Nima Portfolio</title>
   <link rel="icon" type="image/svg+xml" href="/static/icons/favicon.svg">
   <link rel="stylesheet" href="/static/css/fonts.css">
-  <link rel="stylesheet" href="/static/css/admin.css?v=5">
+  <link rel="stylesheet" href="/static/css/admin.css?v=6">
 </head>
 <body>
   <!-- ================= LOGIN ================= -->
@@ -168,6 +168,7 @@
           <div class="scard"><span class="scard-num hot" id="fd-hot">–</span><span class="scard-label">Hot (70+)</span></div>
           <div class="scard"><span class="scard-num" id="fd-nosite">–</span><span class="scard-label">No website</span></div>
           <div class="scard"><span class="scard-num" id="fd-reach">–</span><span class="scard-label">WhatsApp reachable</span></div>
+          <div class="scard"><span class="scard-num ig" id="fd-igonly">–</span><span class="scard-label">Instagram only</span></div>
           <div class="scard"><span class="scard-num" id="fd-unprofiled">–</span><span class="scard-label">Sites unchecked</span></div>
         </div>
 
@@ -214,6 +215,13 @@
             <option value="cold">Cold (&lt;45)</option>
           </select>
           <select id="fd-f-cat" aria-label="Filter by category"><option value="">All types</option></select>
+          <select id="fd-f-reach" aria-label="Filter by how you can reach them">
+            <option value="">Any contact</option>
+            <option value="wa">Has WhatsApp (mobile)</option>
+            <option value="ig">Has Instagram</option>
+            <option value="ig_only">Instagram only (no mobile)</option>
+            <option value="none">No way to reach</option>
+          </select>
           <input id="fd-f-q" type="search" placeholder="Search name, domain or phone…">
         </div>
 
@@ -243,6 +251,7 @@
             <div class="field"><label>Email</label><input name="email" type="email"></div>
             <div class="field"><label>Telegram URL</label><input name="telegram" placeholder="https://t.me/â€¦"></div>
             <div class="field"><label>WhatsApp URL</label><input name="whatsapp" placeholder="https://wa.me/â€¦"></div>
+            <div class="field"><label>Instagram URL</label><input name="instagram" placeholder="https://instagram.com/…"></div>
             <div class="field"><label>GitHub URL</label><input name="github"></div>
             <div class="field"><label>LinkedIn URL</label><input name="linkedin"></div>
           </div>
@@ -372,6 +381,7 @@
 
       <div class="lead-send-row">
         <button type="button" class="btn btn-primary" id="lead-wa">Open WhatsApp</button>
+        <button type="button" class="btn btn-ig" id="lead-ig">Copy &amp; open Instagram DM</button>
         <button type="button" class="btn btn-ghost" id="lead-copy">Copy message</button>
         <button type="button" class="btn btn-ghost" id="lead-regen">Rewrite from signals</button>
       </div>
@@ -396,7 +406,7 @@
     </div>
   </div>
 
-  <script src="/static/js/admin.js?v=4"></script>
+  <script src="/static/js/admin.js?v=5"></script>
 </body>
 </html>
 

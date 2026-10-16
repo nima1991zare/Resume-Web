@@ -78,6 +78,14 @@ Open **Project Finder** in the admin panel and press **Find businesses**.
 you read, edit and send yourself — deliberately, because bulk-messaging local
 businesses would burn the number the whole thing depends on.
 
+Two ways out, because one is never enough: **WhatsApp** when the listing has a
+mobile (a `wa.me` link with the pitch pre-filled), and **Instagram DM** when it
+does not — plenty of Shiraz businesses list only a landline, or a mobile that
+turns out not to be on WhatsApp, while their Instagram is plainly active.
+Instagram cannot pre-fill a message from a URL (no one can, it isn't a feature),
+so that button copies the pitch and opens the thread; the paste is one keystroke.
+The **Instagram only** filter and stat card isolate exactly that pile.
+
 ### What makes a lead good
 
 Weights live in `SIGNALS` in `app/finder.py`; edit them and the next run re-scores.
