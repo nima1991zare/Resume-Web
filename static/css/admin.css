@@ -359,3 +359,8 @@ a.lead-chip:hover { border-color: var(--accent); color: var(--accent); }
 .btn-ig:hover { box-shadow: 0 0 22px rgba(192,132,252,.4); }
 .scard-num.ig { color: #C084FC; }
 .icon-btn.ig-btn:hover { color: #C084FC; border-color: #C084FC; }
+
+/* A blank table and a broken request must not look the same. */
+.tbl-empty { color: var(--muted); font-size: .88rem; text-align: center; padding: 26px !important; }
+.tbl-error { color: var(--danger); font-size: .86rem; padding: 20px !important; line-height: 1.7; }
+.tbl-error strong { color: var(--fg); }

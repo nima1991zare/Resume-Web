@@ -200,10 +200,27 @@
           "</div></td></tr>";
       }).join("");
       el._rows = rows;
-    }).catch(function () {});
+      if (!rows.length) {
+        el.innerHTML = head + '<tr><td colspan="9" class="tbl-empty">Nothing here yet' +
+          " — press <strong>+ Add</strong> above.</td></tr>";
+      }
+    }).catch(function (err) {
+      // An empty table and a failed request looked identical, which turned a
+      // deploy problem ("the server is still running last week's code") into
+      // "this section is empty". Say which one it actually is.
+      var el = document.getElementById("table-" + table);
+      var msg = (err && err.message) || "";
+      el.innerHTML = '<tr><td class="tbl-error">' +
+        (/not found|404/i.test(msg)
+          ? "This section is missing from the running server. The files are " +
+            "deployed, but the web app has not been reloaded — press " +
+            "<strong>Reload</strong> on the PythonAnywhere Web tab."
+          : "Could not load: " + esc(msg || "unknown error")) +
+        "</td></tr>";
+    });
   }
 
-  ["apps", "bots", "games", "websites"].forEach(function (table) {
+  ["apps", "bots", "games", "websites", "opensource"].forEach(function (table) {
     document.getElementById("table-" + table).addEventListener("click", function (e) {
       var btn = e.target.closest("button[data-act]");
       if (!btn) return;
