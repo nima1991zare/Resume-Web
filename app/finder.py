@@ -354,12 +354,17 @@ async def overpass(client: httpx.AsyncClient, body: str,
     """
     last = ""
     delay = OVERPASS_BACKOFF
+    # "busy" and "blocked" need different advice, so count which is happening.
+    blocked = 0
+    attempts = 0
     for round_no in range(OVERPASS_ROUNDS):
         for endpoint in OVERPASS_ENDPOINTS:
+            attempts += 1
             try:
                 r = await client.post(endpoint, content=body.encode(),
                                       headers={"User-Agent": UA})
             except httpx.HTTPError as e:
+                blocked += 1
                 last = f"{endpoint}: unreachable ({e})"
                 logger.warning("overpass %s", last)
                 continue
@@ -370,6 +375,9 @@ async def overpass(client: httpx.AsyncClient, body: str,
                     last = f"{endpoint}: 200 but not JSON"
                     logger.warning("overpass %s", last)
                     continue
+            # A proxy refusing the host looks like 403/407, not a busy queue.
+            if r.status_code in (401, 403, 407):
+                blocked += 1
             last = f"{endpoint}: HTTP {r.status_code}"
             logger.warning("overpass %s (round %d)", last, round_no + 1)
         if round_no < OVERPASS_ROUNDS - 1:
@@ -379,6 +387,15 @@ async def overpass(client: httpx.AsyncClient, body: str,
                      f"{OVERPASS_ROUNDS}…")
             await asyncio.sleep(delay)
             delay *= 2          # 8s, 16s, 32s — the queue usually drains by then
+    if blocked == attempts:
+        # Never once got a reply. On a host that whitelists outbound traffic
+        # (PythonAnywhere's free tier does) this is the normal outcome, and
+        # telling him to "wait a few minutes" would waste his afternoon.
+        raise RuntimeError(
+            "به سرورهای OpenStreetMap اصلاً دسترسی نبود. اگر سایت روی هاست "
+            "اشتراکی اجرا می‌شود، احتمالاً اینترنت خروجی محدود است (مثلاً "
+            "PythonAnywhere رایگان فقط دامنه‌های مجاز را باز می‌کند). "
+            f"جست‌وجو را روی کامپیوتر خودتان اجرا کنید. ({last})")
     raise RuntimeError(
         "سرورهای OpenStreetMap پاسخ ندادند (شلوغ هستند). این سرویس رایگان و "
         f"داوطلبانه است — چند دقیقه بعد دوباره تلاش کنید. ({last})")
@@ -405,6 +422,7 @@ async def discover(client: httpx.AsyncClient, city: str, cat_keys: list[str],
 
     elements: list[tuple[dict, str]] = []
     failed: list[str] = []
+    first_error = ""
     for i, cat in enumerate(chosen):
         if i:
             await asyncio.sleep(OVERPASS_INTERVAL)   # community rate etiquette
@@ -422,6 +440,7 @@ async def discover(client: httpx.AsyncClient, city: str, cat_keys: list[str],
         except RuntimeError as e:
             logger.warning("discover: category %s failed: %s", cat["key"], e)
             failed.append(cat["fa"])
+            first_error = first_error or str(e)
             continue
         # Carry the query's own category with each element. Resolving it from
         # the tags instead files a guest house that also serves coffee under
@@ -429,9 +448,11 @@ async def discover(client: httpx.AsyncClient, city: str, cat_keys: list[str],
         elements.extend((el, cat["key"]) for el in (data.get("elements") or []))
 
     if failed and not elements:
-        raise RuntimeError(
-            "سرورهای OpenStreetMap پاسخ ندادند (شلوغ هستند). این سرویس رایگان و "
-            "داوطلبانه است — چند دقیقه بعد دوباره تلاش کنید.")
+        # Pass the real reason up. Overwriting it with a generic "busy" here
+        # would hide the "outbound traffic is blocked" diagnosis the fetcher
+        # already worked out.
+        raise RuntimeError(first_error or
+                           "سرورهای OpenStreetMap پاسخ ندادند (شلوغ هستند).")
 
     # Which of our categories a raw OSM tag belongs to.
     tag_to_cat = {t: c["key"] for c in chosen for t in c["tags"]}
