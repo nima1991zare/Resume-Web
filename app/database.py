@@ -191,6 +191,30 @@ CREATE INDEX IF NOT EXISTS idx_leads_status ON leads(status);
 /* Every fact is a row, never a column — so a new signal needs no migration,
    the same signal observed again is history rather than an overwrite, and the
    evidence URL that proved a claim travels with the claim. */
+/* The outbox is the whole safety model of the automatic sender.
+   Nothing is sent straight from a loop: a message is queued with a time it may
+   go out, and the sender may only claim what is due. That makes the daily cap,
+   the quiet hours and the pacing properties of the data rather than of whichever
+   process happens to be running — so a crashed or double-started sender cannot
+   turn into a burst, which is exactly what gets a number banned. */
+CREATE TABLE IF NOT EXISTS outbox (
+    id          INTEGER PRIMARY KEY AUTOINCREMENT,
+    lead_id     INTEGER NOT NULL REFERENCES leads(id) ON DELETE CASCADE,
+    channel     TEXT NOT NULL DEFAULT 'whatsapp',
+    to_addr     TEXT NOT NULL DEFAULT '',
+    body        TEXT NOT NULL,
+    need        TEXT NOT NULL DEFAULT '',
+    status      TEXT NOT NULL DEFAULT 'queued',
+    due_at      TEXT NOT NULL DEFAULT (datetime('now')),
+    claimed_at  TEXT,
+    sent_at     TEXT,
+    attempts    INTEGER NOT NULL DEFAULT 0,
+    error       TEXT NOT NULL DEFAULT '',
+    created_at  TEXT NOT NULL DEFAULT (datetime('now')),
+    UNIQUE(lead_id, channel)
+);
+CREATE INDEX IF NOT EXISTS idx_outbox_due ON outbox(status, due_at);
+
 CREATE TABLE IF NOT EXISTS lead_signals (
     id          INTEGER PRIMARY KEY AUTOINCREMENT,
     lead_id     INTEGER NOT NULL REFERENCES leads(id) ON DELETE CASCADE,
@@ -250,6 +274,15 @@ DEFAULT_SETTINGS = {
     "finder_city": "Shiraz, Iran",
     "finder_radius_km": "20",
     "finder_sender_name": "نیما زارع",
+    # Autopilot. Conservative on purpose: these numbers are what stands between
+    # "steady outreach" and "banned on day one".
+    "auto_enabled": "0",
+    "auto_daily_cap": "25",
+    "auto_min_gap_s": "140",     # plus jitter, applied when queueing
+    "auto_quiet_start": "21:30",
+    "auto_quiet_end": "09:30",
+    "auto_min_score": "55",
+    "auto_channel": "whatsapp",
 }
 
 SEED_APPS = [
@@ -439,6 +472,17 @@ def init_db() -> None:
             if "demo_url" not in cols:
                 conn.execute(
                     f"ALTER TABLE {table} ADD COLUMN demo_url TEXT NOT NULL DEFAULT ''")
+        # migration: what research concluded this business needs, and the thing
+        # that proved it. Kept on the lead so a message can be rebuilt from it.
+        lead_cols = [r["name"] for r in conn.execute("PRAGMA table_info(leads)")]
+        for col, ddl in (("need", "TEXT NOT NULL DEFAULT ''"),
+                         ("need_fa", "TEXT NOT NULL DEFAULT ''"),
+                         ("need_evidence", "TEXT NOT NULL DEFAULT ''"),
+                         ("need_evidence_url", "TEXT NOT NULL DEFAULT ''"),
+                         ("pages_seen", "INTEGER NOT NULL DEFAULT 0"),
+                         ("researched_at", "TEXT")):
+            if col not in lead_cols:
+                conn.execute(f"ALTER TABLE leads ADD COLUMN {col} {ddl}")
         # migration: apps were the one content table without a link of their own,
         # which left no way to point at a repository or a store listing
         app_cols = [r["name"] for r in conn.execute("PRAGMA table_info(apps)")]

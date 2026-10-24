@@ -1,0 +1,16 @@
+{
+  "name": "nima-whatsapp-sender",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Sends the Project Finder outbox through a local WhatsApp Web session",
+  "main": "sender.js",
+  "scripts": {
+    "start": "node sender.js",
+    "dry": "node -e \"process.exit(0)\" && node sender.js"
+  },
+  "dependencies": {
+    "whatsapp-web.js": "1.26.0",
+    "qrcode-terminal": "0.12.0"
+  },
+  "engines": { "node": ">=18" }
+}

@@ -546,6 +546,7 @@
       fdConfig(d.config);
       fdRunCard(d.active_run, d.runs && d.runs[0]);
       if (d.active_run) fdStartPoll();
+      apLoad();
       return fdLoadLeads();
     }).catch(function () {});
   }
@@ -718,6 +719,8 @@
           clearInterval(fdPoll);
           fdPoll = null;
           fdLoadLeads();
+          apLoad();
+          if (!fdEl("fd-outbox-card").hidden) apOutbox();
         }
       }).catch(function () { clearInterval(fdPoll); fdPoll = null; });
     }, 3000);
@@ -770,6 +773,154 @@
       a.click();
       setTimeout(function () { URL.revokeObjectURL(url); }, 1000);
     }).catch(function () {});
+  });
+
+  /* ---------------- autopilot ---------------- */
+  /* The panel is a window onto the queue, not a second place where sending
+     rules live. Everything here either reads state or asks the server to
+     change it — the browser never decides whether a message may go out. */
+  var apTimer = null;
+
+  function apLoad() {
+    return api("/api/admin/finder/autopilot").then(apRender).catch(function () {});
+  }
+
+  function apRender(d) {
+    var c = d.config;
+    fdEl("fd-auto-on").checked = !!c.enabled;
+    fdEl("fd-a-queued").textContent = d.queued;
+    fdEl("fd-a-today").textContent = d.sent_today + " / " + c.daily_cap;
+    fdEl("fd-a-sent").textContent = d.sent;
+    fdEl("fd-a-failed").textContent = d.failed;
+    fdEl("fd-a-unres").textContent = d.unresearched;
+    // Don't fight the user while they are typing in one of these.
+    [["fd-a-cap", c.daily_cap], ["fd-a-gap", c.min_gap_s], ["fd-a-score", c.min_score],
+     ["fd-a-qs", c.quiet_start], ["fd-a-qe", c.quiet_end]].forEach(function (p) {
+      var el = fdEl(p[0]);
+      if (document.activeElement !== el) el.value = p[1];
+    });
+    fdEl("fd-a-key").value = d.agent_key || "";
+
+    var state = fdEl("fd-auto-state");
+    if (!c.enabled) {
+      state.textContent = "Paused — the sender is handed nothing while this is off.";
+      state.className = "fd-note";
+    } else if (d.quiet_now) {
+      state.textContent = "Running, but inside quiet hours (" + c.quiet_start +
+        "–" + c.quiet_end + ") — nothing goes out until " + c.quiet_end + ".";
+      state.className = "fd-note";
+    } else if (d.sent_today >= c.daily_cap) {
+      state.textContent = "Running — daily cap of " + c.daily_cap + " reached, resumes tomorrow.";
+      state.className = "fd-note";
+    } else {
+      state.textContent = "Running — handing the sender one message roughly every " +
+        Math.round(c.min_gap_s / 60) + " min, up to " + c.daily_cap + " a day.";
+      state.className = "fd-note fd-ok";
+    }
+    fdEl("fd-a-next").textContent = d.next_due ? "next due " + d.next_due : "";
+
+    // Poll while it is actually doing something; stop when it is idle.
+    var busy = c.enabled && d.queued > 0;
+    if (busy && !apTimer) apTimer = setInterval(apLoad, 15000);
+    if (!busy && apTimer) { clearInterval(apTimer); apTimer = null; }
+  }
+
+  function apSave(extra) {
+    var body = Object.assign({
+      daily_cap: +fdEl("fd-a-cap").value || 25,
+      min_gap_s: +fdEl("fd-a-gap").value || 140,
+      min_score: +fdEl("fd-a-score").value || 0,
+      quiet_start: fdEl("fd-a-qs").value.trim(),
+      quiet_end: fdEl("fd-a-qe").value.trim()
+    }, extra || {});
+    return api("/api/admin/finder/autopilot", { method: "PUT", body: body })
+      .then(apRender).catch(function () {});
+  }
+
+  fdEl("fd-auto-on").addEventListener("change", function () {
+    var on = this.checked;
+    if (on && !confirm(
+        "Turn on automatic sending?\n\n" +
+        "The sender on your PC will start messaging businesses on WhatsApp " +
+        "without asking you each time. Make sure it is running on a second " +
+        "number, not the one your clients use.")) {
+      this.checked = false;
+      return;
+    }
+    apSave({ enabled: on });
+  });
+  fdEl("fd-a-save").addEventListener("click", function () { apSave(); });
+
+  fdEl("fd-a-copykey").addEventListener("click", function () {
+    var el = fdEl("fd-a-key");
+    el.select();
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(el.value).then(function () {
+        fdEl("fd-a-copykey").textContent = "Copied";
+        setTimeout(function () { fdEl("fd-a-copykey").textContent = "Copy"; }, 1600);
+      }, function () {});
+    }
+  });
+
+  fdEl("fd-research").addEventListener("click", function () {
+    var btn = this;
+    btn.disabled = true;
+    api("/api/admin/finder/research?limit=60", { method: "POST" })
+      .then(function (run) { fdRunCard(run, run); fdStartPoll(); })
+      .catch(fdRunError)
+      .then(function () { btn.disabled = false; });
+  });
+
+  /* ----- outbox ----- */
+  function apOutbox() {
+    var f = fdEl("fd-ob-filter").value;
+    return api("/api/admin/finder/outbox?limit=200&status=" + encodeURIComponent(f))
+      .then(function (d) {
+        var el = fdEl("table-outbox");
+        if (!d.outbox.length) {
+          el.innerHTML = '<tr><td class="tbl-empty">Nothing in the outbox yet — press ' +
+            "<strong>Research &amp; queue messages</strong>.</td></tr>";
+          return;
+        }
+        el.innerHTML = "<tr><th>Status</th><th>Business</th><th>Need</th>" +
+          "<th>To</th><th>Due / sent</th><th>Message</th><th></th></tr>" +
+          d.outbox.map(function (o) {
+            return "<tr data-ob='" + o.id + "'>" +
+              '<td><span class="tag ' + esc(o.status) + '">' + esc(o.status) + "</span></td>" +
+              "<td><strong>" + esc(o.name) + "</strong><br>" +
+                '<span class="fd-meta">score ' + o.score + "</span></td>" +
+              '<td class="ob-need" dir="rtl">' + esc(o.need_fa || o.need) + "</td>" +
+              '<td class="fd-meta" dir="ltr">+' + esc(o.to_addr) + "</td>" +
+              '<td class="fd-meta" dir="ltr">' + esc(o.sent_at || o.due_at) + "</td>" +
+              '<td class="ob-body" dir="rtl" title="' + esc(o.body) + '">' +
+                esc(o.body.split("\n")[1] || o.body) + "</td>" +
+              '<td><div class="row-actions">' +
+                '<button class="icon-btn" data-ob-act="requeue" title="Send this one next">' + ICONS.edit + "</button>" +
+                '<button class="icon-btn danger" data-ob-act="drop" title="Remove from queue">' + ICONS.del + "</button>" +
+              "</div></td></tr>" +
+              (o.error ? '<tr><td colspan="7" class="fd-meta fd-bad">' + esc(o.error) + "</td></tr>" : "");
+          }).join("");
+      }).catch(function () {});
+  }
+
+  fdEl("fd-a-outbox").addEventListener("click", function () {
+    var card = fdEl("fd-outbox-card");
+    card.hidden = !card.hidden;
+    this.textContent = card.hidden ? "Show outbox" : "Hide outbox";
+    if (!card.hidden) apOutbox();
+  });
+  fdEl("fd-ob-filter").addEventListener("change", apOutbox);
+
+  fdEl("table-outbox").addEventListener("click", function (e) {
+    var btn = e.target.closest("button[data-ob-act]");
+    if (!btn) return;
+    var id = btn.closest("tr").getAttribute("data-ob");
+    var act = btn.getAttribute("data-ob-act");
+    if (act === "drop" && !confirm("Remove this message from the queue?")) return;
+    var req = act === "requeue"
+      ? api("/api/admin/finder/outbox/" + id + "/requeue", { method: "POST" })
+      : api("/api/admin/finder/outbox/" + id, { method: "DELETE" });
+    req.then(function () { apOutbox(); apLoad(); }).catch(function () {});
   });
 
   /* ----- lead modal ----- */

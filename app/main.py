@@ -14,7 +14,7 @@ from fastapi.responses import FileResponse, HTMLResponse, JSONResponse, PlainTex
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field
 
-from . import finder
+from . import autopilot, finder
 from .database import (
     get_db, init_db, get_setting, set_setting, hash_password, verify_password,
 )
@@ -263,6 +263,21 @@ class DiscoverIn(BaseModel):
     radius_km: int = Field(default=20, ge=1, le=60)
     limit: int = Field(default=400, ge=10, le=1200)
     profile: bool = True
+
+
+class AutopilotIn(BaseModel):
+    enabled: Optional[bool] = None
+    daily_cap: Optional[int] = Field(default=None, ge=1, le=200)
+    min_gap_s: Optional[int] = Field(default=None, ge=45, le=3600)
+    quiet_start: Optional[str] = Field(default=None, max_length=5)
+    quiet_end: Optional[str] = Field(default=None, max_length=5)
+    min_score: Optional[int] = Field(default=None, ge=0, le=100)
+
+
+class AgentReportIn(BaseModel):
+    id: int
+    ok: bool
+    error: str = Field(default="", max_length=300)
 
 
 class LeadIn(BaseModel):
@@ -794,6 +809,102 @@ def finder_export(authorization: Optional[str] = Header(None)):
     # BOM so Excel opens the Persian columns in the right encoding.
     return Response("﻿" + finder.export_csv(), media_type="text/csv; charset=utf-8",
                     headers={"Content-Disposition": 'attachment; filename="leads.csv"'})
+
+
+
+# ------------------------------------------------------------------ autopilot
+# The WhatsApp sender runs on Nima's own PC, so it authenticates with a
+# long-lived key rather than an admin session: a worker that runs for days must
+# not be logged out mid-queue, and it must never hold a credential that can
+# edit the site.
+def _agent_key() -> str:
+    conn = get_db()
+    try:
+        key = get_setting(conn, "auto_agent_key")
+        if not key:
+            key = secrets.token_urlsafe(32)
+            set_setting(conn, "auto_agent_key", key)
+            conn.commit()
+        return key
+    finally:
+        conn.close()
+
+
+def require_agent(x_agent_key: Optional[str]) -> None:
+    if not x_agent_key or not secrets.compare_digest(x_agent_key, _agent_key()):
+        raise HTTPException(status_code=401, detail="Bad agent key")
+
+
+@app.get("/api/admin/finder/autopilot")
+def autopilot_status(authorization: Optional[str] = Header(None)):
+    require_admin(authorization)
+    st = autopilot.status()
+    st["agent_key"] = _agent_key()
+    return st
+
+
+@app.put("/api/admin/finder/autopilot")
+def autopilot_update(data: AutopilotIn, authorization: Optional[str] = Header(None)):
+    require_admin(authorization)
+    autopilot.set_config(**{k: v for k, v in data.model_dump().items() if v is not None})
+    st = autopilot.status()
+    st["agent_key"] = _agent_key()
+    return st
+
+
+@app.post("/api/admin/finder/research")
+def autopilot_research(request: Request, limit: int = 60,
+                       authorization: Optional[str] = Header(None)):
+    require_admin(authorization)
+    rate_limit(request, "finder_research", limit=6, window_s=900)
+    try:
+        return autopilot.launch_research(limit=min(max(limit, 1), 300))
+    except RuntimeError as e:
+        raise HTTPException(status_code=409, detail=str(e))
+
+
+@app.get("/api/admin/finder/outbox")
+def autopilot_outbox(status: str = "", limit: int = 100,
+                     authorization: Optional[str] = Header(None)):
+    require_admin(authorization)
+    return {"outbox": autopilot.outbox_rows(status=status,
+                                            limit=min(max(limit, 1), 500))}
+
+
+@app.post("/api/admin/finder/outbox/{item_id}/requeue")
+def autopilot_requeue(item_id: int, authorization: Optional[str] = Header(None)):
+    require_admin(authorization)
+    return autopilot.requeue(item_id)
+
+
+@app.delete("/api/admin/finder/outbox/{item_id}")
+def autopilot_drop(item_id: int, authorization: Optional[str] = Header(None)):
+    require_admin(authorization)
+    return autopilot.drop(item_id)
+
+
+# ---- the two endpoints the sender on the PC actually calls ----
+@app.post("/api/agent/claim")
+def agent_claim(request: Request, x_agent_key: Optional[str] = Header(None)):
+    require_agent(x_agent_key)
+    rate_limit(request, "agent_claim", limit=120, window_s=300)
+    return autopilot.claim_next()
+
+
+@app.post("/api/agent/report")
+def agent_report(data: AgentReportIn, x_agent_key: Optional[str] = Header(None)):
+    require_agent(x_agent_key)
+    try:
+        return autopilot.report(data.id, data.ok, data.error)
+    except LookupError:
+        raise HTTPException(status_code=404, detail="No such message")
+
+
+@app.post("/api/agent/pause")
+def agent_pause(reason: str = "", x_agent_key: Optional[str] = Header(None)):
+    """The sender stops the whole queue itself when WhatsApp pushes back."""
+    require_agent(x_agent_key)
+    return autopilot.pause(reason or "requested by sender")
 
 
 # ------------------------------------------------------------------ SEO layer

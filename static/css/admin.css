@@ -364,3 +364,35 @@ a.lead-chip:hover { border-color: var(--accent); color: var(--accent); }
 .tbl-empty { color: var(--muted); font-size: .88rem; text-align: center; padding: 26px !important; }
 .tbl-error { color: var(--danger); font-size: .86rem; padding: 20px !important; line-height: 1.7; }
 .tbl-error strong { color: var(--fg); }
+
+/* ---------------- autopilot ---------------- */
+.fd-auto { padding: 18px; }
+.fd-auto-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 14px; margin-bottom: 14px; }
+.fd-auto-head h3 { margin-bottom: 2px; }
+.fd-auto-stats { margin-bottom: 14px; }
+.fd-auto-row { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-top: 12px; }
+.fd-key { margin-top: 14px; border-top: 1px solid var(--border); padding-top: 12px; }
+.fd-key summary { cursor: pointer; font-size: .86rem; color: var(--muted); }
+.fd-key code { background: var(--surface-2); padding: 1px 6px; border-radius: 5px; font-size: .92em; }
+.fd-key .upload-row { margin-top: 10px; }
+.fd-key input { flex: 1; font-family: ui-monospace, monospace; font-size: .78rem;
+  background: var(--surface-2); border: 1px solid var(--border); color: var(--fg);
+  border-radius: 9px; padding: 9px 11px; }
+.fd-ob-filter { background: var(--surface-2); border: 1px solid var(--border); color: var(--fg);
+  border-radius: 9px; padding: 8px 11px; font-family: inherit; font-size: .84rem; }
+/* The switch is the kill switch, so it reads as on/off at a glance. */
+.fd-switch { position: relative; width: 54px; height: 30px; flex-shrink: 0; cursor: pointer; }
+.fd-switch input { position: absolute; opacity: 0; width: 0; height: 0; }
+.fd-switch span { position: absolute; inset: 0; border-radius: 999px; background: var(--surface-2);
+  border: 1px solid var(--border); transition: .22s; }
+.fd-switch span::after { content: ""; position: absolute; width: 22px; height: 22px; border-radius: 50%;
+  background: var(--muted); top: 3px; left: 3px; transition: .22s; }
+.fd-switch input:checked + span { background: var(--accent-dim); border-color: var(--accent); }
+.fd-switch input:checked + span::after { background: var(--accent); transform: translateX(24px); }
+.ob-need { font-size: .72rem; color: var(--accent); }
+.ob-body { color: var(--muted); font-size: .76rem; max-width: 360px; overflow: hidden;
+  text-overflow: ellipsis; white-space: nowrap; }
+.tag.queued { background: rgba(96,165,250,.14); color: #60A5FA; }
+.tag.sent { background: var(--accent-dim); color: var(--accent); }
+.tag.failed { background: rgba(239,68,68,.14); color: var(--danger); }
+.tag.skipped, .tag.claimed { background: var(--surface-2); color: var(--muted); }

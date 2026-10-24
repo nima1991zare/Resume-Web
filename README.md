@@ -44,7 +44,11 @@ python -m uvicorn app.main:app --host 0.0.0.0 --port 8000
 app/
   main.py        FastAPI app — API routes, admin API, page serving
   database.py    SQLite schema, seed data, password hashing
-  finder.py      Project Finder — OSM discovery, site profiling, scoring, Persian pitches
+  finder.py      Project Finder — OSM discovery, site profiling, scoring
+  research.py    What each business needs, per category, with evidence
+  autopilot.py   The outbox: research, queueing, pacing, the sender protocol
+tools/
+  whatsapp-sender/  Node sender that runs on your PC (see its README)
 static/
   index.html     Public site
   admin.html     Admin panel
@@ -74,9 +78,38 @@ Open **Project Finder** in the admin panel and press **Find businesses**.
 | **Score** | Deterministic weights over the signals found → 0–100 and hot / warm / cold | free |
 | **Pitch** | A Persian message naming the specific gap, plus a `wa.me` link with it pre-filled | free |
 
-**Nothing is ever sent.** There is no sending code. Every lead ends as a draft
-you read, edit and send yourself — deliberately, because bulk-messaging local
-businesses would burn the number the whole thing depends on.
+### Research: what does this one actually need?
+
+Scoring sorts leads; it does not tell you what to say. A second stage reads up
+to six pages of each site — menu, booking, products, prices, contact — and
+decides what that business is missing **for its trade**. A restaurant with no
+online ordering is losing every order placed after closing. A lawyer with no
+online ordering is losing nothing. The same gap is a need in one category and
+noise in another, so needs are scored per category, and none is reported
+without the URL and snippet that proved it.
+
+The message is then built around that single need: what was seen, what it
+costs them, what you would do, one question. One observation, not a list.
+
+### Sending
+
+Two modes, and the choice is yours per run.
+
+**Manual** — every lead ends as a draft with a `wa.me` link or an Instagram DM
+button. You read it and press send.
+
+**Autopilot** — a sender on your own PC (`tools/whatsapp-sender/`) drives your
+WhatsApp session and sends the queue for you. It is off by default.
+
+> Automating WhatsApp is against its terms of service, and bulk cold messaging
+> is what gets numbers permanently banned. Use a second SIM, keep the cap low,
+> and read `tools/whatsapp-sender/README.md` before turning it on.
+
+Every rule lives in the queue, not in the sender: one message per lead ever,
+a scheduled `due_at` with jitter, a daily cap counted from what was actually
+sent, quiet hours, stop-on-reply, and a kill switch the sender re-reads on
+every claim. Running the sender twice cannot double the rate; a crash cannot
+replay a burst.
 
 Two ways out, because one is never enough: **WhatsApp** when the listing has a
 mobile (a `wa.me` link with the pitch pre-filled), and **Instagram DM** when it

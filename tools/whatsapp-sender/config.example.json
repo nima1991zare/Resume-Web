@@ -1,0 +1,6 @@
+{
+  "serverUrl": "https://nimabuilds.pythonanywhere.com",
+  "agentKey": "paste from Admin -> Project Finder -> Autopilot",
+  "dryRun": true,
+  "headless": true
+}

@@ -7,7 +7,7 @@
   <title>Admin â€” Nima Portfolio</title>
   <link rel="icon" type="image/svg+xml" href="/static/icons/favicon.svg">
   <link rel="stylesheet" href="/static/css/fonts.css">
-  <link rel="stylesheet" href="/static/css/admin.css?v=8">
+  <link rel="stylesheet" href="/static/css/admin.css?v=10">
 </head>
 <body>
   <!-- ================= LOGIN ================= -->
@@ -171,9 +171,11 @@
         </div>
 
         <p class="finder-intro">
-          Finds businesses in your city that visibly need a website, scores them, and
-          drafts a Persian WhatsApp message naming the specific gap it found.
-          <strong>Nothing is sent automatically</strong> — you read, edit and press send.
+          Finds businesses in your city, reads their site to work out what each one
+          actually needs, and writes a Persian WhatsApp message about that one thing.
+          With <strong>Autopilot off</strong> you send each message yourself. With it
+          <strong>on</strong>, the sender running on your PC sends them for you —
+          paced, capped, and silent during quiet hours.
         </p>
 
         <div class="stat-cards">
@@ -191,6 +193,61 @@
             <span class="fd-spinner" id="fd-spinner"></span>
             <span id="fd-run-msg">…</span>
           </div>
+        </div>
+
+        <div class="card fd-auto" id="fd-auto">
+          <div class="fd-auto-head">
+            <div>
+              <h3>خلبان خودکار — Autopilot</h3>
+              <p class="fd-note" id="fd-auto-state">…</p>
+            </div>
+            <label class="fd-switch">
+              <input type="checkbox" id="fd-auto-on">
+              <span></span>
+            </label>
+          </div>
+          <div class="stat-cards fd-auto-stats">
+            <div class="scard"><span class="scard-num" id="fd-a-queued">–</span><span class="scard-label">In queue</span></div>
+            <div class="scard"><span class="scard-num" id="fd-a-today">–</span><span class="scard-label">Sent today</span></div>
+            <div class="scard"><span class="scard-num" id="fd-a-sent">–</span><span class="scard-label">Sent total</span></div>
+            <div class="scard"><span class="scard-num" id="fd-a-failed">–</span><span class="scard-label">Failed</span></div>
+            <div class="scard"><span class="scard-num" id="fd-a-unres">–</span><span class="scard-label">Not researched</span></div>
+          </div>
+          <div class="grid-3 fd-setting-grid">
+            <div class="field"><label for="fd-a-cap">Daily cap</label><input id="fd-a-cap" type="number" min="1" max="200"></div>
+            <div class="field"><label for="fd-a-gap">Seconds between sends</label><input id="fd-a-gap" type="number" min="45" max="3600"></div>
+            <div class="field"><label for="fd-a-score">Only leads scoring at least</label><input id="fd-a-score" type="number" min="0" max="100"></div>
+            <div class="field"><label for="fd-a-qs">Quiet from</label><input id="fd-a-qs" type="text" placeholder="21:30" dir="ltr"></div>
+            <div class="field"><label for="fd-a-qe">Quiet until</label><input id="fd-a-qe" type="text" placeholder="09:30" dir="ltr"></div>
+            <div class="field"><label>&nbsp;</label><button class="btn btn-ghost" id="fd-a-save">Save settings</button></div>
+          </div>
+          <div class="fd-auto-row">
+            <button class="btn btn-primary" id="fd-research">Research &amp; queue messages</button>
+            <button class="btn btn-ghost" id="fd-a-outbox">Show outbox</button>
+            <span class="fd-note" id="fd-a-next"></span>
+          </div>
+          <details class="fd-key">
+            <summary>Sender setup — agent key</summary>
+            <p class="fd-note">Paste this into <code>tools/whatsapp-sender/config.json</code> on your PC, then run <code>npm install</code> and <code>npm start</code> there. It is a credential: anyone holding it can read your queue.</p>
+            <div class="upload-row">
+              <input id="fd-a-key" readonly dir="ltr">
+              <button class="btn btn-ghost" id="fd-a-copykey" type="button">Copy</button>
+            </div>
+          </details>
+        </div>
+
+        <div class="card" id="fd-outbox-card" hidden>
+          <div class="tab-head" style="margin:0 0 14px">
+            <h3>Outbox</h3>
+            <select id="fd-ob-filter" class="fd-ob-filter">
+              <option value="">All</option>
+              <option value="queued">Queued</option>
+              <option value="sent">Sent</option>
+              <option value="failed">Failed</option>
+              <option value="skipped">Skipped</option>
+            </select>
+          </div>
+          <div class="table-wrap"><table id="table-outbox"></table></div>
         </div>
 
         <details class="card fd-settings" id="fd-settings">
@@ -419,7 +476,7 @@
     </div>
   </div>
 
-  <script src="/static/js/admin.js?v=7"></script>
+  <script src="/static/js/admin.js?v=9"></script>
 </body>
 </html>
 
