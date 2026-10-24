@@ -871,6 +871,12 @@ def autopilot_outbox(status: str = "", limit: int = 100,
                                             limit=min(max(limit, 1), 500))}
 
 
+@app.post("/api/admin/finder/outbox/rebuild")
+def autopilot_rebuild(authorization: Optional[str] = Header(None)):
+    require_admin(authorization)
+    return autopilot.rebuild_queued()
+
+
 @app.post("/api/admin/finder/outbox/{item_id}/requeue")
 def autopilot_requeue(item_id: int, authorization: Optional[str] = Header(None)):
     require_admin(authorization)

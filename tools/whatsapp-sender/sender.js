@@ -70,11 +70,65 @@ async function api(route, body) {
   return r.json();
 }
 
+// ── the browser ───────────────────────────────────────────────────────────
+/**
+ * Use the Chrome that is already installed rather than the one puppeteer
+ * bundles. Two reasons, and the second is the important one:
+ *
+ *  - npm 11 blocks install scripts by default, so puppeteer's postinstall
+ *    never runs and no Chromium is downloaded. The failure shows up much
+ *    later as "Could not find expected browser", which is a confusing way to
+ *    learn that.
+ *  - that download is ~150MB from a server that is slow to reach from Iran,
+ *    and an installed Chrome is already patched.
+ *
+ * This launches a separate browser with its own profile under .session/ — it
+ * does not touch your normal Chrome or the accounts you are signed into there.
+ */
+function findChrome() {
+  if (CFG.chromePath) return CFG.chromePath;
+  const env = process.env;
+  // path.join rather than literal backslashes: a Windows path written inline
+  // is a minefield of accidental escape sequences ("\c" is just "c").
+  const win = [
+    [env.PROGRAMFILES, "Google", "Chrome", "Application", "chrome.exe"],
+    [env["PROGRAMFILES(X86)"], "Google", "Chrome", "Application", "chrome.exe"],
+    [env.LOCALAPPDATA, "Google", "Chrome", "Application", "chrome.exe"],
+    [env.PROGRAMFILES, "Microsoft", "Edge", "Application", "msedge.exe"],
+    [env["PROGRAMFILES(X86)"], "Microsoft", "Edge", "Application", "msedge.exe"],
+  ];
+  const candidates = [];
+  for (const parts of win) {
+    if (parts[0]) candidates.push(path.join(...parts));
+  }
+  candidates.push(
+    "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome",
+    "/usr/bin/google-chrome",
+    "/usr/bin/chromium-browser",
+    "/usr/bin/chromium"
+  );
+  for (const c of candidates) {
+    try { if (fs.existsSync(c)) return c; } catch (e) { /* keep looking */ }
+  }
+  return null;
+}
+
+const CHROME = findChrome();
+if (!CHROME) {
+  console.error("");
+  console.error("No Chrome or Edge found on this machine.");
+  console.error('Install Google Chrome, or set "chromePath" in config.json to');
+  console.error("the full path of chrome.exe.");
+  console.error("");
+  process.exit(1);
+}
+
 // ── WhatsApp ──────────────────────────────────────────────────────────────
 const client = new Client({
   authStrategy: new LocalAuth({ dataPath: path.join(__dirname, ".session") }),
   puppeteer: {
     headless: CFG.headless !== false,
+    executablePath: CHROME,
     args: ["--no-sandbox", "--disable-setuid-sandbox"],
   },
 });
@@ -200,7 +254,80 @@ async function loop() {
 
 process.on("SIGINT", () => { log("stopping"); process.exit(0); });
 
+// whatsapp-web.js throws from inside its own page handlers, which arrive as
+// unhandled rejections and would otherwise kill the process with a raw stack
+// trace and no explanation of what to do about it.
+process.on("unhandledRejection", (err) => {
+  const msg = String((err && err.message) || err);
+  log("unhandled error:", msg);
+  if (/Execution context was destroyed|Protocol error|Target closed/i.test(msg)) {
+    log("");
+    log("WhatsApp Web changed under the session. Usually this means");
+    log("whatsapp-web.js is out of date:  npm install whatsapp-web.js@latest");
+    log("If it keeps happening, delete .session/ and link the device again.");
+  }
+  process.exit(1);
+});
+
+/**
+ * `node sender.js --check` — prove the half that does not need WhatsApp.
+ *
+ * Two things can be wrong at setup and they look identical from the outside:
+ * the browser cannot start, or the server will not talk to you. This separates
+ * them in about two seconds, so linking a device is not the step where you
+ * discover the agent key was wrong.
+ */
+if (process.argv.includes("--check")) {
+  (async () => {
+    console.log("");
+    console.log("browser :", CHROME);
+    console.log("server  :", CFG.serverUrl);
+    console.log("dry run :", CFG.dryRun);
+    try {
+      const r = await api("/api/agent/claim");
+      if (r.message) {
+        console.log("server  : OK — a message is ready to send");
+        console.log("");
+        console.log("  to   : +" + r.message.to + "  (" + r.message.name + ")");
+        console.log("  need : " + r.message.need);
+        console.log("  today: " + (r.sent_today || 0) + "/" + r.cap);
+        console.log("");
+        console.log(r.message.body);
+        console.log("");
+        // Put it back: a check must not consume a message.
+        await api("/api/agent/report",
+                  { id: r.message.id, ok: false, error: "returned by --check" });
+        console.log("(returned to the queue — nothing was sent)");
+      } else {
+        console.log("server  : OK — nothing to send right now (" + r.reason + ")");
+        if (r.reason === "paused") {
+          console.log("          turn Autopilot on in Admin -> Project Finder");
+        } else if (r.reason === "nothing_due" && r.next_due) {
+          console.log("          next message is due at " + r.next_due);
+        } else if (r.reason === "quiet_hours") {
+          console.log("          inside quiet hours");
+        }
+      }
+      console.log("");
+      console.log("Everything except WhatsApp itself is working.");
+    } catch (e) {
+      console.log("server  : FAILED — " + e.message);
+      console.log("");
+      console.log("Check serverUrl and agentKey in config.json. The key is in");
+      console.log("Admin -> Project Finder -> Autopilot -> Sender setup.");
+      process.exitCode = 1;
+      return;
+    }
+    // Let the loop drain instead of exiting from inside an async callback:
+    // process.exit() there trips a libuv assertion on Windows.
+    process.exitCode = 0;
+  })();
+} else {
+
 log("connecting to WhatsApp…");
 log("server:", CFG.serverUrl, CFG.dryRun ? "(DRY RUN)" : "");
+log("browser:", CHROME);
 client.initialize();
 loop();
+
+}

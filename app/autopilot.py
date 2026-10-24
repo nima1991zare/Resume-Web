@@ -382,6 +382,36 @@ def status() -> dict:
         conn.close()
 
 
+def rebuild_queued() -> dict:
+    """Recompose every queued message from its lead's stored need.
+
+    The wording lives in research.py, so editing a template — or fixing how a
+    name is written — leaves the already-queued bodies stale. Nothing is
+    re-researched here; only the text is rebuilt from facts already on the lead.
+    """
+    sender = sender_signature()
+    conn = get_db()
+    try:
+        rows = conn.execute(
+            "SELECT o.id, l.* FROM outbox o JOIN leads l ON l.id=o.lead_id "
+            "WHERE o.status='queued' AND l.need<>''").fetchall()
+        n = 0
+        for r in rows:
+            lead = dict(r)
+            finding = research.Finding(lead["need"], 0, lead["need_fa"],
+                                       lead["need_evidence_url"], lead["need_evidence"])
+            body = research.compose(lead["name"], lead["domain"], lead["city"],
+                                    finding, sender)
+            conn.execute("UPDATE outbox SET body=? WHERE id=?", (body, lead["id"]))
+            if not lead["pitch_edited"]:
+                conn.execute("UPDATE leads SET pitch=? WHERE id=?", (body, lead["id"]))
+            n += 1
+        conn.commit()
+        return {"ok": True, "rebuilt": n}
+    finally:
+        conn.close()
+
+
 def requeue(outbox_id: int) -> dict:
     conn = get_db()
     try:

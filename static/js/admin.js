@@ -911,6 +911,19 @@
   });
   fdEl("fd-ob-filter").addEventListener("change", apOutbox);
 
+  fdEl("fd-a-rebuild").addEventListener("click", function () {
+    var b = this;
+    b.disabled = true;
+    api("/api/admin/finder/outbox/rebuild", { method: "POST" })
+      .then(function (d) {
+        b.textContent = "Rewrote " + d.rebuilt;
+        setTimeout(function () { b.textContent = "Rewrite queued"; }, 2200);
+        if (!fdEl("fd-outbox-card").hidden) apOutbox();
+      })
+      .catch(function () {})
+      .then(function () { b.disabled = false; });
+  });
+
   fdEl("table-outbox").addEventListener("click", function (e) {
     var btn = e.target.closest("button[data-ob-act]");
     if (!btn) return;
