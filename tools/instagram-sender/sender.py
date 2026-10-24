@@ -62,7 +62,10 @@ def load_config() -> dict:
     if not f.exists():
         sys.exit("config.json is missing. Copy config.example.json to config.json "
                  "and fill in serverUrl, agentKey, igUsername and igPassword.")
-    c = json.loads(f.read_text(encoding="utf-8"))
+    # utf-8-sig, not utf-8: Notepad and PowerShell's Set-Content both write a
+    # byte-order mark, and json.loads rejects it with an error that says
+    # nothing about which program put it there.
+    c = json.loads(f.read_text(encoding="utf-8-sig"))
     for k in ("serverUrl", "agentKey"):
         if not c.get(k):
             sys.exit(f"config.json needs {k}.")

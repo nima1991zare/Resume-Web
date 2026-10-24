@@ -42,7 +42,9 @@ const CFG = (() => {
                   "config.json and fill in serverUrl and agentKey.\n");
     process.exit(1);
   }
-  const c = JSON.parse(fs.readFileSync(file, "utf8"));
+  // Strip a byte-order mark first: Notepad and PowerShell both add one, and
+  // JSON.parse fails on it with "Unexpected token" pointing at character 0.
+  const c = JSON.parse(fs.readFileSync(file, "utf8").replace(/^﻿/, ""));
   if (!c.serverUrl || !c.agentKey) {
     console.error("\nconfig.json needs both serverUrl and agentKey " +
                   "(Admin → Project Finder → Autopilot shows the key).\n");
