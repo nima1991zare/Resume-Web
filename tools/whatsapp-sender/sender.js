@@ -53,6 +53,37 @@ const CFG = (() => {
   return c;
 })();
 
+// ── proxy ─────────────────────────────────────────────────────────────────
+/**
+ * Node's fetch ignores HTTP_PROXY. Everything else on the machine does not.
+ *
+ * That difference is invisible and expensive: the browser loads the site
+ * through the proxy, so the server is obviously up, while this process
+ * connects directly and gets HTTP 451 from a host that blocks the country.
+ * You end up checking the agent key, which was never the problem.
+ *
+ * Node 24 honours the proxy variables when NODE_USE_ENV_PROXY=1, but only if
+ * it is set *before* the runtime starts — so if a proxy is configured and the
+ * flag is missing, re-exec once with it set rather than failing later.
+ */
+const PROXY = CFG.proxy || process.env.HTTPS_PROXY || process.env.https_proxy ||
+              process.env.HTTP_PROXY || process.env.http_proxy || "";
+
+if (PROXY && !process.env.NODE_USE_ENV_PROXY) {
+  const { spawnSync } = require("child_process");
+  const env = Object.assign({}, process.env, {
+    NODE_USE_ENV_PROXY: "1",
+    HTTPS_PROXY: PROXY,
+    HTTP_PROXY: PROXY,
+    // A local server must never be sent through the proxy.
+    NO_PROXY: process.env.NO_PROXY || "localhost,127.0.0.1,::1",
+  });
+  console.log("using proxy " + PROXY + " (restarting so fetch picks it up)");
+  const r = spawnSync(process.execPath, [__filename, ...process.argv.slice(2)],
+                      { stdio: "inherit", env });
+  process.exit(r.status === null ? 1 : r.status);
+}
+
 const log = (...a) => console.log(new Date().toLocaleTimeString("en-GB"), ...a);
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 const jitter = (ms, pct = 0.35) =>
@@ -129,7 +160,14 @@ const client = new Client({
   puppeteer: {
     headless: CFG.headless !== false,
     executablePath: CHROME,
-    args: ["--no-sandbox", "--disable-setuid-sandbox"],
+    args: [
+      "--no-sandbox",
+      "--disable-setuid-sandbox",
+      // Be explicit rather than relying on the system setting: if fetch goes
+      // through a proxy and the browser does not, WhatsApp Web silently fails
+      // in a different way than the server calls do.
+      ...(PROXY ? ["--proxy-server=" + PROXY] : []),
+    ],
   },
 });
 
@@ -281,6 +319,7 @@ if (process.argv.includes("--check")) {
   (async () => {
     console.log("");
     console.log("browser :", CHROME);
+    console.log("proxy   :", PROXY || "(none — connecting directly)");
     console.log("server  :", CFG.serverUrl);
     console.log("dry run :", CFG.dryRun);
     try {
@@ -313,8 +352,18 @@ if (process.argv.includes("--check")) {
     } catch (e) {
       console.log("server  : FAILED — " + e.message);
       console.log("");
-      console.log("Check serverUrl and agentKey in config.json. The key is in");
-      console.log("Admin -> Project Finder -> Autopilot -> Sender setup.");
+      if (/451/.test(e.message)) {
+        console.log("451 means the host refused this country, not that your key");
+        console.log("is wrong. Your browser reaches the site through a proxy and");
+        console.log("this process did not. Set \"proxy\" in config.json, e.g.");
+        console.log('  "proxy": "http://127.0.0.1:10808"');
+      } else if (/401/.test(e.message)) {
+        console.log("401 means the agent key is wrong. Copy it again from");
+        console.log("Admin -> Project Finder -> Autopilot -> Sender setup.");
+      } else {
+        console.log("Check serverUrl and agentKey in config.json. The key is in");
+        console.log("Admin -> Project Finder -> Autopilot -> Sender setup.");
+      }
       process.exitCode = 1;
       return;
     }
@@ -327,6 +376,7 @@ if (process.argv.includes("--check")) {
 log("connecting to WhatsApp…");
 log("server:", CFG.serverUrl, CFG.dryRun ? "(DRY RUN)" : "");
 log("browser:", CHROME);
+if (PROXY) log("proxy:", PROXY);
 client.initialize();
 loop();
 
