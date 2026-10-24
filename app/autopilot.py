@@ -44,6 +44,33 @@ logger = logging.getLogger("finder.autopilot")
 # dies mid-send does not strand the row forever.
 CLAIM_TIMEOUT_MINUTES = 10
 
+CHANNELS = ("instagram", "whatsapp")
+
+
+def cap_for(cfg: dict, channel: str) -> int:
+    return cfg["ig_daily_cap"] if channel == "instagram" else cfg["daily_cap"]
+
+
+def gap_for(cfg: dict, channel: str) -> int:
+    return cfg["ig_min_gap_s"] if channel == "instagram" else cfg["min_gap_s"]
+
+
+def channel_for(lead: dict, cfg: dict, exclude: tuple = ()) -> str:
+    """Which channel to use for this lead, honouring the configured order.
+
+    Instagram first by default: a business that runs on Instagram reads its
+    DMs, and an unexpected WhatsApp message from a stranger is an interruption
+    on a personal phone. Falls through to whatever the lead actually has.
+    """
+    for ch in cfg["channels"]:
+        if ch in exclude:
+            continue
+        if ch == "instagram" and lead.get("instagram"):
+            return ch
+        if ch == "whatsapp" and lead.get("is_mobile") and lead.get("phone_e164"):
+            return ch
+    return ""
+
 
 # ─────────────────────────────────────────── settings
 def config() -> dict:
@@ -57,7 +84,12 @@ def config() -> dict:
             "quiet_start": g("auto_quiet_start", "21:30"),
             "quiet_end": g("auto_quiet_end", "09:30"),
             "min_score": int(g("auto_min_score", "55") or 55),
-            "channel": g("auto_channel", "whatsapp"),
+            "channels": [c.strip() for c in
+                         (g("auto_channels", "instagram,whatsapp")).split(",")
+                         if c.strip() in CHANNELS],
+            "ig_daily_cap": int(g("auto_ig_daily_cap", "12") or 12),
+            "ig_min_gap_s": int(g("auto_ig_min_gap_s", "420") or 420),
+            "fallback": g("auto_fallback", "1") == "1",
         }
     finally:
         conn.close()
@@ -67,14 +99,17 @@ def set_config(**kw) -> dict:
     keys = {"enabled": "auto_enabled", "daily_cap": "auto_daily_cap",
             "min_gap_s": "auto_min_gap_s", "quiet_start": "auto_quiet_start",
             "quiet_end": "auto_quiet_end", "min_score": "auto_min_score",
-            "channel": "auto_channel"}
+            "channels": "auto_channels", "ig_daily_cap": "auto_ig_daily_cap",
+            "ig_min_gap_s": "auto_ig_min_gap_s", "fallback": "auto_fallback"}
     conn = get_db()
     try:
         for k, v in kw.items():
             if k not in keys or v is None:
                 continue
-            if k == "enabled":
+            if k in ("enabled", "fallback"):
                 v = "1" if v else "0"
+            elif k == "channels" and isinstance(v, (list, tuple)):
+                v = ",".join(x for x in v if x in CHANNELS)
             set_setting(conn, keys[k], str(v))
         conn.commit()
     finally:
@@ -102,7 +137,7 @@ def in_quiet_hours(cfg: dict, now: datetime | None = None) -> bool:
     return (start <= cur or cur < end) if start > end else (start <= cur < end)
 
 
-def _next_due(conn, cfg: dict) -> datetime:
+def _next_due(conn, cfg: dict, channel: str) -> datetime:
     """When the next queued message may go out.
 
     Spaced from the last one already in the queue rather than from now, so
@@ -110,8 +145,8 @@ def _next_due(conn, cfg: dict) -> datetime:
     times instead of forty messages due immediately.
     """
     row = conn.execute(
-        "SELECT MAX(due_at) d FROM outbox WHERE status IN ('queued','claimed')"
-    ).fetchone()
+        "SELECT MAX(due_at) d FROM outbox WHERE status IN ('queued','claimed') "
+        "AND channel=?", (channel,)).fetchone()
     base = datetime.now()
     if row and row["d"]:
         try:
@@ -119,7 +154,7 @@ def _next_due(conn, cfg: dict) -> datetime:
             base = max(base, last)
         except ValueError:
             pass
-    gap = max(45, cfg["min_gap_s"])
+    gap = max(45, gap_for(cfg, channel))
     # Jitter both ways. A perfectly regular interval is a signature.
     due = base + timedelta(seconds=gap + random.randint(-gap // 4, gap // 2))
 
@@ -131,10 +166,14 @@ def _next_due(conn, cfg: dict) -> datetime:
     return due
 
 
-def sent_today(conn) -> int:
-    return conn.execute(
-        "SELECT COUNT(*) FROM outbox WHERE status='sent' "
-        "AND date(sent_at)=date('now','localtime')").fetchone()[0]
+def sent_today(conn, channel: str = "") -> int:
+    sql = ("SELECT COUNT(*) FROM outbox WHERE status='sent' "
+           "AND date(sent_at)=date('now','localtime')")
+    args: tuple = ()
+    if channel:
+        sql += " AND channel=?"
+        args = (channel,)
+    return conn.execute(sql, args).fetchone()[0]
 
 
 # ─────────────────────────────────────────── research + queue
@@ -189,20 +228,29 @@ async def _research_and_queue(run_id: int, limit: int) -> tuple[int, int]:
                 if r["need"] and not lead["pitch_edited"]:
                     finding = research.Finding(
                         r["need"], 0, r["need_fa"], r["evidence_url"], r["evidence"])
-                    body = research.compose(
-                        lead["name"], lead["domain"] or normalize_domain(lead["website"]),
-                        lead["city"], finding, sender)
+                    domain = lead["domain"] or normalize_domain(lead["website"])
+                    channel = channel_for(lead, cfg)
+                    body = research.compose(lead["name"], domain, lead["city"],
+                                            finding, sender, channel=channel or "whatsapp")
                     conn.execute("UPDATE leads SET pitch=? WHERE id=?", (body, lead_id))
 
-                    to_addr = lead["phone_e164"] if lead["is_mobile"] else ""
-                    if cfg["channel"] == "whatsapp" and to_addr:
-                        due = _next_due(conn, cfg)
+                    to_addr = (lead["instagram"] if channel == "instagram"
+                               else lead["phone_e164"])
+                    if channel and to_addr:
+                        due = _next_due(conn, cfg, channel)
                         try:
                             conn.execute(
                                 "INSERT INTO outbox(lead_id,channel,to_addr,body,need,due_at)"
                                 " VALUES(?,?,?,?,?,?)",
-                                (lead_id, "whatsapp", to_addr, body, r["need"],
+                                (lead_id, channel, to_addr, body, r["need"],
                                  due.strftime("%Y-%m-%d %H:%M:%S")))
+                            # Commit before the next lead is scheduled. _next_due
+                            # reads MAX(due_at) on a *different* connection, and
+                            # an uncommitted row is invisible to it — leaving
+                            # every concurrently-researched lead scheduled for
+                            # the same instant, which is the burst the spacing
+                            # exists to prevent.
+                            conn.commit()
                             queued += 1
                         except Exception:
                             pass          # UNIQUE(lead_id,channel): already queued
@@ -244,7 +292,7 @@ def launch_research(limit: int = 60) -> dict:
 
 
 # ─────────────────────────────────────────── the sender protocol
-def claim_next() -> dict:
+def claim_next(channel: str = "whatsapp") -> dict:
     """Hand the sender one message, or tell it why there is none.
 
     Every guard is re-read here rather than trusted from the caller, because the
@@ -257,12 +305,18 @@ def claim_next() -> dict:
     if in_quiet_hours(cfg):
         return {"message": None, "reason": "quiet_hours", "wait_s": 600}
 
+    if channel not in CHANNELS:
+        return {"message": None, "reason": "bad_channel", "wait_s": 600}
+    if channel not in cfg["channels"]:
+        return {"message": None, "reason": "channel_disabled", "wait_s": 600}
+
+    cap = cap_for(cfg, channel)
     conn = get_db()
     try:
-        used = sent_today(conn)
-        if used >= cfg["daily_cap"]:
+        used = sent_today(conn, channel)
+        if used >= cap:
             return {"message": None, "reason": "daily_cap",
-                    "sent_today": used, "cap": cfg["daily_cap"], "wait_s": 1800}
+                    "sent_today": used, "cap": cap, "wait_s": 1800}
 
         # Release anything a dead sender claimed and never reported.
         conn.execute(
@@ -273,11 +327,12 @@ def claim_next() -> dict:
         row = conn.execute(
             "SELECT o.*, l.name, l.status AS lead_status FROM outbox o "
             "JOIN leads l ON l.id=o.lead_id "
-            "WHERE o.status='queued' AND o.due_at<=datetime('now') "
-            "ORDER BY o.due_at LIMIT 1").fetchone()
+            "WHERE o.status='queued' AND o.channel=? AND o.due_at<=datetime('now') "
+            "ORDER BY o.due_at LIMIT 1", (channel,)).fetchone()
         if row is None:
             nxt = conn.execute(
-                "SELECT MIN(due_at) d FROM outbox WHERE status='queued'").fetchone()
+                "SELECT MIN(due_at) d FROM outbox WHERE status='queued' "
+                "AND channel=?", (channel,)).fetchone()
             conn.commit()
             return {"message": None, "reason": "nothing_due",
                     "next_due": nxt["d"] if nxt else None, "wait_s": 90}
@@ -296,9 +351,10 @@ def claim_next() -> dict:
         return {"message": {"id": row["id"], "lead_id": row["lead_id"],
                             "name": row["name"], "to": row["to_addr"],
                             "body": row["body"], "need": row["need"],
+                            "channel": row["channel"],
                             "attempt": row["attempts"] + 1},
-                "sent_today": used, "cap": cfg["daily_cap"],
-                "min_gap_s": cfg["min_gap_s"]}
+                "sent_today": used, "cap": cap,
+                "min_gap_s": gap_for(cfg, channel)}
     finally:
         conn.close()
 
@@ -317,15 +373,74 @@ def report(outbox_id: int, ok: bool, error: str = "") -> dict:
                          "updated_at=datetime('now') WHERE id=? AND status='new'",
                          (row["lead_id"],))
         else:
-            # Three honest attempts, then stop retrying it forever.
-            final = row["attempts"] >= 3
+            # Three honest attempts for a failure that might pass — but a
+            # missing account or a number that is not on WhatsApp will never
+            # succeed, and spending an hour retrying it delays every lead
+            # behind it while the fallback channel sits unused.
+            final = row["attempts"] >= 3 or is_permanent(error)
             conn.execute(
                 "UPDATE outbox SET status=?, error=?, due_at=datetime('now','+20 minutes') "
                 "WHERE id=?", ("failed" if final else "queued", error[:300], outbox_id))
+            if final:
+                _fallback(conn, row, error)
         conn.commit()
         return {"ok": True, "status": "sent" if ok else "failed"}
     finally:
         conn.close()
+
+
+# Failures that will still be failures in twenty minutes.
+PERMANENT_SIGNS = (
+    "not found", "no such", "does not exist", "not on whatsapp",
+    "invalid user", "user_not_found", "unregistered", "blocked",
+    "deactivated", "not a whatsapp number",
+)
+
+
+def is_permanent(error: str) -> bool:
+    low = (error or "").lower()
+    return any(sign in low for sign in PERMANENT_SIGNS)
+
+
+def _fallback(conn, row, error: str) -> None:
+    """A channel that failed for good is not the same as a lead you cannot reach.
+
+    If Instagram will not take the message — no such account, DMs closed — the
+    business may still have a mobile. Queue the other channel rather than
+    dropping the lead. Only after a *final* failure, so a temporary glitch
+    never produces two messages to the same business.
+    """
+    cfg = config()
+    if not cfg["fallback"]:
+        return
+    lead = conn.execute("SELECT * FROM leads WHERE id=?", (row["lead_id"],)).fetchone()
+    if lead is None or lead["status"] not in ("new", "contacted"):
+        return
+    other = channel_for(dict(lead), cfg, exclude=(row["channel"],))
+    if not other:
+        return
+    to_addr = lead["instagram"] if other == "instagram" else lead["phone_e164"]
+    if not to_addr:
+        return
+    body = row["body"]
+    if other != row["channel"]:
+        # Re-word for the channel it is actually going to.
+        finding = research.Finding(lead["need"], 0, lead["need_fa"],
+                                   lead["need_evidence_url"], lead["need_evidence"])
+        if lead["need"]:
+            body = research.compose(lead["name"], lead["domain"], lead["city"],
+                                    finding, sender_signature(), channel=other)
+    due = _next_due(conn, cfg, other)
+    try:
+        conn.execute(
+            "INSERT INTO outbox(lead_id,channel,to_addr,body,need,due_at) "
+            "VALUES(?,?,?,?,?,?)",
+            (row["lead_id"], other, to_addr, body, row["need"],
+             due.strftime("%Y-%m-%d %H:%M:%S")))
+        logger.info("lead %s: %s failed (%s) -> queued on %s",
+                    row["lead_id"], row["channel"], error[:60], other)
+    except Exception:
+        pass          # already queued there
 
 
 def pause(reason: str = "") -> dict:
@@ -366,8 +481,22 @@ def status() -> dict:
             "AND score>=?", (cfg["min_score"],)).fetchone()[0]
         researched = conn.execute(
             "SELECT COUNT(*) FROM leads WHERE researched_at IS NOT NULL").fetchone()[0]
+        per_channel = {}
+        for ch in CHANNELS:
+            per_channel[ch] = {
+                "queued": conn.execute(
+                    "SELECT COUNT(*) FROM outbox WHERE status='queued' AND channel=?",
+                    (ch,)).fetchone()[0],
+                "sent": conn.execute(
+                    "SELECT COUNT(*) FROM outbox WHERE status='sent' AND channel=?",
+                    (ch,)).fetchone()[0],
+                "sent_today": sent_today(conn, ch),
+                "cap": cap_for(cfg, ch),
+                "enabled": ch in cfg["channels"],
+            }
         return {
             "config": cfg,
+            "channels": per_channel,
             "quiet_now": in_quiet_hours(cfg),
             "sent_today": sent_today(conn),
             "counts": counts,

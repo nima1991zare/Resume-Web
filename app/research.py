@@ -461,6 +461,19 @@ OFFERS: dict[str, str] = {
 }
 
 
+# Instagram openers say where you were. You are messaging them from inside the
+# thing you looked at, and saying so is most of what separates this from a bot.
+IG_OPENERS: dict[str, str] = {
+    "NEED_ORDER_PAGE": "صفحه‌تون رو دیدم. برای سفارش دادن، مشتری باید حتماً تماس بگیره یا دایرکت بده.",
+    "NEED_APPOINTMENT": "صفحه‌تون رو دیدم. برای نوبت گرفتن راهی جز تماس یا دایرکت نیست.",
+    "NEED_RESERVATION": "صفحه‌تون رو دیدم. برای رزرو، مشتری باید تماس بگیره یا دایرکت بده.",
+    "NEED_CATALOG": "صفحه‌تون رو دیدم. محصولاتتون فقط توی پست‌هاست و جای دیگه‌ای نیست.",
+    "NEED_LISTINGS": "صفحه‌تون رو دیدم. فایل‌ها فقط توی پست‌ها هستن و قابل جست‌وجو نیستن.",
+    "NEED_CREDIBILITY": "صفحه‌تون رو دیدم. دنبال سایت رسمی‌تون گشتم و پیدا نکردم.",
+    "NEED_FINDABLE": "صفحه‌تون رو دیدم، ولی اسمتون رو که در گوگل زدم چیزی بالا نیومد.",
+}
+
+
 def short_name(raw: str) -> str:
     """The name as you would say it out loud, mid-sentence.
 
@@ -476,26 +489,43 @@ def short_name(raw: str) -> str:
 
 
 def compose(name: str, domain: str, city: str, finding: Finding,
-            sender: str) -> str:
+            sender: str, channel: str = "whatsapp") -> str:
     """Four lines: what I saw, what it costs, what I'd do, one question.
 
     The order matters. Opening with yourself is the thing everyone does and the
     reason most of these messages go unread, so the first line is about them and
     is something they can verify.
+
+    The channel changes the register, not the content. A WhatsApp message is a
+    note to a business and carries a signature. An Instagram DM from a stranger
+    lands in Message Requests next to actual spam, so it has to be shorter, has
+    to show immediately that a person looked at their page, and must not carry
+    a signature block — that is precisely what makes a DM look forwarded.
     """
     ctx = {"name": short_name(name) or "کسب‌وکار شما", "domain": domain or "سایت شما",
            "city": city or "شیراز"}
     opener = OPENERS.get(finding.code, "به حضور اینترنتی {name} نگاهی انداختم.").format(**ctx)
     cost = COSTS.get(finding.code, "")
     offer = OFFERS.get(finding.code, "ساخت یا بهبود سایت")
-    lines = [
-        "سلام، وقت بخیر",
-        opener,
-        cost,
-        f"من برای کسب‌وکارهای {ctx['city']} سایت می‌سازم و کاری که پیشنهاد می‌دهم مشخص است: {offer}.",
-        "اگر مفید بود، یک نمونه کار و قیمتش را بفرستم؟",
-        sender,
-    ]
+
+    if channel == "instagram":
+        ig = IG_OPENERS.get(finding.code, "")
+        lines = [
+            "سلام 👋",
+            ig.format(**ctx) if ig else opener,
+            cost,
+            f"من سایت و اپلیکیشن برای کسب‌وکارهای {ctx['city']} می‌سازم — {offer}.",
+            "اگر خواستید یک نمونه بفرستم؟",
+        ]
+    else:
+        lines = [
+            "سلام، وقت بخیر",
+            opener,
+            cost,
+            f"من برای کسب‌وکارهای {ctx['city']} سایت می‌سازم و کاری که پیشنهاد می‌دهم مشخص است: {offer}.",
+            "اگر مفید بود، یک نمونه کار و قیمتش را بفرستم؟",
+            sender,
+        ]
     return "\n".join(x for x in lines if x).strip()
 
 

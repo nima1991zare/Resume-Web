@@ -272,6 +272,11 @@ class AutopilotIn(BaseModel):
     quiet_start: Optional[str] = Field(default=None, max_length=5)
     quiet_end: Optional[str] = Field(default=None, max_length=5)
     min_score: Optional[int] = Field(default=None, ge=0, le=100)
+    channels: Optional[list[str]] = Field(default=None, max_length=4)
+    # Instagram action-blocks long before it bans, so its ceiling is lower.
+    ig_daily_cap: Optional[int] = Field(default=None, ge=1, le=60)
+    ig_min_gap_s: Optional[int] = Field(default=None, ge=120, le=7200)
+    fallback: Optional[bool] = None
 
 
 class AgentReportIn(BaseModel):
@@ -891,10 +896,13 @@ def autopilot_drop(item_id: int, authorization: Optional[str] = Header(None)):
 
 # ---- the two endpoints the sender on the PC actually calls ----
 @app.post("/api/agent/claim")
-def agent_claim(request: Request, x_agent_key: Optional[str] = Header(None)):
+def agent_claim(request: Request, channel: str = "whatsapp",
+                x_agent_key: Optional[str] = Header(None)):
+    """Each sender claims only its own channel, so the two run independently
+    and neither can consume the other's daily allowance."""
     require_agent(x_agent_key)
-    rate_limit(request, "agent_claim", limit=120, window_s=300)
-    return autopilot.claim_next()
+    rate_limit(request, "agent_claim", limit=240, window_s=300)
+    return autopilot.claim_next(channel=channel)
 
 
 @app.post("/api/agent/report")

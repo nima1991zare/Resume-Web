@@ -48,7 +48,10 @@ app/
   research.py    What each business needs, per category, with evidence
   autopilot.py   The outbox: research, queueing, pacing, the sender protocol
 tools/
-  whatsapp-sender/  Node sender that runs on your PC (see its README)
+  whatsapp-sender/   Node sender, runs on your PC
+  instagram-sender/  Python sender, runs on your PC
+docs/
+  project-finder-guide.md  how the whole thing works
 static/
   index.html     Public site
   admin.html     Admin panel
@@ -98,12 +101,17 @@ Two modes, and the choice is yours per run.
 **Manual** — every lead ends as a draft with a `wa.me` link or an Instagram DM
 button. You read it and press send.
 
-**Autopilot** — a sender on your own PC (`tools/whatsapp-sender/`) drives your
-WhatsApp session and sends the queue for you. It is off by default.
+**Autopilot** — senders on your own PC work the queue for you. Instagram is
+tried first (`tools/instagram-sender/`, Python), WhatsApp second
+(`tools/whatsapp-sender/`, Node); a lead whose first channel fails permanently
+falls back to the other, re-worded for it. Off by default.
 
-> Automating WhatsApp is against its terms of service, and bulk cold messaging
-> is what gets numbers permanently banned. Use a second SIM, keep the cap low,
-> and read `tools/whatsapp-sender/README.md` before turning it on.
+Full walkthrough: [docs/project-finder-guide.md](docs/project-finder-guide.md).
+
+> Both platforms forbid this. WhatsApp bans numbers; Instagram action-blocks
+> first and restricts accounts after. Use a second SIM and an account you can
+> afford to lose, keep the caps low (Instagram defaults to 12 a day for a
+> reason), and read the guide before turning it on.
 
 Every rule lives in the queue, not in the sender: one message per lead ever,
 a scheduled `due_at` with jitter, a daily cap counted from what was actually

@@ -396,3 +396,17 @@ a.lead-chip:hover { border-color: var(--accent); color: var(--accent); }
 .tag.sent { background: var(--accent-dim); color: var(--accent); }
 .tag.failed { background: rgba(239,68,68,.14); color: var(--danger); }
 .tag.skipped, .tag.claimed { background: var(--surface-2); color: var(--muted); }
+
+/* ---------------- channels ---------------- */
+.chan-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 14px; }
+@media (max-width: 820px) { .chan-grid { grid-template-columns: 1fr; } }
+.chan { background: var(--surface-2); border: 1px solid var(--border); border-radius: 11px; padding: 13px 15px; }
+.chan-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 4px; }
+.chan-on { display: flex; align-items: center; gap: 8px; cursor: pointer; font-size: .92rem; }
+.chan-on input { width: 16px; height: 16px; accent-color: var(--accent); }
+.chan-first { font-size: .68rem; color: var(--muted); background: var(--surface); padding: 2px 9px; border-radius: 999px; }
+#chan-instagram { border-color: rgba(192,132,252,.3); }
+#chan-instagram .chan-first { color: #C084FC; }
+.chan .fd-note { margin: 2px 0 10px; }
+.tag.instagram { background: rgba(192,132,252,.14); color: #C084FC; }
+.tag.whatsapp { background: var(--accent-dim); color: var(--accent); }

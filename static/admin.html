@@ -7,7 +7,7 @@
   <title>Admin â€” Nima Portfolio</title>
   <link rel="icon" type="image/svg+xml" href="/static/icons/favicon.svg">
   <link rel="stylesheet" href="/static/css/fonts.css">
-  <link rel="stylesheet" href="/static/css/admin.css?v=11">
+  <link rel="stylesheet" href="/static/css/admin.css?v=12">
 </head>
 <body>
   <!-- ================= LOGIN ================= -->
@@ -208,17 +208,41 @@
           </div>
           <div class="stat-cards fd-auto-stats">
             <div class="scard"><span class="scard-num" id="fd-a-queued">–</span><span class="scard-label">In queue</span></div>
+            <div class="scard"><span class="scard-num ig" id="fd-a-igq">–</span><span class="scard-label">Instagram queue</span></div>
             <div class="scard"><span class="scard-num" id="fd-a-today">–</span><span class="scard-label">Sent today</span></div>
             <div class="scard"><span class="scard-num" id="fd-a-sent">–</span><span class="scard-label">Sent total</span></div>
             <div class="scard"><span class="scard-num" id="fd-a-failed">–</span><span class="scard-label">Failed</span></div>
             <div class="scard"><span class="scard-num" id="fd-a-unres">–</span><span class="scard-label">Not researched</span></div>
           </div>
+          <div class="chan-grid">
+            <div class="chan" id="chan-instagram">
+              <div class="chan-head">
+                <label class="chan-on"><input type="checkbox" id="fd-c-ig"> <b>Instagram</b></label>
+                <span class="chan-first">tried first</span>
+              </div>
+              <p class="fd-note" id="fd-c-ig-state">–</p>
+              <div class="grid-2">
+                <div class="field"><label for="fd-a-igcap">Daily cap</label><input id="fd-a-igcap" type="number" min="1" max="60"></div>
+                <div class="field"><label for="fd-a-iggap">Seconds apart</label><input id="fd-a-iggap" type="number" min="120" max="7200"></div>
+              </div>
+            </div>
+            <div class="chan" id="chan-whatsapp">
+              <div class="chan-head">
+                <label class="chan-on"><input type="checkbox" id="fd-c-wa"> <b>WhatsApp</b></label>
+                <span class="chan-first">fallback</span>
+              </div>
+              <p class="fd-note" id="fd-c-wa-state">–</p>
+              <div class="grid-2">
+                <div class="field"><label for="fd-a-cap">Daily cap</label><input id="fd-a-cap" type="number" min="1" max="200"></div>
+                <div class="field"><label for="fd-a-gap">Seconds apart</label><input id="fd-a-gap" type="number" min="45" max="3600"></div>
+              </div>
+            </div>
+          </div>
           <div class="grid-3 fd-setting-grid">
-            <div class="field"><label for="fd-a-cap">Daily cap</label><input id="fd-a-cap" type="number" min="1" max="200"></div>
-            <div class="field"><label for="fd-a-gap">Seconds between sends</label><input id="fd-a-gap" type="number" min="45" max="3600"></div>
             <div class="field"><label for="fd-a-score">Only leads scoring at least</label><input id="fd-a-score" type="number" min="0" max="100"></div>
             <div class="field"><label for="fd-a-qs">Quiet from</label><input id="fd-a-qs" type="text" placeholder="21:30" dir="ltr"></div>
             <div class="field"><label for="fd-a-qe">Quiet until</label><input id="fd-a-qe" type="text" placeholder="09:30" dir="ltr"></div>
+            <div class="field check-field"><label><input type="checkbox" id="fd-a-fb"> If one channel fails for good, try the other</label></div>
             <div class="field"><label>&nbsp;</label><button class="btn btn-ghost" id="fd-a-save">Save settings</button></div>
           </div>
           <div class="fd-auto-row">
@@ -477,7 +501,7 @@
     </div>
   </div>
 
-  <script src="/static/js/admin.js?v=10"></script>
+  <script src="/static/js/admin.js?v=11"></script>
 </body>
 </html>
 

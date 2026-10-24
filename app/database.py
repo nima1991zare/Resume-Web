@@ -282,7 +282,15 @@ DEFAULT_SETTINGS = {
     "auto_quiet_start": "21:30",
     "auto_quiet_end": "09:30",
     "auto_min_score": "55",
-    "auto_channel": "whatsapp",
+    # Instagram first, WhatsApp second. A business that runs on Instagram reads
+    # its DMs; a stranger's WhatsApp message is an interruption on a phone.
+    "auto_channels": "instagram,whatsapp",
+    # Instagram's limits are far tighter than WhatsApp's and it action-blocks
+    # long before it bans, so it gets its own, much more conservative numbers.
+    "auto_ig_daily_cap": "12",
+    "auto_ig_min_gap_s": "420",
+    # When a channel fails for good, try the other one if the lead has it.
+    "auto_fallback": "1",
 }
 
 SEED_APPS = [

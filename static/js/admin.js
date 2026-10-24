@@ -801,6 +801,27 @@
     });
     fdEl("fd-a-key").value = d.agent_key || "";
 
+    // per-channel: each sender has its own queue, cap and pace
+    fdEl("fd-c-ig").checked = c.channels.indexOf("instagram") !== -1;
+    fdEl("fd-c-wa").checked = c.channels.indexOf("whatsapp") !== -1;
+    fdEl("fd-a-fb").checked = !!c.fallback;
+    [["fd-a-igcap", c.ig_daily_cap], ["fd-a-iggap", c.ig_min_gap_s]].forEach(function (p) {
+      var el = fdEl(p[0]);
+      if (document.activeElement !== el) el.value = p[1];
+    });
+    var ch = d.channels || {};
+    [["ig", "instagram"], ["wa", "whatsapp"]].forEach(function (p) {
+      var info = ch[p[1]] || {};
+      var el = fdEl("fd-c-" + p[0] + "-state");
+      if (!el) return;
+      el.textContent = info.enabled
+        ? (info.queued || 0) + " queued · " + (info.sent_today || 0) + "/" +
+          (info.cap || 0) + " sent today · " + (info.sent || 0) + " all time"
+        : "off — nothing is queued or sent here";
+      el.className = "fd-note" + (info.enabled ? "" : " fd-bad");
+    });
+    fdEl("fd-a-igq").textContent = (ch.instagram || {}).queued || 0;
+
     var state = fdEl("fd-auto-state");
     if (!c.enabled) {
       state.textContent = "Paused — the sender is handed nothing while this is off.";
@@ -826,12 +847,21 @@
   }
 
   function apSave(extra) {
+    // Instagram stays first in the list: it is the channel a business that
+    // lives on Instagram actually reads.
+    var channels = [];
+    if (fdEl("fd-c-ig").checked) channels.push("instagram");
+    if (fdEl("fd-c-wa").checked) channels.push("whatsapp");
     var body = Object.assign({
       daily_cap: +fdEl("fd-a-cap").value || 25,
       min_gap_s: +fdEl("fd-a-gap").value || 140,
+      ig_daily_cap: +fdEl("fd-a-igcap").value || 12,
+      ig_min_gap_s: +fdEl("fd-a-iggap").value || 420,
       min_score: +fdEl("fd-a-score").value || 0,
       quiet_start: fdEl("fd-a-qs").value.trim(),
-      quiet_end: fdEl("fd-a-qe").value.trim()
+      quiet_end: fdEl("fd-a-qe").value.trim(),
+      channels: channels,
+      fallback: fdEl("fd-a-fb").checked
     }, extra || {});
     return api("/api/admin/finder/autopilot", { method: "PUT", body: body })
       .then(apRender).catch(function () {});
@@ -850,6 +880,9 @@
     apSave({ enabled: on });
   });
   fdEl("fd-a-save").addEventListener("click", function () { apSave(); });
+  ["fd-c-ig", "fd-c-wa", "fd-a-fb"].forEach(function (id) {
+    fdEl(id).addEventListener("change", function () { apSave(); });
+  });
 
   fdEl("fd-a-copykey").addEventListener("click", function () {
     var el = fdEl("fd-a-key");
@@ -886,11 +919,13 @@
           "<th>To</th><th>Due / sent</th><th>Message</th><th></th></tr>" +
           d.outbox.map(function (o) {
             return "<tr data-ob='" + o.id + "'>" +
-              '<td><span class="tag ' + esc(o.status) + '">' + esc(o.status) + "</span></td>" +
+              '<td><span class="tag ' + esc(o.status) + '">' + esc(o.status) + "</span><br>" +
+                '<span class="tag ' + esc(o.channel) + '">' + esc(o.channel) + "</span></td>" +
               "<td><strong>" + esc(o.name) + "</strong><br>" +
                 '<span class="fd-meta">score ' + o.score + "</span></td>" +
               '<td class="ob-need" dir="rtl">' + esc(o.need_fa || o.need) + "</td>" +
-              '<td class="fd-meta" dir="ltr">+' + esc(o.to_addr) + "</td>" +
+              '<td class="fd-meta" dir="ltr">' +
+                (o.channel === "instagram" ? "@" : "+") + esc(o.to_addr) + "</td>" +
               '<td class="fd-meta" dir="ltr">' + esc(o.sent_at || o.due_at) + "</td>" +
               '<td class="ob-body" dir="rtl" title="' + esc(o.body) + '">' +
                 esc(o.body.split("\n")[1] || o.body) + "</td>" +

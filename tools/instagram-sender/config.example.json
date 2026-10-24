@@ -1,0 +1,8 @@
+{
+  "serverUrl": "https://nimabuilds.pythonanywhere.com",
+  "agentKey": "paste from Admin -> Project Finder -> Autopilot",
+  "igUsername": "nima.z.are",
+  "igPassword": "",
+  "dryRun": true,
+  "proxy": ""
+}
