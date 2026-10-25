@@ -1,10 +1,10 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en" dir="ltr">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="robots" content="noindex, nofollow">
-  <title>Admin â€” Nima Portfolio</title>
+  <title>Admin — Nima Portfolio</title>
   <link rel="icon" type="image/svg+xml" href="/static/icons/favicon.svg">
   <link rel="stylesheet" href="/static/css/fonts.css">
   <link rel="stylesheet" href="/static/css/admin.css?v=12">
@@ -84,18 +84,28 @@
       <section class="tab" id="tab-stats">
         <h2>Dashboard</h2>
         <div class="stat-cards">
-          <div class="scard"><span class="scard-num" id="st-total">â€“</span><span class="scard-label">Total Visits</span></div>
-          <div class="scard"><span class="scard-num" id="st-today">â€“</span><span class="scard-label">Today</span></div>
-          <div class="scard"><span class="scard-num" id="st-week">â€“</span><span class="scard-label">Last 7 Days</span></div>
-          <div class="scard"><span class="scard-num" id="st-unread">â€“</span><span class="scard-label">Unread Messages</span></div>
+          <div class="scard"><span class="scard-num" id="st-total">–</span><span class="scard-label">Total Visits</span></div>
+          <div class="scard"><span class="scard-num" id="st-today">–</span><span class="scard-label">Today</span></div>
+          <div class="scard"><span class="scard-num" id="st-week">–</span><span class="scard-label">Last 7 Days</span></div>
+          <div class="scard"><span class="scard-num" id="st-unread">–</span><span class="scard-label">Unread Messages</span></div>
         </div>
         <div class="card">
-          <h3>Visits â€” last 30 days</h3>
+          <h3>Visits — last 30 days</h3>
           <div class="chart" id="chart-days"></div>
         </div>
         <div class="card">
           <h3>Visits by language</h3>
           <div id="lang-rows"></div>
+        </div>
+        <div class="card">
+          <h3>Don't count my own visits</h3>
+          <div class="fd-auto-head" style="margin:0">
+            <p class="fd-note" id="notrack-state" style="margin:0">…</p>
+            <label class="fd-switch">
+              <input type="checkbox" id="notrack-toggle">
+              <span></span>
+            </label>
+          </div>
         </div>
       </section>
 
@@ -337,15 +347,15 @@
           </div>
           <h3>SEO</h3>
           <div class="field">
-            <label>Public Site URL (used for canonical link, sitemap &amp; social previews â€” e.g. https://nima.dev)</label>
+            <label>Public Site URL (used for canonical link, sitemap &amp; social previews — e.g. https://nima.dev)</label>
             <input name="site_url" placeholder="https://yourdomain.com" dir="ltr">
           </div>
           <h3>Contact Channels</h3>
           <div class="grid-2">
             <div class="field"><label>Phone</label><input name="phone"></div>
             <div class="field"><label>Email</label><input name="email" type="email"></div>
-            <div class="field"><label>Telegram URL</label><input name="telegram" placeholder="https://t.me/â€¦"></div>
-            <div class="field"><label>WhatsApp URL</label><input name="whatsapp" placeholder="https://wa.me/â€¦"></div>
+            <div class="field"><label>Telegram URL</label><input name="telegram" placeholder="https://t.me/…"></div>
+            <div class="field"><label>WhatsApp URL</label><input name="whatsapp" placeholder="https://wa.me/…"></div>
             <div class="field"><label>Instagram URL</label><input name="instagram" placeholder="https://instagram.com/…"></div>
             <div class="field"><label>GitHub URL</label><input name="github"></div>
             <div class="field"><label>LinkedIn URL</label><input name="linkedin"></div>
@@ -386,7 +396,7 @@
       </div>
       <div class="grid-2">
         <div class="field"><label>Tech (e.g. Python · JS · SQL)</label><input name="tech"></div>
-        <div class="field" id="url-field"><label>Live URL (optional â€” must start with https://)</label><input name="url" placeholder="https://project-demo.com" dir="ltr"></div>
+        <div class="field" id="url-field"><label>Live URL (optional — must start with https://)</label><input name="url" placeholder="https://project-demo.com" dir="ltr"></div>
       </div>
       <div class="grid-3">
         <div class="field" id="price-field"><label>Price</label><input name="price" type="number" min="0" step="0.01" value="0"></div>
@@ -413,7 +423,7 @@
       <div class="field">
         <label>Image</label>
         <div class="upload-row">
-          <input name="image" placeholder="/static/uploads/â€¦ or URL">
+          <input name="image" placeholder="/static/uploads/… or URL">
           <label class="btn btn-ghost upload-btn">Upload<input type="file" id="item-upload" accept="image/*" hidden></label>
         </div>
         <img id="img-preview" class="img-preview" alt="" hidden>
@@ -431,11 +441,11 @@
     <form class="modal-card" id="brand-form">
       <h3 id="brand-modal-title">Brand</h3>
       <div class="field"><label>Name *</label><input name="name" required></div>
-      <div class="field"><label>Website URL (optional â€” must start with https://, leave empty if none)</label><input name="url" placeholder="https://brand-website.com" dir="ltr"></div>
+      <div class="field"><label>Website URL (optional — must start with https://, leave empty if none)</label><input name="url" placeholder="https://brand-website.com" dir="ltr"></div>
       <div class="field">
         <label>Logo</label>
         <div class="upload-row">
-          <input name="logo" placeholder="/static/uploads/â€¦ or URL">
+          <input name="logo" placeholder="/static/uploads/… or URL">
           <label class="btn btn-ghost upload-btn">Upload<input type="file" id="brand-upload" accept="image/*" hidden></label>
         </div>
       </div>
@@ -501,7 +511,7 @@
     </div>
   </div>
 
-  <script src="/static/js/admin.js?v=11"></script>
+  <script src="/static/js/admin.js?v=12"></script>
 </body>
 </html>
 

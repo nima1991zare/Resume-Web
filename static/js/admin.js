@@ -91,6 +91,14 @@
       .catch(function (err) { errEl.textContent = err.message || "Login failed."; });
   });
 
+  document.getElementById("notrack-toggle").addEventListener("change", function () {
+    try {
+      if (this.checked) localStorage.setItem(NOTRACK, "1");
+      else localStorage.removeItem(NOTRACK);
+    } catch (e) {}
+    renderNoTrack();
+  });
+
   document.getElementById("logout-btn").addEventListener("click", function () {
     api("/api/admin/logout", { method: "POST" }).catch(function () {});
     logout();
@@ -116,7 +124,20 @@
   }
 
   /* ---------------- stats ---------------- */
+  function renderNoTrack() {
+    var el = document.getElementById("notrack-state");
+    if (!el) return;
+    var on = true;
+    try { on = localStorage.getItem(NOTRACK) === "1"; } catch (e) {}
+    document.getElementById("notrack-toggle").checked = on;
+    el.textContent = on
+      ? "This browser is not counted. It only covers this browser — open the admin panel on your phone too."
+      : "This browser IS being counted in the numbers above.";
+    el.className = "fd-note" + (on ? " fd-ok" : " fd-bad");
+  }
+
   function loadStats() {
+    renderNoTrack();
     api("/api/admin/stats").then(function (d) {
       // security: warn loudly while the default password is still in use
       var warn = document.getElementById("pw-warning");
@@ -1138,8 +1159,12 @@
     settings: loadSettings
   };
 
+  var NOTRACK = "nima_notrack";
+
   function enterPanel() {
     show("panel");
+    // Reaching this screen means it is him, so stop counting this browser.
+    try { localStorage.setItem(NOTRACK, "1"); } catch (e) {}
     switchTab("stats");
   }
 

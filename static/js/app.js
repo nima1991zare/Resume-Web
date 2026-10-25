@@ -617,8 +617,17 @@
   /* ---------------- visit tracking ---------------- */
   try {
     var KEY = "nima_visit_ts";
+    // Nima's own visits were the bulk of the numbers, which made the analytics
+    // useless for the one thing they are for. Logging into the admin panel sets
+    // this flag on the same origin, so his browser stops counting itself.
+    // ?track=1 in the URL clears it, for checking the counter still works.
+    if (/[?&]track=1(&|$)/.test(location.search)) {
+      try { localStorage.removeItem("nima_notrack"); } catch (e) {}
+    }
+    var skip = false;
+    try { skip = localStorage.getItem("nima_notrack") === "1"; } catch (e) {}
     var last = Number(sessionStorage.getItem(KEY) || 0);
-    if (Date.now() - last > 30 * 60 * 1000) {
+    if (!skip && Date.now() - last > 30 * 60 * 1000) {
       sessionStorage.setItem(KEY, String(Date.now()));
       fetch("/api/visit", {
         method: "POST",

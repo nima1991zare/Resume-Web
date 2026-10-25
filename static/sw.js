@@ -3,12 +3,12 @@
    - CSS/JS: network-first so portfolio updates are visible immediately
    - pages: network-first with offline fallback
    - API and the entire admin panel: NEVER touched by this worker */
-var CACHE = "nima-v22";
+var CACHE = "nima-v23";
 var PRECACHE = [
   "/",
   "/static/css/fonts.css",
   "/static/css/style.css?v=22",
-  "/static/js/app.js?v=22",
+  "/static/js/app.js?v=23",
   "/static/js/i18n.js?v=22",
   "/static/js/morph.js?v=22",
   "/static/fonts/spacegrotesk_v22_V8mDoQDjQSkFtoMM3T6r8E7mPbF4Cw.woff2",
