@@ -114,7 +114,72 @@ def set_config(**kw) -> dict:
         conn.commit()
     finally:
         conn.close()
-    return config()
+    cfg = config()
+    if "channels" in kw:
+        reroute_disabled(cfg)
+    return cfg
+
+
+def reroute_disabled(cfg: dict) -> int:
+    """Move messages queued on a channel that is now switched off.
+
+    Turning Instagram off would otherwise strand every lead already queued
+    there: the claim refuses a disabled channel, and the fallback only fires on
+    a *failed send*, which can never happen for a message nobody is allowed to
+    claim. Those leads would sit in the queue looking scheduled and never go
+    anywhere.
+    """
+    live = [c for c in CHANNELS if c in cfg["channels"]]
+    dead = [c for c in CHANNELS if c not in cfg["channels"]]
+    if not live or not dead:
+        return 0
+
+    moved = 0
+    conn = get_db()
+    try:
+        rows = conn.execute(
+            "SELECT o.*, l.instagram, l.phone_e164, l.is_mobile, l.name, l.domain, "
+            "l.city, l.need, l.need_fa, l.need_evidence, l.need_evidence_url "
+            "FROM outbox o JOIN leads l ON l.id=o.lead_id "
+            f"WHERE o.status='queued' AND o.channel IN ({','.join('?' * len(dead))})",
+            dead).fetchall()
+        sender = sender_signature()
+        for r in rows:
+            lead = dict(r)
+            other = channel_for(lead, cfg)
+            if not other:
+                # Nothing else reaches them — drop it rather than leave a
+                # message pretending it is still on its way.
+                conn.execute("UPDATE outbox SET status='skipped', "
+                             "error='channel turned off, no other way to reach them' "
+                             "WHERE id=?", (r["id"],))
+                continue
+            to_addr = lead["instagram"] if other == "instagram" else lead["phone_e164"]
+            body = r["body"]
+            if lead["need"]:
+                finding = research.Finding(lead["need"], 0, lead["need_fa"],
+                                           lead["need_evidence_url"], lead["need_evidence"])
+                body = research.compose(lead["name"], lead["domain"], lead["city"],
+                                        finding, sender, channel=other)
+            due = _next_due(conn, cfg, other)
+            try:
+                conn.execute(
+                    "UPDATE outbox SET channel=?, to_addr=?, body=?, due_at=?, "
+                    "attempts=0, error='' WHERE id=?",
+                    (other, to_addr, body, due.strftime("%Y-%m-%d %H:%M:%S"), r["id"]))
+                conn.commit()        # so the next due time sees this one
+                moved += 1
+            except Exception:
+                # Already queued on the other channel for this lead.
+                conn.execute("UPDATE outbox SET status='skipped', "
+                             "error='already queued on the other channel' "
+                             "WHERE id=?", (r["id"],))
+        conn.commit()
+        if moved:
+            logger.info("rerouted %d queued messages off %s", moved, ",".join(dead))
+    finally:
+        conn.close()
+    return moved
 
 
 def _hhmm(s: str, fallback: str) -> tuple[int, int]:
