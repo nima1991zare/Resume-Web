@@ -126,7 +126,7 @@ body { font-family:'Vazirmatn',system-ui,sans-serif; color:#eef4fb; }
 
   <section class="scene" id="s1">
     <div class="kicker">پروژه‌یاب · شیراز</div>
-    <div class="lead" style="margin-top:28px">من <span class="accent" id="n-total">@@TOTAL@@</span> کسب‌وکار شیراز را<br>یکی‌یکی بررسی کردم.</div>
+    <div class="lead" style="margin-top:28px">من <span class="accent" id="n-total">@@TOTAL_FA@@</span> کسب‌وکار شیراز را<br>یکی‌یکی بررسی کردم.</div>
     <div class="sub" style="margin-top:34px">رستوران، کافه، مطب، هتل، آرایشگاه، فروشگاه.</div>
   </section>
 
@@ -139,7 +139,7 @@ body { font-family:'Vazirmatn',system-ui,sans-serif; color:#eef4fb; }
 
   <section class="scene" id="s3">
     <div class="kicker">و آن‌هایی که داشتند؟</div>
-    <div class="lead" style="margin-top:30px">از <span class="accent">@@WITHSITE@@</span> سایتی که پیدا کردم،</div>
+    <div class="lead" style="margin-top:30px">از <span class="accent">@@WITHSITE_FA@@</span> سایتی که پیدا کردم،</div>
     <div class="mid" id="n-dead" style="margin-top:18px">۰</div>
     <div class="lead">تا اصلاً باز نمی‌شد.</div>
     <div class="bar"><i id="deadbar" style="width:0%"></i></div>
@@ -291,6 +291,9 @@ def main() -> None:
         "TOTAL_FRAMES": TOTAL_FRAMES, "TOTAL": S["total"],
         "NOSITE": S["nosite"], "WITHSITE": S["withsite"],
         "DEAD": S["dead"], "PCT": S["pct"],
+        # Persian digits for anything the viewer reads as prose. The JS
+        # rewrites most counters every frame, but not these two.
+        "TOTAL_FA": fa(S["total"]), "WITHSITE_FA": fa(S["withsite"]),
         "HANDLE": "nima.z.are", "SITE": "nimabuilds.pythonanywhere.com",
     }
     out = HTML
