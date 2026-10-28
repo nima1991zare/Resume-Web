@@ -291,6 +291,9 @@ DEFAULT_SETTINGS = {
     "auto_ig_min_gap_s": "420",
     # When a channel fails for good, try the other one if the lead has it.
     "auto_fallback": "1",
+    # Minutes east of UTC for quiet hours and the daily cap. Iran is +03:30 and
+    # has had no DST since 2022, so a fixed offset is correct all year.
+    "auto_tz_offset_min": "210",
 }
 
 SEED_APPS = [

@@ -848,15 +848,20 @@
       state.textContent = "Paused — the sender is handed nothing while this is off.";
       state.className = "fd-note";
     } else if (d.quiet_now) {
+      // Show the clock it is actually using. "Quiet hours" with no time next
+      // to it is unfalsifiable from the outside — which is how a timezone bug
+      // survived for days looking like a dead queue.
       state.textContent = "Running, but inside quiet hours (" + c.quiet_start +
-        "–" + c.quiet_end + ") — nothing goes out until " + c.quiet_end + ".";
+        "–" + c.quiet_end + ") — nothing goes out until " + c.quiet_end +
+        ". Your local time now: " + (d.local_time || "?") + ".";
       state.className = "fd-note";
     } else if (d.sent_today >= c.daily_cap) {
       state.textContent = "Running — daily cap of " + c.daily_cap + " reached, resumes tomorrow.";
       state.className = "fd-note";
     } else {
       state.textContent = "Running — handing the sender one message roughly every " +
-        Math.round(c.min_gap_s / 60) + " min, up to " + c.daily_cap + " a day.";
+        Math.round(c.min_gap_s / 60) + " min, up to " + c.daily_cap + " a day. " +
+        "Local time " + (d.local_time || "?") + ".";
       state.className = "fd-note fd-ok";
     }
     fdEl("fd-a-next").textContent = d.next_due ? "next due " + d.next_due : "";

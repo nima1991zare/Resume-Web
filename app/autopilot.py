@@ -46,6 +46,35 @@ CLAIM_TIMEOUT_MINUTES = 10
 
 CHANNELS = ("instagram", "whatsapp")
 
+# Every timestamp in the database is UTC, because the claim compares due_at
+# against SQLite's datetime('now'). But "quiet hours" and "sent today" are
+# human ideas and have to be answered in the sender's own timezone — the
+# server runs UTC, so asking datetime.now() shifted a 21:30-09:30 window to
+# 01:00-13:00 local: silent all morning, awake at night, exactly inverted.
+#
+# A fixed offset rather than a zoneinfo name on purpose: Iran dropped DST in
+# 2022, so +03:30 is correct year-round, and it needs no tzdata package on
+# either the server or a Windows laptop.
+def tz_offset() -> int:
+    conn = get_db()
+    try:
+        raw = get_setting(conn, "auto_tz_offset_min") or "210"
+    finally:
+        conn.close()
+    try:
+        return max(-840, min(840, int(raw)))
+    except ValueError:
+        return 210
+
+
+def utc_now() -> datetime:
+    return datetime.utcnow()
+
+
+def local_now(offset: int | None = None) -> datetime:
+    off = tz_offset() if offset is None else offset
+    return utc_now() + timedelta(minutes=off)
+
 
 def cap_for(cfg: dict, channel: str) -> int:
     return cfg["ig_daily_cap"] if channel == "instagram" else cfg["daily_cap"]
@@ -90,6 +119,7 @@ def config() -> dict:
             "ig_daily_cap": int(g("auto_ig_daily_cap", "12") or 12),
             "ig_min_gap_s": int(g("auto_ig_min_gap_s", "420") or 420),
             "fallback": g("auto_fallback", "1") == "1",
+            "tz_offset_min": int(g("auto_tz_offset_min", "210") or 210),
         }
     finally:
         conn.close()
@@ -100,7 +130,8 @@ def set_config(**kw) -> dict:
             "min_gap_s": "auto_min_gap_s", "quiet_start": "auto_quiet_start",
             "quiet_end": "auto_quiet_end", "min_score": "auto_min_score",
             "channels": "auto_channels", "ig_daily_cap": "auto_ig_daily_cap",
-            "ig_min_gap_s": "auto_ig_min_gap_s", "fallback": "auto_fallback"}
+            "ig_min_gap_s": "auto_ig_min_gap_s", "fallback": "auto_fallback",
+            "tz_offset_min": "auto_tz_offset_min"}
     conn = get_db()
     try:
         for k, v in kw.items():
@@ -192,7 +223,8 @@ def _hhmm(s: str, fallback: str) -> tuple[int, int]:
 
 
 def in_quiet_hours(cfg: dict, now: datetime | None = None) -> bool:
-    now = now or datetime.now()
+    """`now` is a LOCAL time. Callers pass UTC in only via local_at()."""
+    now = now or local_now(cfg.get("tz_offset_min"))
     sh, sm = _hhmm(cfg["quiet_start"], "21:30")
     eh, em = _hhmm(cfg["quiet_end"], "09:30")
     start, end = sh * 60 + sm, eh * 60 + em
@@ -212,7 +244,7 @@ def _next_due(conn, cfg: dict, channel: str) -> datetime:
     row = conn.execute(
         "SELECT MAX(due_at) d FROM outbox WHERE status IN ('queued','claimed') "
         "AND channel=?", (channel,)).fetchone()
-    base = datetime.now()
+    base = utc_now()
     if row and row["d"]:
         try:
             last = datetime.strptime(row["d"], "%Y-%m-%d %H:%M:%S")
@@ -223,21 +255,35 @@ def _next_due(conn, cfg: dict, channel: str) -> datetime:
     # Jitter both ways. A perfectly regular interval is a signature.
     due = base + timedelta(seconds=gap + random.randint(-gap // 4, gap // 2))
 
-    # Walk out of quiet hours rather than queueing into them.
+    # Walk out of quiet hours rather than queueing into them. `due` is UTC, so
+    # it has to be converted before asking a question about the local clock.
+    off = cfg.get("tz_offset_min", 210)
     for _ in range(48):
-        if not in_quiet_hours(cfg, due):
+        if not in_quiet_hours(cfg, due + timedelta(minutes=off)):
             break
         due += timedelta(minutes=30)
     return due
 
 
 def sent_today(conn, channel: str = "") -> int:
+    """Count sends inside the sender's local day.
+
+    sent_at is UTC, so the local day has to be expressed as a UTC window.
+    date('now','localtime') asked the *server* what day it was, which on a
+    UTC host rolls the cap over at 03:30 local — the cap would reset in the
+    middle of the night and then run out mid-afternoon.
+    """
+    off = tz_offset()
+    local_midnight = local_now(off).replace(hour=0, minute=0, second=0, microsecond=0)
+    start = local_midnight - timedelta(minutes=off)
+    end = start + timedelta(days=1)
     sql = ("SELECT COUNT(*) FROM outbox WHERE status='sent' "
-           "AND date(sent_at)=date('now','localtime')")
-    args: tuple = ()
+           "AND sent_at >= ? AND sent_at < ?")
+    args: tuple = (start.strftime("%Y-%m-%d %H:%M:%S"),
+                   end.strftime("%Y-%m-%d %H:%M:%S"))
     if channel:
         sql += " AND channel=?"
-        args = (channel,)
+        args = args + (channel,)
     return conn.execute(sql, args).fetchone()[0]
 
 
@@ -563,6 +609,8 @@ def status() -> dict:
             "config": cfg,
             "channels": per_channel,
             "quiet_now": in_quiet_hours(cfg),
+            "local_time": local_now(cfg["tz_offset_min"]).strftime("%Y-%m-%d %H:%M"),
+            "server_time": utc_now().strftime("%Y-%m-%d %H:%M") + " UTC",
             "sent_today": sent_today(conn),
             "counts": counts,
             "queued": counts.get("queued", 0),
