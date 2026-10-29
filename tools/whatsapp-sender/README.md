@@ -52,6 +52,11 @@ npm start         # dry run: prints the queue, consumes nothing
 npm run send      # actually sends (same as setting "dryRun": false)
 ```
 
+Or skip all of that: double-click **WhatsApp Sender** on the desktop. It looks
+for the VPN, checks the server, opens the admin panel, and starts sending — or
+stops and names whichever of those is missing. That shortcut runs `start.cmd` in
+this folder; `make-shortcut.ps1` recreates it if it is lost.
+
 The first run prints a QR code. Scan it with **WhatsApp → Linked devices →
 Link a device**. The session is saved in `.session/`, so this happens once.
 

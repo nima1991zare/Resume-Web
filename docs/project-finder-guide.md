@@ -175,6 +175,12 @@ npm start       # dry run: prints exactly what it would send, sends nothing
 npm run send    # the real thing — scan the QR once
 ```
 
+**One click instead of all that:** double-click **WhatsApp Sender** on the
+desktop. It finds the VPN, checks the server, opens the admin panel, and starts
+sending — or stops and says which of those is missing. The shortcut runs
+`tools/whatsapp-sender/start.cmd`, so if it is ever lost, run
+`make-shortcut.ps1` in that folder to recreate it.
+
 `check` and a plain `start` never take a message out of the queue, so you can run
 them as often as you like without losing anything. `npm run send` is the only
 command that talks to real people; you can also make that permanent by setting
