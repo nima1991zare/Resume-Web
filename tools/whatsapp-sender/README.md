@@ -40,7 +40,7 @@ Open `config.json` and set:
 | field | what it is |
 |---|---|
 | `serverUrl` | `https://nimabuilds.pythonanywhere.com`, or `http://127.0.0.1:8000` when testing locally |
-| `agentKey` | from **Admin → Project Finder → Autopilot → Sender setup** |
+| `agentKey` | from **Admin → Project Finder → Autopilot → Sender setup**. Easier: press **Download config.json** there and drop the file in this folder — then `serverUrl` and `agentKey` are already right. |
 | `dryRun` | `true` prints each message instead of sending it. **Leave it true for the first run.** |
 | `headless` | `false` shows the browser window, which is useful the first time |
 
