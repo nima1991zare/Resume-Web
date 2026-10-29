@@ -978,6 +978,18 @@
       .then(function () { btn.disabled = false; });
   });
 
+  // A message that says the site is down is the one claim worth re-checking
+  // before it goes out: a VPN exit, or a host that refuses foreign addresses,
+  // makes a perfectly working site look dead.
+  fdEl("fd-a-recheck").addEventListener("click", function () {
+    var btn = this;
+    btn.disabled = true;
+    api("/api/admin/finder/recheck", { method: "POST" })
+      .then(function (run) { fdRunCard(run, run); fdStartPoll(); apLoad(); })
+      .catch(fdRunError)
+      .then(function () { btn.disabled = false; });
+  });
+
   /* ----- outbox ----- */
   function apOutbox() {
     var f = fdEl("fd-ob-filter").value;

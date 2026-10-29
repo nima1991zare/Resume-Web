@@ -33,6 +33,8 @@ from urllib.parse import urljoin, urlparse
 
 import httpx
 
+from .finder import fetch_site, is_blocked
+
 logger = logging.getLogger("finder.research")
 
 MAX_PAGES = 6                 # homepage + 5 — enough to find a menu or a booking page
@@ -155,11 +157,12 @@ def _pick_links(html: str, base: str, limit: int) -> list[str]:
 
 
 async def _get(client: httpx.AsyncClient, url: str, ua: str) -> httpx.Response | None:
-    try:
-        return await client.get(url, headers={"User-Agent": ua}, follow_redirects=True,
-                                timeout=PAGE_TIMEOUT)
-    except httpx.HTTPError:
-        return None
+    """One page, through whatever route can actually reach it.
+
+    `fetch_site` retries a refusal without the proxy: Iranian hosts refuse
+    foreign addresses, and a VPN exit is a foreign address all day long.
+    """
+    return await fetch_site(client, url, ua, timeout=PAGE_TIMEOUT)
 
 
 async def crawl(client: httpx.AsyncClient, url: str, ua: str) -> SiteFacts:
@@ -181,6 +184,12 @@ async def crawl(client: httpx.AsyncClient, url: str, ua: str) -> SiteFacts:
     f.final_url = str(r.url)
     f.https = urlparse(f.final_url).scheme == "https"
     if r.status_code >= 400:
+        if is_blocked(r.status_code):
+            # Something in front of the site refused *us* — a foreign IP, a
+            # VPN exit, a throttle. That is not evidence the business is
+            # offline, so it must not become "سایت از دسترس خارج است" in a
+            # message to a stranger.
+            f.status = 0
         return f
     f.reachable = True
 

@@ -78,8 +78,68 @@ def proxy_url() -> str | None:
     return PROXY_URL
 
 
-def new_client() -> httpx.AsyncClient:
+def new_client(direct: bool = False) -> httpx.AsyncClient:
+    """`direct=True` ignores every proxy, *including the environment's*.
+
+    That second part is the point. A VPN client (V2Ray and friends) sets
+    HTTP_PROXY/HTTPS_PROXY for the whole machine, so "no proxy configured in
+    this code" still means "through the VPN" to httpx — and a site that only
+    accepts Iranian visitors then fails here while opening fine in Nima's own
+    browser the moment the VPN is off.
+    """
+    if direct:
+        return httpx.AsyncClient(timeout=TIMEOUT, proxy=None, trust_env=False)
     return httpx.AsyncClient(timeout=TIMEOUT, proxy=proxy_url())
+
+
+# Statuses that mean "something between us and the site said no", not "the site
+# is broken". Iranian hosts routinely 403 a foreign IP; Cloudflare answers 52x
+# when the origin is unreachable from its edge; 429 and 451 are throttles and
+# legal blocks. None of them is evidence a business is offline, and a VPN exit
+# sees them constantly.
+BLOCK_STATUS = frozenset({401, 403, 406, 407, 429, 451, 511,
+                          520, 521, 522, 523, 524, 525, 526, 527})
+
+
+def is_blocked(status: int) -> bool:
+    return status in BLOCK_STATUS
+
+
+async def _try_get(client: httpx.AsyncClient, url: str, ua: str,
+                   timeout) -> httpx.Response | None:
+    try:
+        return await client.get(url, headers={"User-Agent": ua or UA},
+                                follow_redirects=True,
+                                **({"timeout": timeout} if timeout else {}))
+    except httpx.HTTPError:
+        return None
+
+
+async def fetch_site(client: httpx.AsyncClient, url: str, ua: str = "",
+                     timeout=None) -> httpx.Response | None:
+    """GET a business site as a customer in Iran would see it.
+
+    Three things are true at once and they interact badly: Iranian business
+    sites often refuse non-Iranian addresses, Nima works behind a VPN, and the
+    research run then concludes "their site is down" and writes that to a
+    stranger. So a refused or blocked attempt is *not* an answer: the same URL
+    is retried with no proxy at all before anything is believed about it.
+    """
+    r = await _try_get(client, url, ua, timeout)
+    if r is not None and r.status_code not in BLOCK_STATUS:
+        return r
+    r2 = None
+    try:
+        async with new_client(direct=True) as plain:
+            r2 = await _try_get(plain, url, ua, timeout)
+    except Exception:                      # no direct route on this host
+        r2 = None
+    if r2 is not None and r2.status_code not in BLOCK_STATUS:
+        if r is not None:
+            logger.info("%s answered %s through the proxy, %s directly — using "
+                        "the direct answer", url, r.status_code, r2.status_code)
+        return r2
+    return r if r is not None else r2
 
 
 # ─────────────────────────────────────────────────────── categories
@@ -661,24 +721,28 @@ async def profile_site(client: httpx.AsyncClient, url: str) -> Profile:
     r = None
     last_err = ""
     # https first, then plain http: a working http-only site is a finding
-    # (SITE_NO_HTTPS), not an unreachable one.
+    # (SITE_NO_HTTPS), not an unreachable one. `fetch_site` retries any refusal
+    # without the proxy, so a VPN exit cannot turn a live site into a dead one.
     for attempt in (target, "http://" + host if target.startswith("https://") else ""):
         if not attempt:
             break
-        try:
-            r = await client.get(attempt, headers={"User-Agent": UA},
-                                 follow_redirects=True)
+        r = await fetch_site(client, attempt, UA)
+        if r is not None:
             break
-        except httpx.HTTPError as e:
-            last_err = type(e).__name__
+        last_err = "connect failed"
     if r is None:
         p.add("SITE_UNREACHABLE", last_err or "connect failed", target)
         return p
     elapsed = time.monotonic() - started
 
     if r.status_code >= 400:
-        # The server answered. This one is proof.
-        p.add("SITE_DEAD", f"HTTP {r.status_code}", str(r.url))
+        if is_blocked(r.status_code):
+            # A refusal is not a broken site. Said plainly, because the panel
+            # and the message both have to hedge this one.
+            p.add("SITE_UNREACHABLE", f"refused HTTP {r.status_code}", str(r.url))
+        else:
+            # The server answered with a real error. This one is proof.
+            p.add("SITE_DEAD", f"HTTP {r.status_code}", str(r.url))
         return p
 
     final = str(r.url)

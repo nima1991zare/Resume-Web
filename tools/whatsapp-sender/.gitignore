@@ -1,3 +1,5 @@
 node_modules/
 .session/
 config.json
+.wwebjs_cache/
+pending-reports.json

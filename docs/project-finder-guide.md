@@ -207,6 +207,21 @@ to an Iranian IP while your browser sees a working site. Both senders detect the
 proxy and route through it. If you ever see 451, that is what it means — not a
 bad key.
 
+The research run is the opposite problem. Many Iranian business sites refuse
+addresses outside Iran, so a request that leaves through a VPN exit is refused
+with 403/451/52x — and a crawler that treats any error status as proof would
+then tell that business its website is down. Two things prevent it:
+
+* `fetch_site()` retries any refused or failed request **with no proxy at all**
+  before believing it, so a site that only answers inside Iran is still read.
+* A refusal is recorded as "could not verify", never as "the site is dead".
+  Only a real error page (`404`, `410`, `500`…) counts as proof.
+
+Messages already queued with a "your site is down" claim can be re-derived:
+**Autopilot → Re-check "site is down" messages**. Working sites get a true
+message instead, sites we cannot verify have the message dropped, and genuinely
+broken sites keep theirs.
+
 ---
 
 ## The honest part

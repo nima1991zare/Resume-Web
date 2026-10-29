@@ -877,6 +877,21 @@ def autopilot_research(request: Request, limit: int = 60,
         raise HTTPException(status_code=409, detail=str(e))
 
 
+@app.post("/api/admin/finder/recheck")
+def autopilot_recheck(request: Request, authorization: Optional[str] = Header(None)):
+    """Re-crawl the sites behind queued "your site is down" messages.
+
+    The crawl cannot tell a broken site from one that refuses this server's
+    address, and a message built on that mistake accuses a working business.
+    """
+    require_admin(authorization)
+    rate_limit(request, "finder_recheck", limit=4, window_s=900)
+    try:
+        return autopilot.launch_recheck()
+    except RuntimeError as e:
+        raise HTTPException(status_code=409, detail=str(e))
+
+
 @app.get("/api/admin/finder/outbox")
 def autopilot_outbox(status: str = "", limit: int = 100,
                      authorization: Optional[str] = Header(None)):

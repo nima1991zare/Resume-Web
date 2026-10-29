@@ -257,7 +257,18 @@ const client = new Client({
 });
 
 let ready = false;
-let consecutiveFailures = 0;
+let readyAt = 0;              // when the page last said it was ready
+let readyRepeats = 0;
+let consecutiveFailures = 0;  // real send failures
+let transientFailures = 0;    // page vanished under a send
+
+// whatsapp-web.js reloads the tab once after pairing, and WhatsApp itself
+// reloads it after a long sleep. A send that is in flight when that happens
+// dies with "Execution context was destroyed" even though nothing is wrong
+// with the account. Claiming a message and then waiting for the new page to
+// settle is the difference between one failed attempt per reload and a queue
+// that actually moves.
+const SETTLE_MS = 8000;
 
 client.on("qr", (qr) => {
   console.log("\nScan this with WhatsApp → Linked devices → Link a device:\n");
@@ -265,7 +276,22 @@ client.on("qr", (qr) => {
   console.log("\nThe session is saved, so this only happens once.\n");
 });
 client.on("authenticated", () => log("authenticated"));
-client.on("ready", () => { ready = true; log("WhatsApp is ready"); });
+client.on("ready", () => {
+  ready = true;
+  readyAt = Date.now();
+  if (readyRepeats++ === 0) {
+    log("WhatsApp is ready");
+    return;
+  }
+  log("WhatsApp is ready again (" + readyRepeats + ") — waiting for the page to settle");
+  if (readyRepeats === 4) {
+    log("");
+    log("The WhatsApp tab keeps reloading. Nothing can be sent while it does.");
+    log("If this does not stop: close this window, delete the .session folder");
+    log("in this directory, and run npm run send to link the phone again.");
+    log("");
+  }
+});
 client.on("auth_failure", (m) => { log("AUTH FAILURE:", m); process.exit(1); });
 client.on("disconnected", (r) => {
   ready = false;
@@ -280,20 +306,57 @@ client.on("disconnected", (r) => {
  */
 client.on("message", async (msg) => {
   try {
-    if (msg.fromMe || msg.isStatus || /@(g\.us|broadcast)$/.test(msg.from || "")) return;
-    const from = (msg.from || "").replace(/\D/g, "");
-    if (!from) return;
+    const from = String(msg.from || "");
+    if (msg.fromMe || msg.isStatus) return;
+    // Only a one-to-one chat with a real phone number is a lead writing back.
+    // These are not people, and treating them as people is expensive: the
+    // @newsletter (channel) and @lid ids are long numbers whose last ten
+    // digits can collide with a real lead, so one broadcast post would stop
+    // that lead's message and mark them "replied" for no reason.
+    if (!/@c\.us$/i.test(from)) {
+      if (/@(g\.us|broadcast|newsletter|lid)$/i.test(from)) {
+        log("ignoring a message from " + from.split("@")[1] + " (not a one-to-one chat)");
+      }
+      return;
+    }
+    const fromDigits = from.replace(/@.*$/, "").replace(/\D/g, "");
+    if (!/^\d{8,15}$/.test(fromDigits)) return;
     // An opt-out has to be honoured on the spot and loudly.
     const text = (msg.body || "").toLowerCase();
     const optout = /stop|unsubscribe|لغو|مزاحم|قطع|نفرست/.test(text);
-    log("reply from +" + from + (optout ? " — OPT-OUT" : "") +
+    log("reply from +" + fromDigits + (optout ? " — OPT-OUT" : "") +
         " — that lead is yours now");
     // Tell the server, so anything still queued for them is dropped. This is
     // the only way the queue can know a human answered.
-    await api("/api/agent/replied", { phone: from, optout }).catch((e) =>
+    await api("/api/agent/replied", { phone: fromDigits, optout }).catch((e) =>
       log("  could not record the reply:", e.message));
   } catch (e) { /* never let a reply handler kill the sender */ }
 });
+
+/** A page-level failure, not a WhatsApp-level refusal. Retrying is right;
+ * reporting it as a failed attempt would burn one of three tries per reload. */
+function isTransient(e) {
+  return /Execution context was destroyed|Protocol error|Target closed|Session closed|detached Frame|Cannot find context/i
+    .test(String((e && e.message) || e));
+}
+
+/** Wait until the page says "ready" again (plus its settle time), or until
+ * `maxMs` — whichever comes first. Returns null on timeout. */
+function recoveryWait(maxMs) {
+  return new Promise((resolve) => {
+    let finished = false;
+    const finish = (ms) => {
+      if (finished) return;
+      finished = true;
+      clearTimeout(timer);
+      client.removeListener("ready", onReady);
+      resolve(ms);
+    };
+    const onReady = () => finish(jitter(SETTLE_MS + 4000, 0.15));
+    const timer = setTimeout(() => finish(null), maxMs);
+    client.on("ready", onReady);
+  });
+}
 
 // ── the loop ──────────────────────────────────────────────────────────────
 /**
@@ -396,10 +459,44 @@ function explain(res) {
   }
 }
 
+/** Put a claimed message back in the queue without burning one of its three
+ * attempts — for the case where our side broke, not the send. */
+async function release(id) {
+  try {
+    await api("/api/agent/release", { id });
+    return true;
+  } catch (e) {
+    log("  could not release the message:", e.message);
+    return false;
+  }
+}
+
+/** Did that exact text already go out? Both wrong answers are expensive: a
+ * false "sent" loses the lead for good, a false "not sent" sends the same
+ * stranger a second copy. `null` means the page was gone and we cannot tell. */
+async function delivered(chatId, body) {
+  try {
+    const chat = await client.getChatById(chatId);
+    const msgs = await chat.fetchMessages({ limit: 10 });
+    const want = String(body || "").trim();
+    return msgs.some((x) => x.fromMe && String(x.body || "").trim() === want);
+  } catch (e) {
+    return null;
+  }
+}
+
+/** Ask the dead page a question at our own pace: the call itself may hang. */
+function withTimeout(promise, ms) {
+  return Promise.race([promise, sleep(ms).then(() => null)]);
+}
+
 async function tick() {
   await ensureProtocol();
   if (CFG.dryRun) return dryTick();
   if (!ready) return 3000;
+  // A page that has only just said "ready" is still finishing its own setup.
+  // Sending into it is how the first message of a session dies.
+  if (Date.now() - readyAt < SETTLE_MS) return 2000;
 
   // Anything we sent but could not report must be settled first, or the server
   // will hand the same message out again once the claim expires.
@@ -446,11 +543,48 @@ async function tick() {
     consecutiveFailures = 0;
     log("  sent");
   } catch (e) {
+    if (isTransient(e)) {
+      // The page reloaded (WhatsApp does this after pairing and after a long
+      // sleep). That is not WhatsApp refusing the message, so it must not burn
+      // one of the lead's three attempts — and the message may in fact have
+      // been written before the page vanished.
+      transientFailures++;
+      const state = await withTimeout(delivered(chatId, m.body), 6000);
+      if (state === true) {
+        log("  the page reloaded just after sending — confirmed in the chat");
+        await report({ id: m.id, ok: true, name: m.name }, "message");
+        consecutiveFailures = 0;
+        transientFailures = 0;
+        return jitter(SETTLE_MS + 5000);
+      }
+      log("  the WhatsApp page reloaded mid-send — message released, will retry");
+      const putBack = await release(m.id);
+      if (!putBack) {
+        // Without a release the claim sits until it expires; reporting a
+        // failure would at least make that visible in the panel.
+        await report({ id: m.id, ok: false, error: "page reloaded mid-send" }, "message");
+      }
+      if (transientFailures >= 3) {
+        log("");
+        log("The WhatsApp page has gone away three times in a row. Nothing was");
+        log("reported as failed — the messages are still queued and no attempt");
+        log("was used up. Pausing for ten minutes.");
+        log("If this keeps happening, stop this window, delete the .session");
+        log("folder in this directory, and run npm run send to link again.");
+        log("");
+        transientFailures = 0;
+        return 600000;
+      }
+      // Give the new page time to say ready; if it does, come back sooner
+      // rather than sitting out the full wait.
+      const wait = jitter(75000, 0.2);
+      return (await recoveryWait(wait)) || wait;
+    }
+
     consecutiveFailures++;
     log("  send failed:", e.message);
-    await api("/api/agent/report",
-              { id: m.id, ok: false, error: String(e.message).slice(0, 280) })
-      .catch(() => {});
+    await report({ id: m.id, ok: false, error: String(e.message).slice(0, 280) },
+                 "message");
 
     // Repeated failures usually mean WhatsApp has started refusing us. Stopping
     // the whole queue is the correct response; carrying on is how a warning
@@ -490,11 +624,15 @@ process.on("SIGINT", () => { log("stopping"); process.exit(0); });
 process.on("unhandledRejection", (err) => {
   const msg = String((err && err.message) || err);
   log("unhandled error:", msg);
-  if (/Execution context was destroyed|Protocol error|Target closed/i.test(msg)) {
-    log("");
-    log("WhatsApp Web changed under the session. Usually this means");
-    log("whatsapp-web.js is out of date:  npm install whatsapp-web.js@latest");
-    log("If it keeps happening, delete .session/ and link the device again.");
+  if (isTransient(err)) {
+    // The page reloaded under us. whatsapp-web.js throws from its own handlers
+    // and there is nothing to fix — the loop releases whatever was in flight
+    // and retries. Killing the process here is how one reload became a night
+    // of nothing being sent.
+    readyAt = Date.now();   // let the page settle before claiming anything new
+    log("WhatsApp reloaded its page. Carrying on — if this repeats, delete");
+    log(".session/ and link the phone again.");
+    return;
   }
   process.exit(1);
 });

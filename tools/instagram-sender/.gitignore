@@ -1,3 +1,4 @@
 config.json
 session.json
 __pycache__/
+pending-reports.json

@@ -478,6 +478,112 @@ def launch_research(limit: int = 60) -> dict:
         conn.close()
 
 
+async def _recheck_site_claims(run_id: int) -> dict:
+    """Re-crawl the sites behind queued "your site is down" messages.
+
+    Those messages are the most damaging kind of wrong: a business whose site
+    loads perfectly for every customer in Shiraz is told it does not. They were
+    produced by a crawl that could not tell "broken" from "the network this ran
+    on is not allowed to see it" — a VPN exit, or a host that blocks foreign
+    IPs. `fetch_site` now separates the two, so the messages written before it
+    did have to be re-derived rather than sent.
+    """
+    conn = get_db()
+    try:
+        ids = [r["lead_id"] for r in conn.execute(
+            "SELECT DISTINCT o.lead_id FROM outbox o JOIN leads l ON l.id=o.lead_id "
+            "WHERE o.status='queued' AND (o.need='NEED_SITE_FIX' OR "
+            "l.need='NEED_SITE_FIX')").fetchall()]
+    finally:
+        conn.close()
+
+    sender = sender_signature()
+    counted = {"checked": 0, "rewritten": 0, "dropped": 0, "kept": 0}
+    sem = asyncio.Semaphore(3)
+
+    async with new_client() as client:
+        async def one(lead_id: int) -> None:
+            conn = get_db()
+            try:
+                row = conn.execute("SELECT * FROM leads WHERE id=?",
+                                   (lead_id,)).fetchone()
+                lead = dict(row) if row else None
+            finally:
+                conn.close()
+            if not lead:
+                return
+            async with sem:
+                try:
+                    r = await research.research_lead(client, lead, UA)
+                except Exception:
+                    counted["kept"] += 1
+                    return
+            conn = get_db()
+            try:
+                out = conn.execute(
+                    "SELECT id, channel FROM outbox WHERE lead_id=? AND status='queued'",
+                    (lead_id,)).fetchone()
+                if not out:
+                    return
+                counted["checked"] += 1
+                if not r["need"]:
+                    # It opens. The claim was wrong, so the message is deleted
+                    # rather than reworded — nobody is told about a problem
+                    # they do not have.
+                    conn.execute("DELETE FROM outbox WHERE id=?", (out["id"],))
+                    conn.execute("UPDATE leads SET need='', need_fa='', "
+                                 "need_evidence='', need_evidence_url='' WHERE id=?",
+                                 (lead_id,))
+                    counted["dropped"] += 1
+                else:
+                    finding = research.Finding(r["need"], 0, r["need_fa"],
+                                               r["evidence_url"], r["evidence"])
+                    body = research.compose(
+                        lead["name"], lead["domain"] or normalize_domain(lead["website"]),
+                        lead["city"], finding, sender, channel=out["channel"])
+                    conn.execute("UPDATE leads SET need=?,need_fa=?,need_evidence=?,"
+                                 "need_evidence_url=? WHERE id=?",
+                                 (r["need"], r["need_fa"], r["evidence"][:400],
+                                  r["evidence_url"][:400], lead_id))
+                    conn.execute("UPDATE outbox SET body=?, need=? WHERE id=?",
+                                 (body, r["need"], out["id"]))
+                    counted["rewritten"] += 1
+                conn.commit()
+            finally:
+                conn.close()
+
+        await asyncio.gather(*(one(i) for i in ids))
+    return counted
+
+
+def launch_recheck() -> dict:
+    """Re-verify every queued "site is down" message. Safe to run twice."""
+    if active_run():
+        raise RuntimeError("یک اجرا همین حالا در حال انجام است.")
+    run_id = start_run("recheck")
+
+    def worker():
+        try:
+            r = asyncio.run(_recheck_site_claims(run_id))
+            _run_set(run_id, status="done", profiled=r["checked"],
+                     message=(f"{r['checked']} پیام «سایت خراب است» دوباره بررسی شد — "
+                              f"{r['rewritten']} اصلاح، {r['dropped']} حذف، "
+                              f"{r['kept']} هنوز درست بود."),
+                     finished_at=time.strftime("%Y-%m-%d %H:%M:%S"))
+        except Exception as e:
+            logger.exception("recheck run failed")
+            _run_set(run_id, status="error", message=str(e)[:500],
+                     finished_at=time.strftime("%Y-%m-%d %H:%M:%S"))
+
+    threading.Thread(target=worker, name=f"recheck-{run_id}", daemon=True).start()
+    conn = get_db()
+    try:
+        return dict(conn.execute("SELECT * FROM finder_runs WHERE id=?",
+                                 (run_id,)).fetchone())
+    finally:
+        conn.close()
+
+
 # ─────────────────────────────────────────── the sender protocol
 def _reroute_to_live(conn, cfg: dict, live: list, target: str,
                      limit: int = 6) -> int:
