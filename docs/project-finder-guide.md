@@ -132,6 +132,16 @@ Instagram is tried first, WhatsApp second. A business that runs on Instagram
 reads its DMs; an unexpected WhatsApp message from a stranger is an
 interruption on a personal phone.
 
+**Live senders win.** Every sender checks in when it claims a message, and the
+server remembers the last time each channel was seen (45 minutes). A message is
+only handed to a channel that is actually running, so if you only start the
+WhatsApp sender, everything goes to WhatsApp instead of piling up on an
+Instagram channel nobody is watching. When both are running, the documented
+Instagram-first order is preserved.
+
+A message already parked on a channel whose sender has gone quiet is adopted by
+the next live sender and re-worded for that channel. Nothing gets stranded.
+
 If a channel fails **permanently** — no such account, not a WhatsApp number —
 the lead falls back to the other channel, re-worded for it. Permanent failures
 fail immediately rather than burning three retries over an hour.
@@ -151,23 +161,40 @@ fail immediately rather than burning three retries over an hour.
 
 ### On your PC
 
-Both senders live in `tools/`. Each needs the agent key from
-**Autopilot → Sender setup**.
+Both senders live in `tools/`. Each needs the agent key, and the panel now hands
+you the whole file: **Autopilot → Sender setup → Download config.json**, then
+drop it into the sender's folder. Typing the key by hand is where this used to
+fail — a placeholder left in place looks exactly like a queue that sends nothing.
+A sender still holding the placeholder refuses to start and says so.
 
 ```powershell
 cd C:\Users\nima1\OneDrive\Desktop\WEB\tools\whatsapp-sender
 npm install
-copy config.example.json config.json   # fill in serverUrl + agentKey
-npm run check                          # proves everything except WhatsApp
-npm start                              # scan the QR once
+npm run check   # proves everything except WhatsApp (reads the queue, claims nothing)
+npm start       # dry run: prints exactly what it would send, sends nothing
+npm run send    # the real thing — scan the QR once
 ```
+
+`check` and a plain `start` never take a message out of the queue, so you can run
+them as often as you like without losing anything. `npm run send` is the only
+command that talks to real people; you can also make that permanent by setting
+`"dryRun": false` in `config.json`.
+
+Both senders refuse to run against a server that does not understand `peek` —
+an older build would treat that check as a real claim and quietly mark the queue
+as sent.
+
+If WhatsApp accepts a message but the report back to the server fails, the sender
+keeps that report on disk and retries it before asking for the next message. The
+claim would otherwise expire and the same text would go to the same business a
+second time.
 
 ```powershell
 cd C:\Users\nima1\OneDrive\Desktop\WEB\tools\instagram-sender
 pip install -r requirements.txt
 copy config.example.json config.json   # + igUsername / igPassword
 python sender.py --check
-python sender.py
+python sender.py --send
 ```
 
 Both default to `dryRun: true`. Leave it there until the messages read right.

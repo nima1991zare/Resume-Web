@@ -27,6 +27,7 @@ from __future__ import annotations
 import asyncio
 import logging
 import random
+import re
 import threading
 import time
 from datetime import datetime, timedelta
@@ -44,13 +45,22 @@ logger = logging.getLogger("finder.autopilot")
 # dies mid-send does not strand the row forever.
 CLAIM_TIMEOUT_MINUTES = 10
 
+# How recently a sender must have asked for work to count as "running". The
+# Instagram sender sleeps up to 30 minutes when it hits its daily cap, so this
+# has to be comfortably longer than one idle poll — otherwise a live sender is
+# mistaken for a dead one and its queue is moved to the other channel.
+SENDER_LIVE_MINUTES = 45
+
 CHANNELS = ("instagram", "whatsapp")
 
+SQL_DT = "%Y-%m-%d %H:%M:%S"
+
+
 # Every timestamp in the database is UTC, because the claim compares due_at
-# against SQLite's datetime('now'). But "quiet hours" and "sent today" are
-# human ideas and have to be answered in the sender's own timezone — the
-# server runs UTC, so asking datetime.now() shifted a 21:30-09:30 window to
-# 01:00-13:00 local: silent all morning, awake at night, exactly inverted.
+# against SQLite's datetime('now'). But "quiet hours", "sent today" and the
+# daily cap are human ideas and have to be answered in the sender's own
+# timezone — the server runs UTC, so asking datetime.now() shifted a
+# 21:30-09:30 window to 01:00-13:00 local: silent all morning, awake at night.
 #
 # A fixed offset rather than a zoneinfo name on purpose: Iran dropped DST in
 # 2022, so +03:30 is correct year-round, and it needs no tzdata package on
@@ -68,12 +78,24 @@ def tz_offset() -> int:
 
 
 def utc_now() -> datetime:
+    """Naive UTC, which is what SQLite's datetime('now') returns."""
     return datetime.utcnow()
 
 
 def local_now(offset: int | None = None) -> datetime:
+    """Naive wall-clock time where the businesses are."""
     off = tz_offset() if offset is None else offset
     return utc_now() + timedelta(minutes=off)
+
+
+def local_at(naive_utc: datetime, offset: int | None = None) -> datetime:
+    """A stored UTC timestamp, as wall-clock time for the business."""
+    off = tz_offset() if offset is None else offset
+    return naive_utc + timedelta(minutes=off)
+
+
+def dt_str(dt: datetime) -> str:
+    return dt.strftime(SQL_DT)
 
 
 def cap_for(cfg: dict, channel: str) -> int:
@@ -84,14 +106,61 @@ def gap_for(cfg: dict, channel: str) -> int:
     return cfg["ig_min_gap_s"] if channel == "instagram" else cfg["min_gap_s"]
 
 
-def channel_for(lead: dict, cfg: dict, exclude: tuple = ()) -> str:
+def sender_key(channel: str) -> str:
+    return f"agent_seen_{channel}"
+
+
+def sender_status(conn, cfg: dict) -> dict:
+    """Which senders have asked for work recently.
+
+    A queue is only useful if something is on the other end of it. The panel
+    shows this, and `channel_for` uses it so a message is not parked on
+    Instagram for days because that sender was never started while the
+    WhatsApp one is running and idle.
+    """
+    now = utc_now()
+    out = {}
+    for ch in CHANNELS:
+        raw = get_setting(conn, sender_key(ch)) or ""
+        seen = None
+        if raw:
+            try:
+                seen = datetime.strptime(raw, SQL_DT)
+            except ValueError:
+                seen = None
+        live = bool(seen and now - seen <= timedelta(minutes=SENDER_LIVE_MINUTES))
+        out[ch] = {"last_seen": raw or None, "live": live,
+                   "enabled": ch in cfg["channels"]}
+    return out
+
+
+def mark_sender_seen(channel: str) -> None:
+    conn = get_db()
+    try:
+        set_setting(conn, sender_key(channel), dt_str(utc_now()))
+        conn.commit()
+    finally:
+        conn.close()
+
+
+def channel_for(lead: dict, cfg: dict, exclude: tuple = (),
+                live: tuple | list = ()) -> str:
     """Which channel to use for this lead, honouring the configured order.
 
     Instagram first by default: a business that runs on Instagram reads its
     DMs, and an unexpected WhatsApp message from a stranger is an interruption
     on a personal phone. Falls through to whatever the lead actually has.
+
+    Senders that are actually running come first. If only the WhatsApp process
+    is up, that is where a message has a chance of being delivered today; the
+    documented order still decides between two live senders, and still decides
+    when nothing has checked in at all.
     """
-    for ch in cfg["channels"]:
+    order = list(cfg["channels"])
+    if live:
+        order = ([c for c in order if c in live] +
+                 [c for c in order if c not in live])
+    for ch in order:
         if ch in exclude:
             continue
         if ch == "instagram" and lead.get("instagram"):
@@ -223,7 +292,8 @@ def _hhmm(s: str, fallback: str) -> tuple[int, int]:
 
 
 def in_quiet_hours(cfg: dict, now: datetime | None = None) -> bool:
-    """`now` is a LOCAL time. Callers pass UTC in only via local_at()."""
+    """`now` is business-local wall time; callers pass UTC due times through
+    `local_at` first."""
     now = now or local_now(cfg.get("tz_offset_min"))
     sh, sm = _hhmm(cfg["quiet_start"], "21:30")
     eh, em = _hhmm(cfg["quiet_end"], "09:30")
@@ -240,6 +310,9 @@ def _next_due(conn, cfg: dict, channel: str) -> datetime:
     Spaced from the last one already in the queue rather than from now, so
     queueing forty messages at once still produces forty well-separated send
     times instead of forty messages due immediately.
+
+    Stored in UTC because every due_at comparison is against SQLite's
+    datetime('now'), which is UTC too.
     """
     row = conn.execute(
         "SELECT MAX(due_at) d FROM outbox WHERE status IN ('queued','claimed') "
@@ -247,7 +320,7 @@ def _next_due(conn, cfg: dict, channel: str) -> datetime:
     base = utc_now()
     if row and row["d"]:
         try:
-            last = datetime.strptime(row["d"], "%Y-%m-%d %H:%M:%S")
+            last = datetime.strptime(row["d"], SQL_DT)
             base = max(base, last)
         except ValueError:
             pass
@@ -259,7 +332,7 @@ def _next_due(conn, cfg: dict, channel: str) -> datetime:
     # it has to be converted before asking a question about the local clock.
     off = cfg.get("tz_offset_min", 210)
     for _ in range(48):
-        if not in_quiet_hours(cfg, due + timedelta(minutes=off)):
+        if not in_quiet_hours(cfg, local_at(due, off)):
             break
         due += timedelta(minutes=30)
     return due
@@ -274,13 +347,12 @@ def sent_today(conn, channel: str = "") -> int:
     middle of the night and then run out mid-afternoon.
     """
     off = tz_offset()
-    local_midnight = local_now(off).replace(hour=0, minute=0, second=0, microsecond=0)
-    start = local_midnight - timedelta(minutes=off)
+    midnight = local_now(off).replace(hour=0, minute=0, second=0, microsecond=0)
+    start = midnight - timedelta(minutes=off)
     end = start + timedelta(days=1)
     sql = ("SELECT COUNT(*) FROM outbox WHERE status='sent' "
            "AND sent_at >= ? AND sent_at < ?")
-    args: tuple = (start.strftime("%Y-%m-%d %H:%M:%S"),
-                   end.strftime("%Y-%m-%d %H:%M:%S"))
+    args: tuple = (dt_str(start), dt_str(end))
     if channel:
         sql += " AND channel=?"
         args = args + (channel,)
@@ -314,6 +386,9 @@ async def _research_and_queue(run_id: int, limit: int) -> tuple[int, int]:
             try:
                 row = conn.execute("SELECT * FROM leads WHERE id=?", (lead_id,)).fetchone()
                 lead = dict(row) if row else None
+                # Which senders are up right now decides where this message is
+                # queued, so it is read with the lead rather than once per run.
+                live = [c for c in cfg["channels"] if sender_status(conn, cfg)[c]["live"]]
             finally:
                 conn.close()
             if not lead:
@@ -336,14 +411,15 @@ async def _research_and_queue(run_id: int, limit: int) -> tuple[int, int]:
                      r["evidence_url"][:400], r["pages"], lead_id))
                 done += 1
 
-                if r["need"] and not lead["pitch_edited"]:
+                if r["need"]:
                     finding = research.Finding(
                         r["need"], 0, r["need_fa"], r["evidence_url"], r["evidence"])
                     domain = lead["domain"] or normalize_domain(lead["website"])
-                    channel = channel_for(lead, cfg)
+                    channel = channel_for(lead, cfg, live=live)
                     body = research.compose(lead["name"], domain, lead["city"],
                                             finding, sender, channel=channel or "whatsapp")
-                    conn.execute("UPDATE leads SET pitch=? WHERE id=?", (body, lead_id))
+                    if not lead["pitch_edited"]:
+                        conn.execute("UPDATE leads SET pitch=? WHERE id=?", (body, lead_id))
 
                     to_addr = (lead["instagram"] if channel == "instagram"
                                else lead["phone_e164"])
@@ -354,7 +430,7 @@ async def _research_and_queue(run_id: int, limit: int) -> tuple[int, int]:
                                 "INSERT INTO outbox(lead_id,channel,to_addr,body,need,due_at)"
                                 " VALUES(?,?,?,?,?,?)",
                                 (lead_id, channel, to_addr, body, r["need"],
-                                 due.strftime("%Y-%m-%d %H:%M:%S")))
+                                 due.strftime(SQL_DT)))
                             # Commit before the next lead is scheduled. _next_due
                             # reads MAX(due_at) on a *different* connection, and
                             # an uncommitted row is invisible to it — leaving
@@ -403,23 +479,89 @@ def launch_research(limit: int = 60) -> dict:
 
 
 # ─────────────────────────────────────────── the sender protocol
-def claim_next(channel: str = "whatsapp") -> dict:
+def _reroute_to_live(conn, cfg: dict, live: list, target: str,
+                     limit: int = 6) -> int:
+    """Move queued messages off a channel whose sender is not running.
+
+    The panel tries Instagram first, and on a fresh install the Instagram
+    sender is often not started at all. Those messages would sit in the queue
+    forever while the WhatsApp sender asks for work and is told there is none.
+    A live sender may therefore adopt a handful of messages the dead channel
+    was sitting on — re-worded for the new channel, and paced from that
+    channel's own queue so adopting them cannot produce a burst.
+    """
+    dead = [c for c in cfg["channels"] if c not in live and c != target]
+    if not dead:
+        return 0
+    rows = conn.execute(
+        "SELECT o.id AS oid, o.body, o.need, l.* FROM outbox o "
+        "JOIN leads l ON l.id=o.lead_id "
+        f"WHERE o.status='queued' AND o.channel IN ({','.join('?' * len(dead))}) "
+        "ORDER BY o.due_at LIMIT ?", (*dead, limit)).fetchall()
+    if not rows:
+        return 0
+    sender = sender_signature()
+    moved = 0
+    for r in rows:
+        lead = dict(r)
+        if lead["status"] not in ("new", "contacted"):
+            continue
+        if channel_for(lead, cfg, live=live) != target:
+            continue
+        to_addr = lead["instagram"] if target == "instagram" else lead["phone_e164"]
+        if not to_addr:
+            continue
+        body = r["body"]
+        if r["need"]:
+            finding = research.Finding(r["need"], 0, lead["need_fa"],
+                                       lead["need_evidence_url"], lead["need_evidence"])
+            body = research.compose(lead["name"], lead["domain"], lead["city"],
+                                    finding, sender, channel=target)
+        due = _next_due(conn, cfg, target)
+        try:
+            conn.execute(
+                "UPDATE outbox SET channel=?, to_addr=?, body=?, attempts=0, "
+                "error='', due_at=? WHERE id=?",
+                (target, to_addr, body, dt_str(due), r["oid"]))
+            conn.commit()
+            moved += 1
+        except Exception:
+            # UNIQUE(lead_id,channel): it is already queued on the target.
+            conn.execute("UPDATE outbox SET status='skipped', "
+                         "error='already queued on the other channel' WHERE id=?",
+                         (r["oid"],))
+    if moved:
+        logger.info("adopted %d queued messages from %s onto %s",
+                    moved, ",".join(dead), target)
+    return moved
+
+
+def claim_next(channel: str = "whatsapp", peek: bool = False,
+               offset: int = 0) -> dict:
     """Hand the sender one message, or tell it why there is none.
 
     Every guard is re-read here rather than trusted from the caller, because the
     caller is a separate process on another machine that may be running an old
     build, may have been started twice, or may simply be wrong.
+
+    `peek` is what the dry run and the --check mode use: it shows exactly what
+    would go out next without claiming it, incrementing the attempt counter or
+    marking anything as sent. A check that consumed the queue would be worse
+    than no check at all.
     """
+    if channel not in CHANNELS:
+        return {"message": None, "reason": "bad_channel", "wait_s": 600, "peek": bool(peek)}
+    if not peek:
+        mark_sender_seen(channel)
+
     cfg = config()
     if not cfg["enabled"]:
-        return {"message": None, "reason": "paused", "wait_s": 120}
-    if in_quiet_hours(cfg):
-        return {"message": None, "reason": "quiet_hours", "wait_s": 600}
-
-    if channel not in CHANNELS:
-        return {"message": None, "reason": "bad_channel", "wait_s": 600}
+        return {"message": None, "reason": "paused", "wait_s": 120, "peek": bool(peek)}
     if channel not in cfg["channels"]:
-        return {"message": None, "reason": "channel_disabled", "wait_s": 600}
+        return {"message": None, "reason": "channel_disabled", "wait_s": 600, "peek": bool(peek)}
+    if in_quiet_hours(cfg):
+        return {"message": None, "reason": "quiet_hours", "wait_s": 600,
+                "quiet_end": cfg["quiet_end"], "peek": bool(peek)}
 
     cap = cap_for(cfg, channel)
     conn = get_db()
@@ -427,7 +569,7 @@ def claim_next(channel: str = "whatsapp") -> dict:
         used = sent_today(conn, channel)
         if used >= cap:
             return {"message": None, "reason": "daily_cap",
-                    "sent_today": used, "cap": cap, "wait_s": 1800}
+                    "sent_today": used, "cap": cap, "wait_s": 1800, "peek": bool(peek)}
 
         # Release anything a dead sender claimed and never reported.
         conn.execute(
@@ -435,36 +577,46 @@ def claim_next(channel: str = "whatsapp") -> dict:
             "WHERE status='claimed' AND claimed_at < datetime('now', ?)",
             (f"-{CLAIM_TIMEOUT_MINUTES} minutes",))
 
+        if not peek:
+            seen = sender_status(conn, cfg)
+            if seen[channel]["live"]:
+                live = [c for c in cfg["channels"] if seen[c]["live"]]
+                _reroute_to_live(conn, cfg, live, channel)
+                conn.commit()
+
         row = conn.execute(
             "SELECT o.*, l.name, l.status AS lead_status FROM outbox o "
             "JOIN leads l ON l.id=o.lead_id "
             "WHERE o.status='queued' AND o.channel=? AND o.due_at<=datetime('now') "
-            "ORDER BY o.due_at LIMIT 1", (channel,)).fetchone()
+            "ORDER BY o.due_at LIMIT 1 OFFSET ?",
+            (channel, max(0, int(offset)))).fetchone()
         if row is None:
             nxt = conn.execute(
                 "SELECT MIN(due_at) d FROM outbox WHERE status='queued' "
                 "AND channel=?", (channel,)).fetchone()
             conn.commit()
             return {"message": None, "reason": "nothing_due",
-                    "next_due": nxt["d"] if nxt else None, "wait_s": 90}
+                    "next_due": nxt["d"] if nxt else None, "wait_s": 90, "peek": bool(peek)}
 
         # A lead who already replied is off the list — that conversation is his.
         if row["lead_status"] not in ("new", "contacted"):
-            conn.execute("UPDATE outbox SET status='skipped', "
-                         "error='lead already answered' WHERE id=?", (row["id"],))
-            conn.commit()
-            return {"message": None, "reason": "skipped", "wait_s": 2}
+            if not peek:
+                conn.execute("UPDATE outbox SET status='skipped', "
+                             "error='lead already answered' WHERE id=?", (row["id"],))
+                conn.commit()
+            return {"message": None, "reason": "skipped", "wait_s": 2, "peek": bool(peek)}
 
-        conn.execute(
-            "UPDATE outbox SET status='claimed', claimed_at=datetime('now'), "
-            "attempts=attempts+1 WHERE id=?", (row["id"],))
-        conn.commit()
+        if not peek:
+            conn.execute(
+                "UPDATE outbox SET status='claimed', claimed_at=datetime('now'), "
+                "attempts=attempts+1 WHERE id=?", (row["id"],))
+            conn.commit()
         return {"message": {"id": row["id"], "lead_id": row["lead_id"],
                             "name": row["name"], "to": row["to_addr"],
                             "body": row["body"], "need": row["need"],
                             "channel": row["channel"],
                             "attempt": row["attempts"] + 1},
-                "sent_today": used, "cap": cap,
+                "sent_today": used, "cap": cap, "peek": peek,
                 "min_gap_s": gap_for(cfg, channel)}
     finally:
         conn.close()
@@ -496,6 +648,70 @@ def report(outbox_id: int, ok: bool, error: str = "") -> dict:
                 _fallback(conn, row, error)
         conn.commit()
         return {"ok": True, "status": "sent" if ok else "failed"}
+    finally:
+        conn.close()
+
+
+def release(outbox_id: int) -> dict:
+    """Put a claimed message back exactly as it was.
+
+    Used by --check and by the dry run. Reporting `ok: false` would have
+    incremented the attempt counter and eventually marked a perfectly good
+    message as failed — three checks and the queue quietly ate the lead.
+    """
+    conn = get_db()
+    try:
+        row = conn.execute("SELECT * FROM outbox WHERE id=?", (outbox_id,)).fetchone()
+        if row is None:
+            raise LookupError("no such message")
+        if row["status"] == "claimed":
+            conn.execute(
+                "UPDATE outbox SET status='queued', claimed_at=NULL, "
+                "attempts=MAX(attempts-1,0) WHERE id=?", (outbox_id,))
+            conn.commit()
+        return {"ok": True, "status": "queued"}
+    finally:
+        conn.close()
+
+
+def replied(phone: str, optout: bool = False) -> dict:
+    """A human answered. Stop everything still queued for that number.
+
+    This is the one signal the sender can produce that the queue cannot infer:
+    the moment a business writes back, the conversation belongs to Nima and
+    any further automated message would be an intrusion. An opt-out says so
+    explicitly and also stops the lead being picked up by a later research run.
+    """
+    digits = re.sub(r"\D", "", phone or "")
+    if digits.startswith("00"):
+        digits = digits[2:]
+    if digits.startswith("0"):
+        digits = digits[1:]
+    if len(digits) < 8:
+        raise ValueError("bad phone number")
+    last10 = digits[-10:]
+
+    status = "skip" if optout else "replied"
+    conn = get_db()
+    try:
+        leads = conn.execute(
+            "SELECT id FROM leads WHERE phone_e164=? OR phone_e164 LIKE ?",
+            (digits, f"%{last10}")).fetchall()
+        ids = [r["id"] for r in leads]
+        if not ids:
+            return {"ok": True, "leads": 0, "stopped": 0}
+        marks = ",".join("?" * len(ids))
+        conn.execute(f"UPDATE leads SET status=?, updated_at=datetime('now') "
+                     f"WHERE id IN ({marks})", (status, *ids))
+        cur = conn.execute(
+            f"UPDATE outbox SET status='skipped', error=? "
+            f"WHERE lead_id IN ({marks}) AND status IN ('queued','claimed')",
+            ("opted out" if optout else "lead replied", *ids))
+        conn.commit()
+        if cur.rowcount:
+            logger.info("lead %s replied — %d queued message(s) stopped",
+                        digits, cur.rowcount)
+        return {"ok": True, "leads": len(ids), "stopped": cur.rowcount}
     finally:
         conn.close()
 
@@ -593,6 +809,7 @@ def status() -> dict:
         researched = conn.execute(
             "SELECT COUNT(*) FROM leads WHERE researched_at IS NOT NULL").fetchone()[0]
         per_channel = {}
+        senders = sender_status(conn, cfg)
         for ch in CHANNELS:
             per_channel[ch] = {
                 "queued": conn.execute(
@@ -604,10 +821,13 @@ def status() -> dict:
                 "sent_today": sent_today(conn, ch),
                 "cap": cap_for(cfg, ch),
                 "enabled": ch in cfg["channels"],
+                "live": senders[ch]["live"],
+                "last_seen": senders[ch]["last_seen"],
             }
         return {
             "config": cfg,
             "channels": per_channel,
+            "senders": senders,
             "quiet_now": in_quiet_hours(cfg),
             "local_time": local_now(cfg["tz_offset_min"]).strftime("%Y-%m-%d %H:%M"),
             "server_time": utc_now().strftime("%Y-%m-%d %H:%M") + " UTC",
@@ -635,7 +855,7 @@ def rebuild_queued() -> dict:
     conn = get_db()
     try:
         rows = conn.execute(
-            "SELECT o.id, l.* FROM outbox o JOIN leads l ON l.id=o.lead_id "
+            "SELECT o.id AS outbox_id, l.* FROM outbox o JOIN leads l ON l.id=o.lead_id "
             "WHERE o.status='queued' AND l.need<>''").fetchall()
         n = 0
         for r in rows:
@@ -644,7 +864,8 @@ def rebuild_queued() -> dict:
                                        lead["need_evidence_url"], lead["need_evidence"])
             body = research.compose(lead["name"], lead["domain"], lead["city"],
                                     finding, sender)
-            conn.execute("UPDATE outbox SET body=? WHERE id=?", (body, lead["id"]))
+            conn.execute("UPDATE outbox SET body=? WHERE id=?",
+                         (body, lead["outbox_id"]))
             if not lead["pitch_edited"]:
                 conn.execute("UPDATE leads SET pitch=? WHERE id=?", (body, lead["id"]))
             n += 1

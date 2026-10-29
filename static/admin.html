@@ -228,7 +228,7 @@
             <div class="chan" id="chan-instagram">
               <div class="chan-head">
                 <label class="chan-on"><input type="checkbox" id="fd-c-ig"> <b>Instagram</b></label>
-                <span class="chan-first">tried first</span>
+                <span class="chan-first" id="fd-c-ig-first">tried first</span>
               </div>
               <p class="fd-note" id="fd-c-ig-state">–</p>
               <div class="grid-2">
@@ -239,7 +239,7 @@
             <div class="chan" id="chan-whatsapp">
               <div class="chan-head">
                 <label class="chan-on"><input type="checkbox" id="fd-c-wa"> <b>WhatsApp</b></label>
-                <span class="chan-first">fallback</span>
+                <span class="chan-first" id="fd-c-wa-first">fallback</span>
               </div>
               <p class="fd-note" id="fd-c-wa-state">–</p>
               <div class="grid-2">
@@ -263,10 +263,11 @@
           </div>
           <details class="fd-key">
             <summary>Sender setup — agent key</summary>
-            <p class="fd-note">Paste this into <code>tools/whatsapp-sender/config.json</code> on your PC, then run <code>npm install</code> and <code>npm start</code> there. It is a credential: anyone holding it can read your queue.</p>
+            <p class="fd-note">Put this in <code>tools/whatsapp-sender/config.json</code> on your PC — use <b>Download config.json</b> and drop the file there — then run <code>npm install</code> and <code>npm run check</code> in that folder. It is a credential: anyone holding it can read your queue.</p>
             <div class="upload-row">
               <input id="fd-a-key" readonly dir="ltr">
               <button class="btn btn-ghost" id="fd-a-copykey" type="button">Copy</button>
+              <button class="btn btn-ghost" id="fd-a-dlkey" type="button">Download config.json</button>
             </div>
           </details>
         </div>
@@ -511,7 +512,7 @@
     </div>
   </div>
 
-  <script src="/static/js/admin.js?v=13"></script>
+  <script src="/static/js/admin.js?v=14"></script>
 </body>
 </html>
 

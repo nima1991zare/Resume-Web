@@ -37,6 +37,7 @@ import json
 import os
 import pathlib
 import random
+import re
 import sys
 import time
 import urllib.error
@@ -57,6 +58,93 @@ def log(*a) -> None:
     print(time.strftime("%H:%M:%S"), *a, flush=True)
 
 
+HERE_PENDING = HERE / "pending-reports.json"
+
+
+def _read_pending() -> list:
+    try:
+        return json.loads(HERE_PENDING.read_text(encoding="utf-8"))
+    except Exception:
+        return []
+
+
+def _write_pending(rows: list) -> None:
+    try:
+        HERE_PENDING.write_text(json.dumps(rows, indent=2), encoding="utf-8")
+    except Exception as e:
+        log("could not save pending-reports.json:", e)
+
+
+def flush_pending() -> int:
+    """Send reports that failed earlier, before claiming anything new.
+
+    A sent message the server never heard about stays "claimed" until the
+    claim expires, and is then handed out again — a duplicate DM to a real
+    person. Losing one HTTP call must not cost that.
+    """
+    rows = _read_pending()
+    if not rows:
+        return 0
+    left = []
+    for entry in rows:
+        try:
+            api("/api/agent/report", entry)
+            log("  reported the earlier send to", entry.get("name", "lead"))
+        except RuntimeError as e:
+            # 404: the server no longer knows this message (dropped in the
+            # panel). Retrying forever would never succeed.
+            if "HTTP 404" in str(e):
+                continue
+            left.append(entry)
+    _write_pending(left)
+    return len(left)
+
+
+def report(entry: dict, label: str) -> None:
+    try:
+        api("/api/agent/report", entry)
+    except RuntimeError as e:
+        rows = _read_pending()
+        rows.append(entry)
+        _write_pending(rows)
+        log(f"  {label} sent, but the report failed ({e}) — "
+            f"will report before the next send")
+
+
+_protocol_ok = False
+
+
+def ensure_protocol() -> None:
+    """An older server treats peek=1 as a real claim and reports a dry run as a
+    send — silently eating the queue. Refuse to run against one."""
+    global _protocol_ok
+    if _protocol_ok:
+        return
+    r = api(f"/api/agent/claim?channel={CHANNEL}&peek=1")
+    if r.get("peek") is not True:
+        sys.exit("The server does not understand peek=1 — it is running an older "
+                 "build, which would treat this check as a real claim.\n"
+                 "Deploy the current version of the site, then start this again.")
+    _protocol_ok = True
+
+
+def explain(r: dict) -> str:
+    """Machine reasons are useless to a person at 11pm."""
+    reason = r.get("reason")
+    if reason == "paused":
+        return "Autopilot is off — turn it on in Admin → Project Finder → Autopilot."
+    if reason == "channel_disabled":
+        return "Instagram is switched off in the channel list — tick it in the panel."
+    if reason == "daily_cap":
+        return f"Daily cap reached ({r.get('sent_today', 0)}/{r.get('cap', 0)}) — resumes after midnight, local time."
+    if reason == "quiet_hours":
+        return f"Quiet hours — nothing goes out until {r.get('quiet_end', 'morning')} local time."
+    if reason == "nothing_due":
+        due = r.get("next_due")
+        return f"nothing due until {due} UTC" if due else "queue is empty"
+    return str(reason or "nothing to send")
+
+
 def load_config() -> dict:
     f = HERE / "config.json"
     if not f.exists():
@@ -69,6 +157,11 @@ def load_config() -> dict:
     for k in ("serverUrl", "agentKey"):
         if not c.get(k):
             sys.exit(f"config.json needs {k}.")
+    if re.search(r"paste|your[-_ ]?key|admin\s*->|autopilot", c["agentKey"], re.I) \
+            or len(c["agentKey"]) < 30:
+        sys.exit("agentKey is still the placeholder from the example file.\n"
+                 "Copy the real key from Admin → Project Finder → Autopilot → "
+                 "Sender setup and paste it into config.json.")
     c["serverUrl"] = c["serverUrl"].rstrip("/")
     c.setdefault("dryRun", True)
     return c
@@ -152,7 +245,8 @@ def check() -> int:
     print("account :", CFG.get("igUsername") or "(not set)")
     print("dry run :", CFG["dryRun"])
     try:
-        r = api(f"/api/agent/claim?channel={CHANNEL}")
+        ensure_protocol()
+        r = api(f"/api/agent/claim?channel={CHANNEL}&peek=1")
     except RuntimeError as e:
         print("server  : FAILED —", e)
         print()
@@ -174,39 +268,94 @@ def check() -> int:
         print()
         print(m["body"])
         print()
-        api("/api/agent/report", {"id": m["id"], "ok": False,
-                                  "error": "returned by --check"})
-        print("(returned to the queue — nothing was sent)")
+        print("(peeked — nothing was claimed or sent)")
     else:
-        print("server  : OK — nothing to send (" + str(r.get("reason")) + ")")
-        if r.get("reason") == "channel_disabled":
-            print("          Instagram is not in the channel list;")
-            print("          turn it on in Admin → Project Finder → Autopilot.")
-        elif r.get("reason") == "paused":
-            print("          Autopilot is off.")
-        elif r.get("next_due"):
-            print("          next message due at " + str(r["next_due"]))
+        print("server  : OK — nothing to send")
+        print("          " + explain(r))
     print()
     print("Everything except Instagram itself is working.")
     return 0
 
 
 # ── the loop ─────────────────────────────────────────────────────────────
+def dry_loop() -> int:
+    """Read the queue and print it without claiming anything.
+
+    The old version claimed each message and then reported it as sent, which
+    consumed the daily cap and the one-message-per-lead guarantee while
+    nothing had been delivered.
+    """
+    seen: set[tuple] = set()
+    last = ""
+    ensure_protocol()
+    while True:
+        printed = 0
+        reason = ""
+        for i in range(25):
+            try:
+                r = api(f"/api/agent/claim?channel={CHANNEL}&peek=1&offset={i}")
+            except RuntimeError as e:
+                log("claim failed:", e)
+                time.sleep(45)
+                break
+            msg = r.get("message")
+            if not msg:
+                if i == 0:
+                    reason = explain(r)
+                break
+            key = (msg["id"], msg["body"])
+            if key in seen:
+                continue
+            seen.add(key)
+            printed += 1
+            log(f"DRY RUN — would send to @{msg['to']} ({msg['name']}) "
+                f"— {msg['need']}")
+            log(msg["body"] + "\n")
+        if printed == 0:
+            why = reason or "nothing new"
+            if why != last:
+                log("waiting:", why)
+                last = why
+        else:
+            last = ""
+        time.sleep(60 if printed else 120)
+
+
 def main() -> int:
     if "--check" in sys.argv:
         return check()
 
-    if not CFG.get("igUsername") or not CFG.get("igPassword"):
-        sys.exit("config.json needs igUsername and igPassword.")
+    # `python sender.py --send` is the one-off override, mirroring the WhatsApp
+    # sender, so trying a real send does not mean editing config.json and
+    # remembering to put the safety back.
+    if "--send" in sys.argv:
+        CFG["dryRun"] = False
 
     log("server:", CFG["serverUrl"], "(DRY RUN)" if CFG["dryRun"] else "")
     if _PROXY:
         log("proxy:", _PROXY)
-    cl = None if CFG["dryRun"] else connect()
+    if CFG["dryRun"]:
+        log("DRY RUN — messages are printed and NOT sent. Set \"dryRun\": false")
+        log("in config.json when the text reads right; nothing is consumed meanwhile.")
+        return dry_loop()
+
+    if not CFG.get("igUsername") or not CFG.get("igPassword"):
+        sys.exit("config.json needs igUsername and igPassword.")
+
+    ensure_protocol()
+    cl = connect()
 
     failures = 0
     last_reason = ""
     while True:
+        # Settle anything we sent but could not report first: otherwise the
+        # claim expires and this same text goes to the same person twice.
+        unsent = flush_pending()
+        if unsent:
+            log("waiting for the server to accept", unsent, "earlier report(s)")
+            time.sleep(30)
+            continue
+
         try:
             r = api(f"/api/agent/claim?channel={CHANNEL}")
         except RuntimeError as e:
@@ -216,10 +365,10 @@ def main() -> int:
 
         msg = r.get("message")
         if not msg:
-            reason = r.get("reason", "nothing")
-            if reason != last_reason:
-                log("waiting:", reason)
-                last_reason = reason
+            why = explain(r)
+            if why != last_reason:
+                log("waiting:", why)
+                last_reason = why
             time.sleep(min(900, max(30, r.get("wait_s", 90))))
             continue
         last_reason = ""
@@ -227,11 +376,8 @@ def main() -> int:
         log(f"sending to @{msg['to']} ({msg['name']}) — {msg['need']} "
             f"[{r.get('sent_today', 0) + 1}/{r.get('cap')}]")
         try:
-            if CFG["dryRun"]:
-                log("DRY RUN — not sending:\n" + msg["body"] + "\n")
-            else:
-                send_one(cl, msg)
-            api("/api/agent/report", {"id": msg["id"], "ok": True})
+            send_one(cl, msg)
+            report({"id": msg["id"], "ok": True, "name": msg["name"]}, "message")
             failures = 0
             log("  sent")
         except Exception as e:

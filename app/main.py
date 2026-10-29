@@ -285,6 +285,15 @@ class AgentReportIn(BaseModel):
     error: str = Field(default="", max_length=300)
 
 
+class AgentReleaseIn(BaseModel):
+    id: int
+
+
+class AgentReplyIn(BaseModel):
+    phone: str = Field(min_length=6, max_length=40)
+    optout: bool = False
+
+
 class LeadIn(BaseModel):
     status: str = Field(default="", max_length=20)
     note: Optional[str] = Field(default=None, max_length=2000)
@@ -896,13 +905,19 @@ def autopilot_drop(item_id: int, authorization: Optional[str] = Header(None)):
 
 # ---- the two endpoints the sender on the PC actually calls ----
 @app.post("/api/agent/claim")
-def agent_claim(request: Request, channel: str = "whatsapp",
-                x_agent_key: Optional[str] = Header(None)):
+def agent_claim(request: Request, channel: str = "whatsapp", peek: int = 0,
+                offset: int = 0, x_agent_key: Optional[str] = Header(None)):
     """Each sender claims only its own channel, so the two run independently
-    and neither can consume the other's daily allowance."""
+    and neither can consume the other's daily allowance.
+
+    `peek=1` shows the next message without claiming it — what the dry run and
+    `--check` use, so checking the queue can never consume it. `offset` pages
+    through the visible queue for the dry run.
+    """
     require_agent(x_agent_key)
     rate_limit(request, "agent_claim", limit=240, window_s=300)
-    return autopilot.claim_next(channel=channel)
+    return autopilot.claim_next(channel=channel, peek=bool(peek),
+                                offset=min(max(offset, 0), 500))
 
 
 @app.post("/api/agent/report")
@@ -912,6 +927,26 @@ def agent_report(data: AgentReportIn, x_agent_key: Optional[str] = Header(None))
         return autopilot.report(data.id, data.ok, data.error)
     except LookupError:
         raise HTTPException(status_code=404, detail="No such message")
+
+
+@app.post("/api/agent/release")
+def agent_release(data: AgentReleaseIn, x_agent_key: Optional[str] = Header(None)):
+    """Give a claimed message back untouched (dry run, --check)."""
+    require_agent(x_agent_key)
+    try:
+        return autopilot.release(data.id)
+    except LookupError:
+        raise HTTPException(status_code=404, detail="No such message")
+
+
+@app.post("/api/agent/replied")
+def agent_replied(data: AgentReplyIn, x_agent_key: Optional[str] = Header(None)):
+    """A business answered — stop everything queued for that number."""
+    require_agent(x_agent_key)
+    try:
+        return autopilot.replied(data.phone, optout=data.optout)
+    except ValueError:
+        raise HTTPException(status_code=422, detail="Bad phone number")
 
 
 @app.post("/api/agent/pause")

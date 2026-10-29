@@ -47,21 +47,27 @@ Open `config.json` and set:
 Then:
 
 ```bash
-npm start
+npm run check     # proves the server half; claims and sends nothing
+npm start         # dry run: prints the queue, consumes nothing
+npm run send      # actually sends (same as setting "dryRun": false)
 ```
 
 The first run prints a QR code. Scan it with **WhatsApp → Linked devices →
 Link a device**. The session is saved in `.session/`, so this happens once.
 
+If `agentKey` is still the sentence from the example file, the sender stops
+immediately and says so — that is the 401 you would otherwise chase later.
+
 ## Doing it in the right order
 
-1. `dryRun: true`, Autopilot **off** in the panel. Nothing is sent; you are
-   only checking that it connects and can reach the server.
+1. **Dry run first**, Autopilot **off** in the panel. `npm start` prints each
+   message without claiming it, so nothing is marked sent and the daily cap is
+   untouched.
 2. Read the queue in the admin panel. Open ten messages and check each one says
    something true about that business. **This is the step that decides whether
    this works at all** — the messages are specific, which is the whole point,
    but a wrong specific claim is worse than a generic one.
-3. Set `dryRun: false`, cap to about 10, and turn Autopilot on for one day.
+3. Set the cap to about 10, turn Autopilot on, and run `npm run send`.
 4. Read the replies. Adjust the wording in `app/research.py` if they are not
    landing, then raise the cap slowly.
 
@@ -74,8 +80,9 @@ Link a device**. The session is saved in `.session/`, so this happens once.
   because repeated failures usually mean WhatsApp has started refusing you.
 - **Ctrl-C**, obviously.
 
-A reply from a business takes that lead out of the queue automatically. From
-that point the conversation is yours — the agent never answers anyone.
+A reply from a business takes that lead out of the queue automatically, and an
+opt-out ("stop", "لغو", "مزاحم") is recorded as such. From that point the
+conversation is yours — the agent never answers anyone.
 
 ## Why the rules live on the server
 

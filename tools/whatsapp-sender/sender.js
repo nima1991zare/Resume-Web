@@ -50,8 +50,22 @@ const CFG = (() => {
                   "(Admin → Project Finder → Autopilot shows the key).\n");
     process.exit(1);
   }
+  // The example file's value is a sentence, not a key. Catching it here turns
+  // "401 agent key rejected" twenty seconds later into the one instruction
+  // that actually fixes it.
+  if (/paste|your[-_ ]?key|admin\s*->|autopilot/i.test(c.agentKey) ||
+      c.agentKey.length < 30) {
+    console.error("\nagentKey is still the placeholder from the example file.");
+    console.error("Copy the real key from:");
+    console.error("  Admin → Project Finder → Autopilot → Sender setup");
+    console.error('Paste it into "agentKey" in config.json (no spaces).\n');
+    process.exit(1);
+  }
   c.serverUrl = c.serverUrl.replace(/\/+$/, "");
   c.dryRun = !!c.dryRun;
+  // `npm start -- --send` is the one-off override, so trying a real send does
+  // not mean editing this file and remembering to put the safety back.
+  if (process.argv.includes("--send")) c.dryRun = false;
   return c;
 })();
 
@@ -68,8 +82,15 @@ const CFG = (() => {
  * it is set *before* the runtime starts — so if a proxy is configured and the
  * flag is missing, re-exec once with it set rather than failing later.
  */
-const PROXY = CFG.proxy || process.env.HTTPS_PROXY || process.env.https_proxy ||
-              process.env.HTTP_PROXY || process.env.http_proxy || "";
+// A local server must never be sent through the proxy, and the proxy variables
+// are often set machine-wide for other reasons — reaching 127.0.0.1 through a
+// remote tunnel is a confusing way to get "connection refused".
+const LOCAL_SERVER = /^https?:\/\/(localhost|127\.0\.0\.1|\[::1\])(:\d+)?(\/|$)/i
+  .test(CFG.serverUrl);
+const PROXY = CFG.proxy ||
+              (!LOCAL_SERVER &&
+               (process.env.HTTPS_PROXY || process.env.https_proxy ||
+                process.env.HTTP_PROXY || process.env.http_proxy)) || "";
 
 if (PROXY && !process.env.NODE_USE_ENV_PROXY) {
   const { spawnSync } = require("child_process");
@@ -101,6 +122,68 @@ async function api(route, body) {
   if (r.status === 401) throw new Error("agent key rejected by server");
   if (!r.ok) throw new Error(route + " -> HTTP " + r.status);
   return r.json();
+}
+
+// ── reports that did not get through ──────────────────────────────────────
+/**
+ * A message that was really sent but whose report never reached the server is
+ * the worst state this program can be in: the server still thinks it is
+ * claimed, the claim expires after ten minutes, and the next poll sends the
+ * same text to the same business a second time.
+ *
+ * So a failed report is written to disk and retried before anything new is
+ * claimed — across restarts, too. Losing one HTTP call must never cost a
+ * duplicate message to a stranger.
+ */
+const PENDING = path.join(__dirname, "pending-reports.json");
+
+function readPending() {
+  try {
+    const list = JSON.parse(fs.readFileSync(PENDING, "utf8"));
+    return Array.isArray(list) ? list : [];
+  } catch (e) {
+    return [];
+  }
+}
+
+function writePending(list) {
+  try {
+    fs.writeFileSync(PENDING, JSON.stringify(list, null, 2));
+  } catch (e) {
+    log("could not save pending-reports.json:", e.message);
+  }
+}
+
+async function flushPending() {
+  const list = readPending();
+  if (!list.length) return 0;
+  const left = [];
+  for (const e of list) {
+    try {
+      await api("/api/agent/report", e);
+      log("  reported the earlier send to " + (e.name || "lead"));
+    } catch (err) {
+      // 404 means the server does not know this message any more (someone
+      // dropped or requeued it in the panel) — retrying forever is pointless.
+      if (/HTTP 404/.test(err.message)) continue;
+      left.push(e);
+    }
+  }
+  writePending(left);
+  return left.length;
+}
+
+/** Record what happened, or keep trying until the server has certainly heard. */
+async function report(entry, label) {
+  try {
+    await api("/api/agent/report", entry);
+  } catch (e) {
+    const list = readPending();
+    list.push(entry);
+    writePending(list);
+    log("  " + label + " sent, but the report failed (" + e.message +
+        ") — will report before the next send");
+  }
 }
 
 // ── the browser ───────────────────────────────────────────────────────────
@@ -197,62 +280,169 @@ client.on("disconnected", (r) => {
  */
 client.on("message", async (msg) => {
   try {
-    if (msg.fromMe || msg.isStatus) return;
+    if (msg.fromMe || msg.isStatus || /@(g\.us|broadcast)$/.test(msg.from || "")) return;
     const from = (msg.from || "").replace(/\D/g, "");
     if (!from) return;
-    log("reply from +" + from + " — that lead is yours now");
     // An opt-out has to be honoured on the spot and loudly.
     const text = (msg.body || "").toLowerCase();
-    if (/stop|unsubscribe|لغو|مزاحم|قطع|نفرست/.test(text)) {
-      log("OPT-OUT from +" + from);
-      await api("/api/agent/report", { id: 0, ok: false, error: "optout:" + from })
-        .catch(() => {});
-    }
+    const optout = /stop|unsubscribe|لغو|مزاحم|قطع|نفرست/.test(text);
+    log("reply from +" + from + (optout ? " — OPT-OUT" : "") +
+        " — that lead is yours now");
+    // Tell the server, so anything still queued for them is dropped. This is
+    // the only way the queue can know a human answered.
+    await api("/api/agent/replied", { phone: from, optout }).catch((e) =>
+      log("  could not record the reply:", e.message));
   } catch (e) { /* never let a reply handler kill the sender */ }
 });
 
 // ── the loop ──────────────────────────────────────────────────────────────
+/**
+ * Dry run: read the queue, print it, touch nothing.
+ *
+ * It deliberately does not claim. Claiming and reporting "sent" used to mark
+ * every message as delivered — consuming the daily cap and the one-message-
+ * per-lead guarantee while nothing had actually been sent. A dry run must be
+ * free to repeat.
+ */
+const drySeen = new Set();
+
+async function dryTick() {
+  let printed = 0;
+  let reason = "";
+  let nextDue = null;
+  for (let i = 0; i < 25; i++) {
+    let res;
+    try {
+      res = await api("/api/agent/claim?channel=whatsapp&peek=1&offset=" + i);
+    } catch (e) {
+      log("claim failed:", e.message);
+      return 30000;
+    }
+    if (!res.message) {
+      if (i === 0) { reason = res.reason || "nothing"; nextDue = res.next_due; }
+      break;
+    }
+    const m = res.message;
+    // Re-worded messages must be re-printed: the whole point of the dry run is
+    // reading the text that would actually go out.
+    const key = m.id + "|" + m.body;
+    if (drySeen.has(key)) continue;
+    drySeen.add(key);
+    printed++;
+    log(`DRY RUN — would send to ${m.name} (+${m.to}) — ${m.need} ` +
+        `[${(res.sent_today || 0) + printed}/${res.cap}]`);
+    log(m.body + "\n");
+  }
+  if (printed === 0) {
+    const why = reason ? explain({ reason, next_due: nextDue }) : "nothing new";
+    if (why !== lastReason) { log("waiting:", why); lastReason = why; }
+  } else {
+    lastReason = "";
+  }
+  return printed ? 60000 : 120000;
+}
+
+/** Is this number on WhatsApp? Unknown answers are given the benefit of the
+ * doubt — refusing to try would silently drop a real business. */
+async function isOnWhatsApp(digits) {
+  try {
+    if (typeof client.getNumberId === "function") {
+      const id = await client.getNumberId(digits);
+      return !!id;
+    }
+  } catch (e) { /* fall through to the older call */ }
+  try {
+    return await client.isRegisteredUser(digits + "@c.us");
+  } catch (e) {
+    return true;
+  }
+}
+
+/** An old server would still claim on `peek=1` — and then report a dry run as
+ * a real send. Refuse to talk to one rather than eat the queue silently. */
+let protocolOk = false;
+async function ensureProtocol() {
+  if (protocolOk) return;
+  const r = await api("/api/agent/claim?channel=whatsapp&peek=1").catch((e) => ({ error: e }));
+  if (r.error) throw r.error;
+  if (r.peek !== true) {
+    console.error("");
+    console.error("The server does not understand peek=1 — it is running an older");
+    console.error("build, which would treat this check as a real claim.");
+    console.error("Deploy the current version of the site, then start this again.");
+    console.error("");
+    process.exit(1);
+  }
+  protocolOk = true;
+}
+
+/** Turn the server's machine reasons into a sentence that says what to do. */
+function explain(res) {
+  switch (res.reason) {
+    case "paused":
+      return "Autopilot is off — turn it on in Admin → Project Finder → Autopilot.";
+    case "channel_disabled":
+      return "WhatsApp is switched off in the channel list — tick it in the panel.";
+    case "daily_cap":
+      return "Daily cap reached (" + (res.sent_today || 0) + "/" + (res.cap || 0) +
+             ") — resumes after midnight, local time.";
+    case "quiet_hours":
+      return "Quiet hours — nothing goes out until " + (res.quiet_end || "morning") +
+             " local time.";
+    case "nothing_due":
+      return res.next_due ? "nothing due until " + res.next_due + " UTC" : "queue is empty";
+    default:
+      return res.reason || "nothing to send";
+  }
+}
+
 async function tick() {
+  await ensureProtocol();
+  if (CFG.dryRun) return dryTick();
   if (!ready) return 3000;
+
+  // Anything we sent but could not report must be settled first, or the server
+  // will hand the same message out again once the claim expires.
+  const unsent = await flushPending();
+  if (unsent) {
+    log("waiting for the server to accept " + unsent + " earlier report(s) — not claiming more");
+    return 30000;
+  }
 
   let res;
   try {
-    res = await api("/api/agent/claim");
+    res = await api("/api/agent/claim?channel=whatsapp");
   } catch (e) {
     log("claim failed:", e.message);
     return 30000;
   }
 
   if (!res.message) {
-    const why = res.reason || "nothing";
+    const why = explain(res);
     if (why !== lastReason) { log("waiting:", why); lastReason = why; }
     return jitter((res.wait_s || 60) * 1000, 0.15);
   }
   lastReason = "";
 
   const m = res.message;
-  const chatId = m.to.replace(/\D/g, "") + "@c.us";
+  const digits = m.to.replace(/\D/g, "");
+  const chatId = digits + "@c.us";
   log(`sending to ${m.name} (+${m.to}) — ${m.need} ` +
       `[${(res.sent_today || 0) + 1}/${res.cap}]`);
 
   try {
-    if (CFG.dryRun) {
-      log("DRY RUN — not actually sending:\n" + m.body + "\n");
-    } else {
-      // Confirm the number is on WhatsApp before writing to it. Sending to
-      // numbers that do not exist is itself a spam signal.
-      const exists = await client.isRegisteredUser(chatId);
-      if (!exists) {
-        await api("/api/agent/report",
-                  { id: m.id, ok: false, error: "number not on WhatsApp" });
-        log("  not a WhatsApp number — skipped");
-        return jitter(8000);
-      }
-      // Type-ish pause. Instant sends, one after another, are a bot signature.
-      await sleep(jitter(4000 + m.body.length * 18, 0.4));
-      await client.sendMessage(chatId, m.body);
+    // Confirm the number is on WhatsApp before writing to it. Sending to
+    // numbers that do not exist is itself a spam signal.
+    if (!(await isOnWhatsApp(digits))) {
+      await report({ id: m.id, ok: false, error: "not on WhatsApp", name: m.name },
+                   "not a WhatsApp number —");
+      log("  not a WhatsApp number — skipped");
+      return jitter(8000);
     }
-    await api("/api/agent/report", { id: m.id, ok: true });
+    // Type-ish pause. Instant sends, one after another, are a bot signature.
+    await sleep(jitter(4000 + m.body.length * 18, 0.4));
+    await client.sendMessage(chatId, m.body);
+    await report({ id: m.id, ok: true, name: m.name }, "message");
     consecutiveFailures = 0;
     log("  sent");
   } catch (e) {
@@ -325,7 +515,8 @@ if (process.argv.includes("--check")) {
     console.log("server  :", CFG.serverUrl);
     console.log("dry run :", CFG.dryRun);
     try {
-      const r = await api("/api/agent/claim");
+      await ensureProtocol();
+      const r = await api("/api/agent/claim?channel=whatsapp&peek=1");
       if (r.message) {
         console.log("server  : OK — a message is ready to send");
         console.log("");
@@ -335,19 +526,10 @@ if (process.argv.includes("--check")) {
         console.log("");
         console.log(r.message.body);
         console.log("");
-        // Put it back: a check must not consume a message.
-        await api("/api/agent/report",
-                  { id: r.message.id, ok: false, error: "returned by --check" });
-        console.log("(returned to the queue — nothing was sent)");
+        console.log("(peeked — nothing was claimed or sent)");
       } else {
-        console.log("server  : OK — nothing to send right now (" + r.reason + ")");
-        if (r.reason === "paused") {
-          console.log("          turn Autopilot on in Admin -> Project Finder");
-        } else if (r.reason === "nothing_due" && r.next_due) {
-          console.log("          next message is due at " + r.next_due);
-        } else if (r.reason === "quiet_hours") {
-          console.log("          inside quiet hours");
-        }
+        console.log("server  : OK — nothing to send right now");
+        console.log("          " + explain(r));
       }
       console.log("");
       console.log("Everything except WhatsApp itself is working.");
@@ -379,6 +561,13 @@ log("connecting to WhatsApp…");
 log("server:", CFG.serverUrl, CFG.dryRun ? "(DRY RUN)" : "");
 log("browser:", CHROME);
 if (PROXY) log("proxy:", PROXY);
+if (CFG.dryRun) {
+  log("");
+  log("DRY RUN — messages are printed to this window and NOT sent.");
+  log('When the text reads right, set "dryRun": false in config.json');
+  log("and restart. Nothing in the queue is consumed while dryRun is true.");
+  log("");
+}
 client.initialize();
 loop();
 

@@ -831,22 +831,49 @@
       if (document.activeElement !== el) el.value = p[1];
     });
     var ch = d.channels || {};
+    var senders = d.senders || {};
     [["ig", "instagram"], ["wa", "whatsapp"]].forEach(function (p) {
       var info = ch[p[1]] || {};
+      var snd = senders[p[1]] || {};
       var el = fdEl("fd-c-" + p[0] + "-state");
       if (!el) return;
+      var senderText = snd.live ? "sender connected" : "no sender connected";
       el.textContent = info.enabled
         ? (info.queued || 0) + " queued · " + (info.sent_today || 0) + "/" +
-          (info.cap || 0) + " sent today · " + (info.sent || 0) + " all time"
+          (info.cap || 0) + " sent today · " + (info.sent || 0) + " all time · " +
+          senderText
         : "off — nothing is queued or sent here";
-      el.className = "fd-note" + (info.enabled ? "" : " fd-bad");
+      el.className = "fd-note" + (info.enabled ? (snd.live ? " fd-ok" : "") : " fd-bad");
     });
     fdEl("fd-a-igq").textContent = (ch.instagram || {}).queued || 0;
+
+    // The label follows reality: whichever live sender is first in the list is
+    // the one messages actually go to, even if it is WhatsApp. Saying "tried
+    // first" over a channel with no sender running is how the queue looked
+    // broken when it was only waiting for a process that was never started.
+    var liveOrder = ["instagram", "whatsapp"].filter(function (k) {
+      return c.channels.indexOf(k) !== -1 && (senders[k] || {}).live;
+    });
+    [["ig", "instagram"], ["wa", "whatsapp"]].forEach(function (p, i) {
+      var el = fdEl("fd-c-" + p[0] + "-first");
+      if (!el) return;
+      if (liveOrder.length) {
+        el.textContent = liveOrder[0] === p[1] ? "sending now" : "waiting";
+      } else {
+        el.textContent = i === 0 ? "tried first" : "fallback";
+      }
+    });
+    var anyLive = liveOrder.length > 0;
 
     var state = fdEl("fd-auto-state");
     if (!c.enabled) {
       state.textContent = "Paused — the sender is handed nothing while this is off.";
       state.className = "fd-note";
+    } else if (d.queued > 0 && !anyLive) {
+      state.textContent = "Waiting for a sender — start npm start in " +
+        "tools/whatsapp-sender (or python sender.py in tools/instagram-sender) " +
+        "and this queue starts moving. Local time " + (d.local_time || "?") + ".";
+      state.className = "fd-note fd-bad";
     } else if (d.quiet_now) {
       // Show the clock it is actually using. "Quiet hours" with no time next
       // to it is unfalsifiable from the outside — which is how a timezone bug
@@ -919,6 +946,27 @@
         setTimeout(function () { fdEl("fd-a-copykey").textContent = "Copy"; }, 1600);
       }, function () {});
     }
+  });
+
+  // Typing a 40-character key into a JSON file is where this used to go wrong
+  // (placeholder left in place, sender refused to talk). Hand over the file.
+  fdEl("fd-a-dlkey").addEventListener("click", function () {
+    var cfg = {
+      serverUrl: window.location.origin,
+      agentKey: fdEl("fd-a-key").value,
+      dryRun: true,
+      headless: true,
+      chromePath: "",
+      proxy: ""
+    };
+    var blob = new Blob([JSON.stringify(cfg, null, 2) + "\n"], { type: "application/json" });
+    var a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = "config.json";
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    setTimeout(function () { URL.revokeObjectURL(a.href); }, 1000);
   });
 
   fdEl("fd-research").addEventListener("click", function () {

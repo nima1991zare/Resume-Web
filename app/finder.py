@@ -1260,9 +1260,17 @@ def update_lead(lead_id: int, status: str = "", note: str | None = None,
             conn.execute("UPDATE leads SET note=? WHERE id=?", (note[:2000], lead_id))
         if pitch is not None:
             # Editing by hand pins the message: later re-scoring must not silently
-            # replace words you chose.
-            conn.execute("UPDATE leads SET pitch=?,pitch_edited=1 WHERE id=?",
-                         (pitch[:3000], lead_id))
+            # replace words you chose. Saving the modal unchanged is not an edit,
+            # though — the panel always posts the current text, and pinning on
+            # every save used to stop that lead being queued automatically.
+            current = conn.execute("SELECT pitch FROM leads WHERE id=?",
+                                   (lead_id,)).fetchone()["pitch"]
+            if pitch != current:
+                conn.execute("UPDATE leads SET pitch=?,pitch_edited=1 WHERE id=?",
+                             (pitch[:3000], lead_id))
+            else:
+                conn.execute("UPDATE leads SET pitch=? WHERE id=?",
+                             (pitch[:3000], lead_id))
         conn.commit()
     finally:
         conn.close()

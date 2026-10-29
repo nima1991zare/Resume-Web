@@ -6,6 +6,7 @@
   "main": "sender.js",
   "scripts": {
     "start": "node sender.js",
+    "send": "node sender.js --send",
     "check": "node sender.js --check"
   },
   "dependencies": {
