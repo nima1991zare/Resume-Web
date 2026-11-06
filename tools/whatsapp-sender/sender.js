@@ -695,18 +695,23 @@ if (process.argv.includes("--check")) {
   })();
 } else {
 
-log("connecting to WhatsApp…");
 log("server:", CFG.serverUrl, CFG.dryRun ? "(DRY RUN)" : "");
-log("browser:", CHROME);
-if (PROXY) log("proxy:", PROXY);
 if (CFG.dryRun) {
+  // dryTick() only peeks the server; it never touches WhatsApp. So in dry run
+  // there is no reason to open the browser — which also avoids the page-load
+  // crash on a run that was only ever going to print text.
   log("");
   log("DRY RUN — messages are printed to this window and NOT sent.");
-  log('When the text reads right, set "dryRun": false in config.json');
-  log("and restart. Nothing in the queue is consumed while dryRun is true.");
+  log("WhatsApp is not opened. Nothing in the queue is consumed.");
+  log('When the text reads right, set "dryRun": false in config.json and restart.');
   log("");
+  loop();
+} else {
+  log("connecting to WhatsApp…");
+  log("browser:", CHROME);
+  if (PROXY) log("proxy:", PROXY);
+  client.initialize();
+  loop();
 }
-client.initialize();
-loop();
 
 }

@@ -661,21 +661,27 @@ def claim_next(channel: str = "whatsapp", peek: bool = False,
         mark_sender_seen(channel)
 
     cfg = config()
-    if not cfg["enabled"]:
-        return {"message": None, "reason": "paused", "wait_s": 120, "peek": bool(peek)}
-    if channel not in cfg["channels"]:
-        return {"message": None, "reason": "channel_disabled", "wait_s": 600, "peek": bool(peek)}
-    if in_quiet_hours(cfg):
-        return {"message": None, "reason": "quiet_hours", "wait_s": 600,
-                "quiet_end": cfg["quiet_end"], "peek": bool(peek)}
+    # A preview is about reading the text, not about whether a send is allowed
+    # right now. The time gates — paused, quiet hours, daily cap — only apply to
+    # a real claim. Checking them for peek is why a dry run at 01:00 (quiet
+    # hours) or against a queue scheduled minutes apart showed nothing at all,
+    # which reads as "broken" when the messages are sitting right there.
+    if not peek:
+        if not cfg["enabled"]:
+            return {"message": None, "reason": "paused", "wait_s": 120, "peek": False}
+        if channel not in cfg["channels"]:
+            return {"message": None, "reason": "channel_disabled", "wait_s": 600, "peek": False}
+        if in_quiet_hours(cfg):
+            return {"message": None, "reason": "quiet_hours", "wait_s": 600,
+                    "quiet_end": cfg["quiet_end"], "peek": False}
 
     cap = cap_for(cfg, channel)
     conn = get_db()
     try:
         used = sent_today(conn, channel)
-        if used >= cap:
+        if not peek and used >= cap:
             return {"message": None, "reason": "daily_cap",
-                    "sent_today": used, "cap": cap, "wait_s": 1800, "peek": bool(peek)}
+                    "sent_today": used, "cap": cap, "wait_s": 1800, "peek": False}
 
         # Release anything a dead sender claimed and never reported.
         conn.execute(
@@ -690,11 +696,16 @@ def claim_next(channel: str = "whatsapp", peek: bool = False,
                 _reroute_to_live(conn, cfg, live, channel)
                 conn.commit()
 
+        # A real claim only takes what is due now. A peek walks the whole queue
+        # in send order, so the preview shows upcoming messages too — they are
+        # scheduled minutes apart, and nobody wants to wait for each to come due
+        # just to read it.
+        due_clause = "" if peek else " AND o.due_at<=datetime('now')"
         row = conn.execute(
             "SELECT o.*, l.name, l.status AS lead_status FROM outbox o "
             "JOIN leads l ON l.id=o.lead_id "
-            "WHERE o.status='queued' AND o.channel=? AND o.due_at<=datetime('now') "
-            "ORDER BY o.due_at LIMIT 1 OFFSET ?",
+            "WHERE o.status='queued' AND o.channel=?" + due_clause +
+            " ORDER BY o.due_at LIMIT 1 OFFSET ?",
             (channel, max(0, int(offset)))).fetchone()
         if row is None:
             nxt = conn.execute(
