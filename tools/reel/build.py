@@ -125,8 +125,8 @@ body { font-family:'Vazirmatn',system-ui,sans-serif; color:#eef4fb; }
   <div id="grid"></div><div id="glow"></div>
 
   <section class="scene" id="s1">
-    <div class="kicker">پروژه‌یاب · شیراز</div>
-    <div class="lead" style="margin-top:28px">من <span class="accent" id="n-total">@@TOTAL_FA@@</span> کسب‌وکار شیراز را<br>یکی‌یکی بررسی کردم.</div>
+    <div class="kicker">یک بررسی واقعی</div>
+    <div class="lead" style="margin-top:28px">من <span class="accent" id="n-total">@@TOTAL_FA@@</span> کسب‌وکار را<br>یکی‌یکی بررسی کردم.</div>
     <div class="sub" style="margin-top:34px">رستوران، کافه، مطب، هتل، آرایشگاه، فروشگاه.</div>
   </section>
 
@@ -155,7 +155,7 @@ body { font-family:'Vazirmatn',system-ui,sans-serif; color:#eef4fb; }
 
   <section class="scene" id="s5">
     <div class="kicker">کاری که می‌کنم</div>
-    <div class="lead" style="margin-top:26px">سایت و اپلیکیشن برای<br>کسب‌وکارهای شیراز.</div>
+    <div class="lead" style="margin-top:26px">سایت و اپلیکیشن که<br>مشتری را پیدا می‌کند.</div>
     <div class="sub" style="margin-top:28px">سریع، موبایل‌پسند، با نوبت‌دهی و سفارش آنلاین.</div>
     <div class="pill">اسم کسب‌وکارت را دایرکت بده</div>
     <div class="sub" style="margin-top:46px">رایگان نگاه می‌کنم و می‌گویم چه چیزی کم دارد.</div>
@@ -294,7 +294,7 @@ def main() -> None:
         # Persian digits for anything the viewer reads as prose. The JS
         # rewrites most counters every frame, but not these two.
         "TOTAL_FA": fa(S["total"]), "WITHSITE_FA": fa(S["withsite"]),
-        "HANDLE": "nima.z.are", "SITE": "nimabuilds.pythonanywhere.com",
+        "HANDLE": "nimazare.dev", "SITE": "nimazare.dev",
     }
     out = HTML
     for key, val in values.items():

@@ -25,8 +25,13 @@ const TOTAL = FPS * SECONDS;
 const W = 1080, H = 1920;
 
 // Reuse the browser the WhatsApp sender already pulled in.
-const puppeteer = require(path.join(HERE, "..", "whatsapp-sender",
-                                    "node_modules", "puppeteer"));
+let puppeteer;
+for (const where of [
+  path.join(HERE, "..", "whatsapp-sender", "node_modules", "puppeteer"),
+  path.join(HERE, "node_modules", "puppeteer"),
+  "puppeteer",
+]) { try { puppeteer = require(where); break; } catch (e) {} }
+if (!puppeteer) { console.error("puppeteer not found; run npm install in tools/whatsapp-sender"); process.exit(1); }
 
 function findChrome() {
   const env = process.env;

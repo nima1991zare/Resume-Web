@@ -59,72 +59,64 @@ def cat(num, title, tag, body, tech):
 
 S = stats()
 
-# ── Post 1 — one person, the whole stack (credibility → followers) ────────
+# ── Post 1 — one person, the whole stack (range → followers, no location) ─
 P1 = [
     ("p1-01", '''
       <div class="kick">نیما زارع · توسعه‌دهنده فول‌استک</div>
       <div class="mega">یک نفر.<br><span class="accent">کل مسیر.</span></div>
       <div class="sub">سایت · اپلیکیشن · بازی · ربات · پایگاه‌داده</div>'''),
-    ("p1-02", cat("۰۱", "وبسایت", "فروشگاه، کافه، شرکت",
-                  "سریع، موبایل‌پسند، قابل دیده‌شدن در گوگل",
-                  "HTML · CSS · JavaScript · PWA")),
-    ("p1-03", cat("۰۲", "اپلیکیشن موبایل", "اندروید، کراس‌پلتفرم",
-                  "برنامه‌ریز شمسی، کالری‌شمار، استایلیست",
-                  "Flutter · Dart · SQLite")),
-    ("p1-04", cat("۰۳", "بازی سه‌بعدی", "کاملاً در مرورگر",
-                  "۱۰۰۰ مرحله، شش شخصیت، بدون نصب",
-                  "Three.js · JavaScript · Vite")),
-    ("p1-05", cat("۰۴", "ربات تلگرام", "اتوماسیون و پرداخت",
-                  "اشتراک با پرداخت خودکار USDT، مدیریت کانال",
-                  "Python · aiogram · TRON · TON")),
-    ("p1-06", cat("۰۵", "داشبورد و اتوماسیون", "مدیریت کسب‌وکار",
-                  "داشبورد فروشندگی آمازون با ۱۴ ماژول",
-                  "Python · Streamlit · SQLite")),
-    ("p1-07", cat("۰۶", "پایگاه‌داده با Rust", "از صفر، بدون فریم‌ورک",
-                  "دیتابیس سازگار با Redis و موتور SQL توزیع‌شده",
-                  "Rust · Tokio · Raft · MVCC")),
-    ("p1-08", '''
+    ("p1-02", '''
+      <div class="kick" style="margin-bottom:40px">چه می‌سازم</div>
+      <div class="grid">
+        <div class="cell"><b>وبسایت</b><em>HTML · JS · PWA</em></div>
+        <div class="cell"><b>اپلیکیشن موبایل</b><em>Flutter · Dart</em></div>
+        <div class="cell"><b>بازی سه‌بعدی</b><em>Three.js</em></div>
+        <div class="cell"><b>ربات تلگرام</b><em>Python · aiogram</em></div>
+        <div class="cell"><b>داشبورد و اتوماسیون</b><em>Streamlit · API</em></div>
+        <div class="cell"><b>پایگاه‌داده</b><em>Rust · Raft</em></div>
+      </div>'''),
+    ("p1-03", '''
+      <div class="kick">از ساده تا عمیق</div>
+      <div class="mega" style="font-size:92px">حتی یک پایگاه‌داده،<br><span class="accent">از صفر با Rust.</span></div>
+      <div class="sub">یک دیتابیس سازگار با Redis و یک موتور SQL توزیع‌شده — بدون فریم‌ورک، بدون میان‌بر.</div>
+      <div class="tech">rudis · RiffleDB · Tokio · MVCC</div>'''),
+    ("p1-04", '''
       <div class="mega" style="font-size:150px">یک نفر،<br><span class="accent">کل مسیر.</span></div>
       <div class="sub" style="margin-top:40px">هر هفته یک پروژه را باز می‌کنم و نشان می‌دهم چطور ساخته شده.</div>
       <div class="cta">فالو کن 👈</div>
-      <div class="handle">@nima.z.are</div>'''),
+      <div class="handle">nimazare.dev</div>'''),
 ]
 
-# ── Post 2 — the data story (value → customers) ───────────────────────────
+# ── Post 2 — the data story (value → customers), 4 slides ─────────────────
 P2 = [
     ("p2-01", f'''
-      <div class="kick">بررسی واقعی · شیراز</div>
+      <div class="kick">یک بررسی واقعی</div>
       <div class="huge accent">٪{fa(S["pct"])}</div>
-      <div class="mega" style="font-size:88px">کسب‌وکارهای شیراز<br>وبسایت ندارند.</div>
+      <div class="mega" style="font-size:90px">کسب‌وکارها<br>وبسایت ندارند.</div>
       <div class="sub">{fa(S["total"])} کسب‌وکار را یکی‌یکی بررسی کردم.</div>'''),
     ("p2-02", '''
       <div class="kick">یعنی چه؟</div>
-      <div class="mega" style="font-size:80px">مشتری ساعت ۱۱ شب<br>تصمیم می‌گیرد.</div>
+      <div class="mega" style="font-size:78px">مشتری ساعت ۱۱ شب<br>تصمیم می‌گیرد.</div>
       <div class="sub">اسم کسب‌وکارت را در گوگل می‌زند…</div>'''),
-    ("p2-03", '''
+    ("p2-03", f'''
       <div class="line">چیزی پیدا نمی‌کند.</div>
       <div class="line dim">نه منو، نه قیمت، نه نوبت.</div>
-      <div class="line accent" style="margin-top:50px">← می‌رود سراغ رقیبت.</div>
-      <div class="line dim" style="font-size:44px">و دیگر برنمی‌گردد.</div>'''),
-    ("p2-04", f'''
-      <div class="kick">و آن‌هایی که سایت داشتند؟</div>
-      <div class="mega" style="font-size:70px">از <span class="accent">{fa(S["withsite"])}</span> سایتی که پیدا کردم،</div>
-      <div class="huge accent" style="font-size:230px">{fa(S["dead"])}</div>
-      <div class="mega" style="font-size:70px">تا اصلاً باز نمی‌شد.</div>'''),
-    ("p2-05", '''
-      <div class="mega" style="font-size:94px">یک سایت ساده<br>کافی است.</div>
+      <div class="line accent" style="margin-top:46px">← می‌رود سراغ رقیبت.</div>
+      <div class="sub" style="margin-top:40px">و از آن‌هایی که سایت داشتند، <span class="accent">{fa(S["dead"])}</span> تا از {fa(S["withsite"])} تا اصلاً باز نمی‌شد.</div>'''),
+    ("p2-04", '''
+      <div class="mega" style="font-size:92px">یک سایت ساده<br>کافی است.</div>
       <div class="sub">که در گوگل پیدا شوی، روی موبایل خوب باز شود، نوبت و سفارش آنلاین بگیری.</div>
       <div class="cta">اسم کسب‌وکارت را کامنت کن 👇</div>
-      <div class="handle">@nima.z.are</div>'''),
+      <div class="handle">nimazare.dev</div>'''),
 ]
 
-# ── Post 3 — reel cover (the video is in tools/reel) ──────────────────────
+# ── Post 3 — reel cover (video rendered separately) ───────────────────────
 P3 = [
     ("p3-cover", '''
       <div class="kick">ساخت یک بازی سه‌بعدی</div>
       <div class="mega" style="font-size:118px">۱۰۰۰ مرحله.<br><span class="accent">صفر تا صد.</span></div>
       <div class="sub">یک رانر مخفی‌کاری سه‌بعدی، کاملاً در مرورگر.</div>
-      <div class="handle" style="margin-top:60px">@nima.z.are</div>'''),
+      <div class="handle" style="margin-top:60px">nimazare.dev</div>'''),
 ]
 
 SLIDES = P1 + P2 + P3
@@ -157,6 +149,11 @@ body{font-family:'Vazirmatn',system-ui,sans-serif;color:#eef4fb}
 .cta{margin-top:56px;display:inline-block;font-size:46px;font-weight:800;color:#070b11;
   background:#22c55e;padding:22px 46px;border-radius:999px}
 .handle{margin-top:30px;font-size:54px;font-weight:800;color:#22c55e;direction:ltr;text-align:right}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:22px}
+.cell{background:#0e151f;border:1px solid rgba(34,197,94,.18);border-radius:22px;padding:30px 28px}
+.cell b{display:block;font-size:46px;font-weight:800}
+.cell em{display:block;font-style:normal;margin-top:8px;font-family:ui-monospace,monospace;
+  direction:ltr;text-align:right;font-size:26px;color:#22c55e}
 #num{display:none;position:absolute;bottom:56px;left:96px;font-family:ui-monospace,monospace;
   font-size:28px;color:#3a4a5c;direction:ltr}
 </style></head><body><div id="stage">
