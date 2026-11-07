@@ -20,33 +20,41 @@ SRC = HERE / "out" / "reel.mp4"
 DST = HERE / "out" / "reel_music.mp4"
 DUR = 20
 
-# ── the bed, as ffmpeg lavfi expressions ──────────────────────────────────
-# Commas inside an expression are escaped (\,) for ffmpeg's own parser; passing
-# the filtergraph as one argv element keeps the shell out of it entirely.
+# ── the bed — an energetic, modern house/EDM bed at 128 BPM ───────────────
+# Commas inside an expression are escaped (\,) for ffmpeg's own parser; the
+# whole graph is passed as one argv element so the shell never touches it.
 #
-# kick  : a 55 Hz sine that decays every half second — a calm 120-bpm heartbeat
-# pad   : a soft D-rooted chord (D3, A3, D4), the warm sustained layer
-# sub   : a low drone an octave under the pad, for body on phone speakers
-# hat   : filtered noise ticking on the off-beat, quiet, for a little motion
-KICK = r"sin(2*PI*55*t)*exp(-11*mod(t\,0.5))*0.9"
-PAD = r"(sin(2*PI*146.83*t)+sin(2*PI*220*t)+sin(2*PI*293.66*t)*0.7)*0.045"
-SUB = r"sin(2*PI*73.42*t)*0.10"
-HAT = r"(2*random(0)-1)*exp(-55*mod(t+0.25\,0.5))*0.06"
+#   B    = one beat at 128 BPM = 0.46875s
+# kick   : punchy four-on-the-floor — a low sine plus a click transient
+# clap   : noise burst on the back-beat (2 and 4), the thing that drives it
+# bass   : an off-beat saw-ish bass, house-style, between the kicks
+# pad    : a D-major chord SIDECHAINED to the kick — it ducks on every beat and
+#          swells back, which is the pump that reads as "modern/energetic"
+# hats   : bright eighth-note ticks for lift
+B = 0.46875
+KICK = r"(sin(2*PI*52*t)*exp(-8*mod(t\,0.46875))+(2*random(0)-1)*exp(-150*mod(t\,0.46875))*0.4)*0.95"
+CLAP = r"(2*random(0)-1)*exp(-23*mod(t+0.46875\,0.9375))*0.38"
+BASS = r"(sin(2*PI*73.42*t)+0.5*sin(2*PI*146.84*t))*exp(-9*mod(t+0.234375\,0.46875))*0.17"
+PAD = r"(sin(2*PI*146.83*t)+sin(2*PI*220*t)+sin(2*PI*293.66*t)+sin(2*PI*369.99*t))*0.026*(0.22+0.78*(1-exp(-9*mod(t\,0.46875))))"
+HAT = r"(2*random(0)-1)*exp(-70*mod(t\,0.234375))*0.05"
 
 FILTER = (
     f"aevalsrc={KICK}:d={DUR}:s=44100[k];"
+    f"aevalsrc={CLAP}:d={DUR}:s=44100[c];"
+    f"aevalsrc={BASS}:d={DUR}:s=44100[b];"
     f"aevalsrc={PAD}:d={DUR}:s=44100[p];"
-    f"aevalsrc={SUB}:d={DUR}:s=44100[s];"
     f"aevalsrc={HAT}:d={DUR}:s=44100[h];"
-    "[k][p][s][h]amix=inputs=4:normalize=0,"
-    # a gentle swell into the 92% reveal (~6s), then settle
-    "volume='0.75+0.2*sin(2*PI*0.5*t)*between(t\\,5\\,7)':eval=frame,"
-    "highpass=f=28,lowpass=f=11000,"
-    "afade=t=in:st=0:d=1.4,afade=t=out:st=17.6:d=2.4,"
-    # a safety limiter so nothing clips if the layers line up
+    "[k][c][b][p][h]amix=inputs=5:normalize=0,"
+    "highpass=f=26,"
+    # glue the hits together and give the kick punch
+    "acompressor=threshold=-18dB:ratio=3:attack=5:release=120,"
+    # a little air so it reads bright/current, not muddy
+    "treble=g=3:f=4500,"
+    "volume=1.15,"
+    # quick in for energy, clean out; limiter so nothing clips
+    "afade=t=in:st=0:d=0.3,afade=t=out:st=18.4:d=1.6,"
     "alimiter=limit=0.95[a]"
 )
-
 
 def main() -> int:
     if not SRC.exists():

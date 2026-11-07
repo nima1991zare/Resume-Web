@@ -119,7 +119,52 @@ P3 = [
       <div class="handle" style="margin-top:60px">nimazare.dev</div>'''),
 ]
 
-SLIDES = P1 + P2 + P3
+# ── Post 4 — a good site has 4 things (value → saves, customers) ──────────
+P4 = [
+    ("p4-01", '''
+      <div class="kick">چک‌لیست سریع</div>
+      <div class="mega">یک سایت خوب،<br><span class="accent">۴ چیز دارد.</span></div>
+      <div class="sub">سایتت این‌ها را دارد؟ ببینیم.</div>'''),
+    ("p4-02", '''
+      <div class="kick" style="margin-bottom:40px">۴ چیزی که مهم است</div>
+      <div class="grid">
+        <div class="cell"><b>سرعت بالا</b><em>زیر ۳ ثانیه باز شود</em></div>
+        <div class="cell"><b>روی موبایل</b><em>۸۰٪ بازدیدها</em></div>
+        <div class="cell"><b>نوبت و سفارش</b><em>آنلاین، ۲۴ ساعته</em></div>
+        <div class="cell"><b>دیده‌شدن</b><em>در نتایج گوگل</em></div>
+      </div>'''),
+    ("p4-03", '''
+      <div class="kick">چرا مهم است؟</div>
+      <div class="mega" style="font-size:84px">سایتی که این‌ها را<br>نداشته باشد،<br><span class="accent">مشتری را فراری می‌دهد.</span></div>'''),
+    ("p4-04", '''
+      <div class="mega" style="font-size:92px">سایتت را<br><span class="accent">رایگان چک می‌کنم.</span></div>
+      <div class="sub">می‌گویم کدام از این ۴ تا را داری و کدام را نه.</div>
+      <div class="cta">آدرس سایتت را کامنت کن 👇</div>
+      <div class="handle">nimazare.dev</div>'''),
+]
+
+# ── Post 5 — "only Instagram isn't enough" (myth-buster → shares) ──────────
+P5 = [
+    ("p5-01", '''
+      <div class="kick">یک حرف رک</div>
+      <div class="mega">فقط اینستاگرام؟<br><span class="accent">کافی نیست.</span></div>
+      <div class="sub">اگر کل کسب‌وکارت روی پیج است، این را بخوان.</div>'''),
+    ("p5-02", '''
+      <div class="line">اینستاگرام فیلتر می‌شود.</div>
+      <div class="line">پیجت می‌تواند قطع شود.</div>
+      <div class="line accent" style="margin-top:46px">و در گوگل اصلاً بالا نمی‌آیی.</div>'''),
+    ("p5-03", '''
+      <div class="kick">راه‌حل ساده</div>
+      <div class="mega" style="font-size:86px">سایت، خانهٔ همیشگیِ<br><span class="accent">کسب‌وکار توست.</span></div>
+      <div class="sub">کسی نمی‌تواند ببنددش، همیشه در گوگل هست، و مال خودت است.</div>'''),
+    ("p5-04", '''
+      <div class="mega" style="font-size:92px">وقتش است یک<br><span class="accent">خانهٔ ثابت بسازی.</span></div>
+      <div class="sub">اینستاگرام را نگه دار، ولی یک سایت هم کنارش داشته باش.</div>
+      <div class="cta">اسم کسب‌وکارت را کامنت کن 👇</div>
+      <div class="handle">nimazare.dev</div>'''),
+]
+
+SLIDES = P1 + P2 + P3 + P4 + P5
 
 HTML = """<!doctype html><html lang="fa" dir="rtl"><head><meta charset="utf-8">
 <style>
@@ -182,7 +227,7 @@ def main():
            .replace("@@SLIDES@@", slides_js))
     (HERE / "slides.html").write_text(out, encoding="utf-8")
     print(f"slides.html written — {len(SLIDES)} slides at {W}x{H}")
-    print(f"  post1={len(P1)}  post2={len(P2)}  post3cover={len(P3)}")
+    print(f"  post1={len(P1)} post2={len(P2)} post3={len(P3)} post4={len(P4)} post5={len(P5)}")
     print(f"  data: {S['total']} businesses, {S['pct']}% no site, {S['dead']}/{S['withsite']} dead")
 
 
