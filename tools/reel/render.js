@@ -20,7 +20,9 @@ const HERE = __dirname;
 const OUT = path.join(HERE, "out");
 const FRAMES = path.join(OUT, "frames");
 const FPS = 30;
-const SECONDS = 20;
+const ARGS = process.argv.slice(2).filter(a => !a.startsWith("--"));
+const BASE = ARGS[0] || "reel";
+const SECONDS = Number(ARGS[1]) || (BASE === "show" ? 15 : 20);
 const TOTAL = FPS * SECONDS;
 const W = 1080, H = 1920;
 
@@ -55,9 +57,9 @@ function findChrome() {
 
 (async () => {
   const previewOnly = process.argv.includes("--preview");
-  const html = path.join(HERE, "reel.html");
+  const html = path.join(HERE, BASE + ".html");
   if (!fs.existsSync(html)) {
-    console.error("reel.html is missing — run:  python build.py");
+    console.error(BASE + ".html is missing — run its build.py first");
     process.exit(1);
   }
   const chrome = findChrome();
@@ -107,7 +109,7 @@ function findChrome() {
   console.log(" done");
   await browser.close();
 
-  const mp4 = path.join(OUT, "reel.mp4");
+  const mp4 = path.join(OUT, BASE + ".mp4");
   // yuv420p + even dimensions, or Instagram re-encodes it badly (or rejects it).
   execFileSync("ffmpeg", [
     "-y", "-framerate", String(FPS),
