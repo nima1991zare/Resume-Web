@@ -181,3 +181,14 @@ Weights live in `SIGNALS` in `app/finder.py`; edit them and the next run re-scor
 - Suggested: `uvicorn app.main:app --host 127.0.0.1 --port 8000 --no-server-header` behind Nginx/Caddy reverse proxy.
 - The rate limiter is in-memory (per process) — run a single worker, or move limits to the proxy for multi-worker setups.
 - Back up `data/site.db` and `static/uploads/`.
+
+---
+
+## 🤖 Continue with a new AI — Handoff (2026-11-08)
+
+- **What:** Nima's portfolio/resume site (3D particle morph background, bilingual EN/FA, PWA) + a "Project Finder" lead-gen agent and WhatsApp/Instagram senders.
+- **Built with:** Python · FastAPI · SQLite; vanilla HTML/CSS/JS front end; PWA (manifest + service worker). Git repo present.
+- **Run:** `pip install -r requirements.txt` then `python -m uvicorn app.main:app --host 0.0.0.0 --port 8000` (or `start-server.bat`). Public `/`, admin `/admin` (default `admin`/`admin123` — change immediately).
+- **Change things:** `app/main.py` (routes/API), `app/database.py` (schema/seed), `app/finder.py`/`research.py`/`autopilot.py` (lead gen), front end in `static/`.
+- **⚠️ Do NOT touch:** `data/site.db` (live DB), `static/uploads/` (user images), `tools/whatsapp-sender/.session/` (logged-in browser session). Admin password is PBKDF2-hashed in the DB.
+- **Secrets/backup:** see `Desktop/ALL-SECRETS.md`; **Backup:** `Desktop/_BACKUPS/WEB_20261108.zip`.
